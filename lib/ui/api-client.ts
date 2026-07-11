@@ -55,3 +55,60 @@ export async function createProject(input: CreateProjectInput): Promise<{
     body: JSON.stringify(input),
   });
 }
+
+export async function getProject(id: string): Promise<ProjectRecord> {
+  const result = await requestJson<{ project: ProjectRecord }>(
+    `/api/projects/${id}`,
+  );
+  return result.project;
+}
+
+export async function adjustProjectStep(
+  id: string,
+  order: number,
+  newDate: string,
+  version: number,
+  confirmShortening = false,
+  confirmOverwrite = false,
+): Promise<ProjectRecord> {
+  const result = await requestJson<{ project: ProjectRecord }>(
+    `/api/projects/${id}/steps/${order}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({
+        newDate,
+        version,
+        confirmShortening,
+        confirmOverwrite,
+      }),
+    },
+  );
+  return result.project;
+}
+
+export async function resetProjectSchedule(
+  id: string,
+  version: number,
+): Promise<ProjectRecord> {
+  const result = await requestJson<{ project: ProjectRecord }>(
+    `/api/projects/${id}/reset-schedule`,
+    { method: "POST", body: JSON.stringify({ version }) },
+  );
+  return result.project;
+}
+
+export async function deleteProject(id: string, version: number): Promise<void> {
+  const response = await fetch(`/api/projects/${id}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ version }),
+  });
+  if (!response.ok) {
+    const body = (await response.json()) as { code?: string; message?: string };
+    throw new ApiError(
+      body.code ?? "INTERNAL_ERROR",
+      body.message ?? "ไม่สามารถลบโครงการได้",
+      response.status,
+    );
+  }
+}

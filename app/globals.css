@@ -25,3 +25,22 @@ textarea,
 select {
   font: inherit;
 }
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
+  body {
+    background: white;
+  }
+
+  .print-hidden {
+    display: none !important;
+  }
+
+  [data-testid="timeline-step"] {
+    break-inside: avoid;
+  }
+}
