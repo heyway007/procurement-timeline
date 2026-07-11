@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  background: #f8fafc;
+  color: #0f172a;
+  font-family: "Noto Sans Thai", "Leelawadee UI", Tahoma, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at top right, rgb(224 231 255 / 70%), transparent 32rem),
+    #f8fafc;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
