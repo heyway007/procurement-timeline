@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import type { CreateProjectInput, ProjectRecord } from "@/lib/projects/types";
 import { createProject, getProjects } from "@/lib/ui/api-client";
 import { ProjectForm } from "./project-form";
@@ -51,9 +52,7 @@ export function Dashboard({ initialProjects }: { initialProjects?: ProjectRecord
           <h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">แผนงานจัดซื้อจัดจ้าง</h1>
           <p className="mt-2 text-sm leading-6 text-slate-600">วางแผนวันดำเนินงานอัตโนมัติตามวันทำการราชการไทย</p>
         </div>
-        <button className="inline-flex min-h-12 items-center justify-center rounded-xl bg-indigo-700 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-800" type="button" onClick={() => setCreating(true)}>
-          สร้าง Timeline
-        </button>
+        <div className="flex gap-3"><Link href="/holidays" className="inline-flex min-h-12 items-center rounded-xl border border-slate-300 px-4 font-semibold text-slate-700">จัดการวันหยุด</Link><button className="inline-flex min-h-12 items-center justify-center rounded-xl bg-indigo-700 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-800" type="button" onClick={() => setCreating(true)}>สร้าง Timeline</button></div>
       </header>
 
       <section aria-label="ตัวกรองโครงการ" className="my-7 grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-3">
