@@ -112,3 +112,66 @@ export function adjustProcessEnd(
     isProcessEndManuallyAdjusted: true,
   };
 }
+
+export function recalculateWithManualAnchors(
+  timeline: ScheduledTimeline,
+  holidays: ReadonlySet<string>,
+):
+  | { kind: "ok"; timeline: ScheduledTimeline }
+  | { kind: "conflict"; order: number | "process-end" } {
+  const milestones = timeline.milestones.map((item) => ({ ...item }));
+  if (!isWorkingDay(milestones[0].scheduledDate, holidays)) {
+    return { kind: "conflict", order: 1 };
+  }
+
+  for (let index = 1; index < milestones.length; index += 1) {
+    const previous = milestones[index - 1];
+    const current = milestones[index];
+    if (current.isDateManuallyAdjusted) {
+      try {
+        countWorkingDayAdditions(
+          previous.scheduledDate,
+          current.scheduledDate,
+          holidays,
+        );
+      } catch {
+        return { kind: "conflict", order: current.order };
+      }
+    } else {
+      current.scheduledDate = addWorkingDays(
+        previous.scheduledDate,
+        previous.workingDaysToNext,
+        holidays,
+      );
+    }
+  }
+
+  const last = milestones[milestones.length - 1];
+  let processEndDate = timeline.processEndDate;
+  if (timeline.isProcessEndManuallyAdjusted) {
+    try {
+      countWorkingDayAdditions(
+        last.scheduledDate,
+        timeline.processEndDate,
+        holidays,
+      );
+    } catch {
+      return { kind: "conflict", order: "process-end" };
+    }
+  } else {
+    processEndDate = addWorkingDays(
+      last.scheduledDate,
+      last.workingDaysToNext,
+      holidays,
+    );
+  }
+
+  return {
+    kind: "ok",
+    timeline: {
+      milestones,
+      processEndDate,
+      isProcessEndManuallyAdjusted: timeline.isProcessEndManuallyAdjusted,
+    },
+  };
+}
