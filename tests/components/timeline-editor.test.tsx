@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { TimelineDetail } from "@/components/timeline/timeline-detail";
@@ -67,6 +67,15 @@ describe("TimelineDetail", () => {
 
     expect(screen.getByTestId("calendar-popover")).toHaveClass("bottom-11");
     expect(screen.getByTestId("calendar-popover")).not.toHaveClass("top-11");
+  });
+
+  it("shows date ranges for milestones 3 and 6 only", () => {
+    render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
+
+    const rows = screen.getAllByTestId("timeline-step");
+    expect(within(rows[2]).getByText("วันจันทร์ 13 ก.ค. 2569 - วันพุธ 15 ก.ค. 2569")).toBeInTheDocument();
+    expect(within(rows[5]).getByText("วันพฤหัสบดี 23 ก.ค. 2569 - วันพุธ 29 ก.ค. 2569")).toBeInTheDocument();
+    expect(within(rows[1]).getByText("วันศุกร์ 10 ก.ค. 2569")).toBeInTheDocument();
   });
 
   it("submits a manual date edit for the selected milestone", async () => {

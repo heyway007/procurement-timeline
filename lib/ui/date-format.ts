@@ -60,6 +60,11 @@ function isoFromUtcDate(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+function isWorkingIsoDate(iso: string, holidays: ReadonlySet<string>): boolean {
+  const day = dateFromIso(iso).getDay();
+  return day !== 0 && day !== 6 && !holidays.has(iso);
+}
+
 export function formatThaiDate(iso: string): string {
   return thaiDate.format(dateFromIso(iso));
 }
@@ -73,9 +78,25 @@ export function isWeekendIso(iso: string): boolean {
   return day === 0 || day === 6;
 }
 
+export function previousWorkingDate(
+  iso: string,
+  holidays: ReadonlySet<string> = new Set(),
+): string {
+  const date = dateFromIso(iso);
+  do {
+    date.setDate(date.getDate() - 1);
+  } while (!isWorkingIsoDate(isoFromUtcDate(date), holidays));
+
+  return isoFromUtcDate(date);
+}
+
 export function formatThaiDateWithWeekday(iso: string): string {
   const parts = dateParts(thaiShortDateParts, iso);
   return `${parts.weekday} ${parts.day} ${parts.month} ${parts.year}`;
+}
+
+export function formatThaiDateRangeWithWeekday(startIso: string, endIso: string): string {
+  return `${formatThaiDateWithWeekday(startIso)} - ${formatThaiDateWithWeekday(endIso)}`;
 }
 
 export function formatThaiFullDateWithWeekday(iso: string): string {

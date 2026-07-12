@@ -14,10 +14,12 @@ import {
   buildMonthCalendar,
   formatBaht,
   formatThaiDate,
+  formatThaiDateRangeWithWeekday,
   formatThaiDateWithWeekday,
   formatThaiFullDateWithWeekday,
   formatThaiMonthYear,
   isWeekendIso,
+  previousWorkingDate,
 } from "@/lib/ui/date-format";
 
 type AdjustStep = (
@@ -98,6 +100,18 @@ function CalendarPreview({
   );
 }
 
+function collectTimelineYears(project: ProjectRecord): number[] {
+  const dates = [
+    project.processEndDate,
+    ...project.steps.map((step) => step.scheduledDate),
+  ];
+  return [...new Set(dates.map((date) => Number(date.slice(0, 4))))].sort();
+}
+
+function isDateRangeMilestone(order: number): boolean {
+  return order === 3 || order === 6;
+}
+
 export function TimelineDetail({
   projectId,
   initialProject,
@@ -108,6 +122,7 @@ export function TimelineDetail({
   const [error, setError] = useState("");
   const [editingOrder, setEditingOrder] = useState<number | null>(null);
   const [newDate, setNewDate] = useState("");
+  const [holidayDates, setHolidayDates] = useState<ReadonlySet<string>>(new Set());
 
   useEffect(() => {
     if (initialProject) return;
@@ -116,6 +131,41 @@ export function TimelineDetail({
       .catch(() => setError("ไม่สามารถโหลด Timeline ได้"))
       .finally(() => setLoading(false));
   }, [initialProject, projectId]);
+
+  useEffect(() => {
+    if (!project || initialProject) return;
+    let cancelled = false;
+    Promise.all(
+      collectTimelineYears(project).map((year) =>
+        fetch(`/api/holidays?year=${year}`)
+          .then((response) => response.json() as Promise<{ holidays?: { date: string }[] }>)
+          .then((data) => data.holidays?.map((holiday) => holiday.date) ?? []),
+      ),
+    )
+      .then((years) => {
+        if (!cancelled) setHolidayDates(new Set(years.flat()));
+      })
+      .catch(() => {
+        if (!cancelled) setHolidayDates(new Set());
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [initialProject, project]);
+
+  function formatStepScheduledDate(stepIndex: number): string {
+    const step = project?.steps[stepIndex];
+    const nextStep = project?.steps[stepIndex + 1];
+    if (!step) return "";
+    if (!nextStep || !isDateRangeMilestone(step.order)) {
+      return formatThaiDateWithWeekday(step.scheduledDate);
+    }
+
+    return formatThaiDateRangeWithWeekday(
+      step.scheduledDate,
+      previousWorkingDate(nextStep.scheduledDate, holidayDates),
+    );
+  }
 
   async function saveEdit(
     confirmShortening = false,
@@ -215,22 +265,22 @@ export function TimelineDetail({
       {error ? <p role="alert" className="mt-5 rounded-xl bg-rose-50 px-4 py-3 text-rose-800">{error}</p> : null}
 
       <section className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="grid grid-cols-[4rem_1fr_11rem_5rem_7rem] gap-3 bg-slate-100 px-4 py-3 text-xs font-semibold text-slate-600">
+        <div className="grid grid-cols-[4rem_1fr_20rem_5rem_7rem] gap-3 bg-slate-100 px-4 py-3 text-xs font-semibold text-slate-600">
           <span>ลำดับ</span><span>ขั้นตอน</span><span>วันที่กำหนด</span><span className="print-hidden">ปฏิทิน</span><span className="print-hidden">จัดการ</span>
         </div>
-        {project.steps.map((step) => (
-          <div data-testid="timeline-step" key={step.order} className="grid grid-cols-[4rem_1fr_11rem_5rem_7rem] gap-3 border-t border-slate-100 px-4 py-4 text-sm">
+        {project.steps.map((step, index) => (
+          <div data-testid="timeline-step" key={step.order} className="grid grid-cols-[4rem_1fr_20rem_5rem_7rem] gap-3 border-t border-slate-100 px-4 py-4 text-sm">
             <span className="font-semibold text-indigo-700">{step.order}</span>
             <div>
               <p className="font-medium text-slate-900">{step.label}</p>
               <p className="mt-1 text-xs text-slate-500">{step.workingDaysToNext} วันทำการถึงขั้นตอนถัดไป {step.isDateManuallyAdjusted ? "· ปรับกำหนดการ" : ""}</p>
             </div>
-            <span className="font-medium text-slate-700">{formatThaiDateWithWeekday(step.scheduledDate)}</span>
+            <span className="font-medium text-slate-700">{formatStepScheduledDate(index)}</span>
             <CalendarPreview iso={step.scheduledDate} placement={step.order >= 10 ? "above" : "below"} />
             <button className="print-hidden h-9 rounded-lg border border-slate-300 font-semibold text-slate-700" type="button" aria-label={`แก้วันที่ ขั้นตอนที่ ${step.order}`} onClick={() => { setEditingOrder(step.order); setNewDate(step.scheduledDate); }}>แก้วันที่</button>
           </div>
         ))}
-        <div className="grid grid-cols-[4rem_1fr_11rem_5rem_7rem] gap-3 border-t-2 border-indigo-100 bg-indigo-50 px-4 py-4 text-sm">
+        <div className="grid grid-cols-[4rem_1fr_20rem_5rem_7rem] gap-3 border-t-2 border-indigo-100 bg-indigo-50 px-4 py-4 text-sm">
           <span className="font-semibold text-indigo-700">จบ</span><span className="font-semibold text-slate-900">วันสิ้นสุดกระบวนการ</span><span className="font-semibold text-indigo-800">{formatThaiDateWithWeekday(project.processEndDate)}</span><CalendarPreview iso={project.processEndDate} placement="above" /><span />
         </div>
       </section>
