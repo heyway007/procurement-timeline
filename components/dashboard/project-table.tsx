@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ProjectRecord } from "@/lib/projects/types";
 import { formatBaht, formatThaiDate } from "@/lib/ui/date-format";
+import { budgetCategoryLabel } from "@/lib/projects/budget-category";
 
 export function ProjectTable({ projects }: { projects: ProjectRecord[] }) {
   if (projects.length === 0) {
@@ -32,7 +33,7 @@ export function ProjectTable({ projects }: { projects: ProjectRecord[] }) {
                   <p className="font-semibold text-slate-950">{project.name}</p>
                   <p className="mt-1 text-sm text-slate-500">{project.ownerName}</p>
                 </td>
-                <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-700">{formatBaht(project.budget)}</td>
+                <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-700"><p>{formatBaht(project.budget)}</p><p className="mt-1 text-xs text-slate-500">{budgetCategoryLabel(project.budgetCategory)}</p></td>
                 <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-700">{formatThaiDate(project.startDate)}</td>
                 <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-700">{formatThaiDate(project.processEndDate)}</td>
                 <td className="px-5 py-4 text-right">

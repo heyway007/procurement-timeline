@@ -1,4 +1,5 @@
 import type { ScheduledMilestone } from "@/lib/schedule/types";
+import type { BudgetCategory } from "./budget-category";
 
 export type ScheduleStatus = "NORMAL" | "NEEDS_REVIEW";
 
@@ -7,6 +8,7 @@ export type ProjectRecord = {
   name: string;
   ownerName: string;
   budget: number;
+  budgetCategory: BudgetCategory;
   startDate: string;
   note: string;
   templateKey: string;
@@ -40,6 +42,7 @@ export type CreateProjectInput = {
   name: string;
   ownerName: string;
   budget: number;
+  budgetCategory: BudgetCategory;
   startDate: string;
   note?: string;
 };

@@ -107,6 +107,10 @@ function makeService(
 }
 
 describe("ProjectService", () => {
+  it("rejects a budget category that does not match the actual amount", async () => {
+    const { service } = makeService();
+    await expect(service.create({ name: "โครงการทดสอบ", ownerName: "ผู้รับผิดชอบ", budget: 6_000_000, budgetCategory: "ONE_TO_FIVE_MILLION", startDate: "2026-07-06", note: "" })).rejects.toThrow();
+  });
   it("creates a project with 13 snapshotted milestones", async () => {
     const { service } = makeService();
 
@@ -114,6 +118,7 @@ describe("ProjectService", () => {
       name: "จัดซื้อระบบ",
       ownerName: "คุณสมชาย",
       budget: 29_000_000,
+      budgetCategory: "ABOVE_TWENTY_MILLION",
       startDate: "2026-07-06",
       note: "",
     });
@@ -131,7 +136,8 @@ describe("ProjectService", () => {
       service.create({
         name: "จัดซื้อระบบ",
         ownerName: "คุณสมชาย",
-        budget: 1,
+        budget: 1_000_000,
+        budgetCategory: "ONE_TO_FIVE_MILLION",
         startDate: "2026-07-28",
         note: "",
       }),
@@ -143,7 +149,8 @@ describe("ProjectService", () => {
     const created = await service.create({
       name: "จัดซื้อระบบ",
       ownerName: "คุณสมชาย",
-      budget: 1,
+      budget: 1_000_000,
+      budgetCategory: "ONE_TO_FIVE_MILLION",
       startDate: "2026-07-06",
       note: "",
     });
@@ -166,7 +173,8 @@ describe("ProjectService", () => {
     const created = await service.create({
       name: "จัดซื้อระบบ",
       ownerName: "คุณสมชาย",
-      budget: 1,
+      budget: 1_000_000,
+      budgetCategory: "ONE_TO_FIVE_MILLION",
       startDate: "2026-07-06",
       note: "",
     });
@@ -182,7 +190,8 @@ describe("ProjectService", () => {
     await service.create({
       name: "จัดซื้อระบบ",
       ownerName: "คุณสมชาย",
-      budget: 1,
+      budget: 1_000_000,
+      budgetCategory: "ONE_TO_FIVE_MILLION",
       startDate: "2026-07-06",
       note: "",
     });
@@ -201,7 +210,8 @@ describe("ProjectService", () => {
     const created = await service.create({
       name: "ชื่อเดิม",
       ownerName: "ผู้รับผิดชอบเดิม",
-      budget: 1,
+      budget: 1_000_000,
+      budgetCategory: "ONE_TO_FIVE_MILLION",
       startDate: "2026-07-06",
       note: "",
     });
@@ -209,7 +219,8 @@ describe("ProjectService", () => {
     const changed = await service.updateDetails(created.project.id, {
       name: "ชื่อใหม่",
       ownerName: "ผู้รับผิดชอบใหม่",
-      budget: 2,
+      budget: 2_000_000,
+      budgetCategory: "ONE_TO_FIVE_MILLION",
       startDate: "2026-07-07",
       note: "หมายเหตุใหม่",
       version: created.project.version,
@@ -219,7 +230,7 @@ describe("ProjectService", () => {
     expect(changed).toMatchObject({
       name: "ชื่อใหม่",
       ownerName: "ผู้รับผิดชอบใหม่",
-      budget: 2,
+      budget: 2_000_000,
       startDate: "2026-07-07",
       version: 2,
     });

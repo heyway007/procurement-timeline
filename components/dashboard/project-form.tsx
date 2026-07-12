@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import type { CreateProjectInput } from "@/lib/projects/types";
 import { ApiError } from "@/lib/ui/api-client";
 import { formatThaiDate, isWeekendIso } from "@/lib/ui/date-format";
+import { BUDGET_CATEGORY_OPTIONS, validateBudgetCategory, type BudgetCategory } from "@/lib/projects/budget-category";
 
 type ProjectFormProps = {
   onCancel: () => void;
@@ -26,10 +27,19 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
       return;
     }
     const form = new FormData(event.currentTarget);
+    const budget = Number(form.get("budget"));
+    const budgetCategory = String(form.get("budgetCategory")) as BudgetCategory;
+    try {
+      validateBudgetCategory(budgetCategory, budget);
+    } catch {
+      setError("ประเภทวงเงินไม่ตรงกับวงเงินจริง");
+      return;
+    }
     const input: CreateProjectInput = {
       name: String(form.get("name") ?? ""),
       ownerName: String(form.get("ownerName") ?? ""),
-      budget: Number(form.get("budget")),
+      budget,
+      budgetCategory,
       startDate,
       note: String(form.get("note") ?? ""),
     };
@@ -77,8 +87,15 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
             <input className={fieldClass} name="ownerName" required maxLength={120} />
           </label>
           <label className="text-sm font-medium text-slate-700">
-            วงเงิน (บาท)
-            <input className={fieldClass} name="budget" type="number" min="0" step="0.01" required />
+            ประเภทวงเงิน
+            <select aria-label="ประเภทวงเงิน" className={fieldClass} name="budgetCategory" required defaultValue="">
+              <option value="" disabled>เลือกประเภทวงเงิน</option>
+              {BUDGET_CATEGORY_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+          </label>
+          <label className="text-sm font-medium text-slate-700">
+            วงเงินจริง (บาท)
+            <input aria-label="วงเงินจริง (บาท)" className={fieldClass} name="budget" type="number" min="1000000" step="0.01" required />
           </label>
           <label className="text-sm font-medium text-slate-700 sm:col-span-2">
             วันที่เริ่มต้น

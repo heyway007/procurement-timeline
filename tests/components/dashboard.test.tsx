@@ -10,6 +10,7 @@ const projects: ProjectRecord[] = [
     name: "จัดซื้อระบบสารสนเทศ",
     ownerName: "คุณสมชาย",
     budget: 29_000_000,
+    budgetCategory: "ABOVE_TWENTY_MILLION",
     startDate: "2026-07-06",
     note: "",
     templateKey: "procurement-29m-v1",
@@ -27,6 +28,7 @@ const projects: ProjectRecord[] = [
     name: "จัดซื้อครุภัณฑ์",
     ownerName: "คุณสุดา",
     budget: 1_500_000,
+    budgetCategory: "ONE_TO_FIVE_MILLION",
     startDate: "2026-09-01",
     note: "",
     templateKey: "procurement-29m-v1",
@@ -48,6 +50,7 @@ describe("Dashboard", () => {
     expect(screen.getByText("จัดซื้อระบบสารสนเทศ")).toBeInTheDocument();
     expect(screen.getByText("คุณสมชาย")).toBeInTheDocument();
     expect(screen.getByText(/29,000,000/)).toBeInTheDocument();
+    expect(screen.getByText("มากกว่า 20 ล้านบาท")).toBeInTheDocument();
     expect(screen.getAllByText(/2569/)).toHaveLength(4);
   });
 

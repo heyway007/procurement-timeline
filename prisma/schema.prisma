@@ -28,6 +28,13 @@ enum HolidaySyncStatus {
   FAILED
 }
 
+enum BudgetCategory {
+  ONE_TO_FIVE_MILLION
+  FIVE_TO_TEN_MILLION
+  TEN_TO_TWENTY_MILLION
+  ABOVE_TWENTY_MILLION
+}
+
 model Template {
   id        String         @id @default(uuid()) @db.Uuid
   key       String         @unique
@@ -56,6 +63,7 @@ model Project {
   name                         String
   ownerName                    String
   budget                       Decimal        @db.Decimal(15, 2)
+  budgetCategory               BudgetCategory
   startDate                    DateTime       @db.Date
   note                         String?
   templateId                   String         @db.Uuid

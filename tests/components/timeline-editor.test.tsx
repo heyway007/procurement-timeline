@@ -17,6 +17,7 @@ function projectFixture(): ProjectRecord {
     name: "จัดซื้อระบบสารสนเทศ",
     ownerName: "คุณสมชาย",
     budget: 29_000_000,
+    budgetCategory: "ABOVE_TWENTY_MILLION",
     startDate: "2026-07-06",
     note: "ทดสอบ",
     templateKey: "procurement-29m-v1",
