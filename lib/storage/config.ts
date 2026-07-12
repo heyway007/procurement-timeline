@@ -15,14 +15,14 @@ function required(value: string | undefined): string | null {
   return trimmed ? trimmed : null;
 }
 
-export function storageModeFromEnv(env: NodeJS.ProcessEnv): StorageMode {
+export function storageModeFromEnv(env: Partial<NodeJS.ProcessEnv>): StorageMode {
   const mode = required(env.STORAGE_MODE) ?? "postgres";
   if (mode === "postgres" || mode === "google_drive") return mode;
   throw new Error("STORAGE_MODE_UNSUPPORTED");
 }
 
 export function assertGoogleDriveEnv(
-  env: NodeJS.ProcessEnv,
+  env: Partial<NodeJS.ProcessEnv>,
 ): GoogleDriveStorageConfig {
   const clientEmail = required(env.GOOGLE_DRIVE_CLIENT_EMAIL);
   if (!clientEmail) throw new Error("GOOGLE_DRIVE_CLIENT_EMAIL_NOT_CONFIGURED");

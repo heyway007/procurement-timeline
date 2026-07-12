@@ -51,7 +51,7 @@ describe("GoogleDriveProjectRepository", () => {
     const repository = new GoogleDriveProjectRepository(store());
 
     const first = await repository.create(newProject("City Expo"));
-    const second = await repository.create(newProject("Roadshow"));
+    await repository.create(newProject("Roadshow"));
 
     expect(first.version).toBe(1);
     expect(await repository.findById(first.id)).toMatchObject({ name: "City Expo" });
