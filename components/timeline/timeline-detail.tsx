@@ -255,7 +255,7 @@ export function TimelineDetail({
         <dl className="mt-6 grid gap-4 text-sm sm:grid-cols-3">
           <div><dt className="text-slate-400">ผู้รับผิดชอบ</dt><dd className="mt-1 font-semibold">{project.ownerName}</dd></div>
           <div><dt className="text-slate-400">วงเงิน</dt><dd className="mt-1 font-semibold">{formatBaht(project.budget)}</dd></div>
-          <div><dt className="text-slate-400">สิ้นสุดกระบวนการ</dt><dd className="mt-1 font-semibold">{formatThaiDate(project.processEndDate)}</dd></div>
+          <div><dt className="text-slate-400">วันที่เริ่มทำสัญญา</dt><dd className="mt-1 font-semibold">{formatThaiDate(project.processEndDate)}</dd></div>
         </dl>
       </header>
 
@@ -281,7 +281,7 @@ export function TimelineDetail({
           </div>
         ))}
         <div className="print-grid grid grid-cols-[4rem_1fr_20rem_5rem_7rem] gap-3 border-t-2 border-indigo-100 bg-indigo-50 px-4 py-4 text-sm">
-          <span className="font-semibold text-indigo-700">จบ</span><span className="font-semibold text-slate-900">วันสิ้นสุดกระบวนการ</span><span className="font-semibold text-indigo-800">{formatThaiDateWithWeekday(project.processEndDate)}</span><CalendarPreview iso={project.processEndDate} placement="above" /><span />
+          <span className="font-semibold text-indigo-700">จบ</span><span className="font-semibold text-slate-900">วันที่เริ่มทำสัญญา</span><span className="font-semibold text-indigo-800">{formatThaiDateWithWeekday(project.processEndDate)}</span><CalendarPreview iso={project.processEndDate} placement="above" /><span />
         </div>
       </section>
 

@@ -22,7 +22,7 @@ export function ProjectTable({ projects }: { projects: ProjectRecord[] }) {
               <th className="px-5 py-4">โครงการ</th>
               <th className="px-5 py-4">วงเงิน</th>
               <th className="px-5 py-4">วันเริ่ม</th>
-              <th className="px-5 py-4">วันสิ้นสุด</th>
+              <th className="px-5 py-4">วันที่เริ่มทำสัญญา</th>
               <th className="px-5 py-4"><span className="sr-only">เปิด</span></th>
             </tr>
           </thead>

@@ -37,7 +37,8 @@ describe("TimelineDetail", () => {
     render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
 
     expect(screen.getAllByTestId("timeline-step")).toHaveLength(13);
-    expect(screen.getByText("วันสิ้นสุดกระบวนการ")).toBeInTheDocument();
+    expect(screen.getAllByText("วันที่เริ่มทำสัญญา")).not.toHaveLength(0);
+    expect(screen.queryByText("วันสิ้นสุดกระบวนการ")).not.toBeInTheDocument();
     expect(screen.getByText("จัดซื้อระบบสารสนเทศ")).toBeInTheDocument();
   });
 
