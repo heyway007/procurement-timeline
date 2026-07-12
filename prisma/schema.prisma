@@ -62,6 +62,7 @@ model Project {
   id                           String         @id @default(uuid()) @db.Uuid
   name                         String
   ownerName                    String
+  departmentName               String         @default("")
   budget                       Decimal        @db.Decimal(15, 2)
   budgetCategory               BudgetCategory
   startDate                    DateTime       @db.Date
@@ -79,6 +80,7 @@ model Project {
 
   @@index([name])
   @@index([ownerName])
+  @@index([departmentName])
   @@index([startDate, processEndDate])
 }
 

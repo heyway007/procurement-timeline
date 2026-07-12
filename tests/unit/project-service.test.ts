@@ -120,7 +120,7 @@ describe("ProjectService", () => {
       name: "จัดซื้อระบบ",
       ownerName: "คุณสมชาย",
       budget: 29_000_000,
-      budgetCategory: "ABOVE_TWENTY_MILLION",
+      budgetCategory: "TEN_TO_TWENTY_MILLION",
       startDate: "2026-07-06",
       note: "",
     });
@@ -189,7 +189,7 @@ describe("ProjectService", () => {
       name: "จัดซื้อระบบ",
       ownerName: "คุณสมชาย",
       budget: 29_000_000,
-      budgetCategory: "ABOVE_TWENTY_MILLION",
+      budgetCategory: "TEN_TO_TWENTY_MILLION",
       startDate: "2026-07-06",
       note: "",
     });

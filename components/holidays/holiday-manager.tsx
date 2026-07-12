@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
+import Swal from "sweetalert2";
 import type { HolidayInput, HolidayRecord, HolidayMutation } from "@/lib/holidays/repository";
 import { formatThaiDate } from "@/lib/ui/date-format";
 
@@ -49,11 +50,30 @@ export function HolidayManager({ initialYear = new Date().getFullYear(), initial
 
   async function confirm() {
     if (!preview || !pendingInput) return;
+    const confirmation = await Swal.fire({
+      title: "ยืนยันการบันทึกวันหยุด?",
+      text: `ต้องการบันทึก ${pendingInput.name} และคำนวณ Timeline ที่ได้รับผลกระทบใหม่ใช่หรือไม่`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "ตกลง",
+      cancelButtonText: "ยกเลิก",
+      confirmButtonColor: "#4338ca",
+      cancelButtonColor: "#64748b",
+      reverseButtons: true,
+    });
+    if (!confirmation.isConfirmed) return;
     const response = await fetch("/api/holidays/confirm", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: preview.token }) });
     if (!response.ok) { setError("ไม่สามารถบันทึกวันหยุดได้"); return; }
     const now = new Date().toISOString();
     const created: HolidayRecord = { id: `new-${pendingInput.date}`, ...pendingInput, scope: "NATIONWIDE", origin: "MANUAL", officialSourceUrl: null, officialSourceLabel: null, lastConfirmedAt: null, createdAt: now, updatedAt: now };
     setHolidays((current) => [...current, created].sort((a, b) => a.date.localeCompare(b.date)));
+    await Swal.fire({
+      title: "บันทึกวันหยุดสำเร็จ",
+      text: "บันทึกวันหยุดและคำนวณ Timeline ที่ได้รับผลกระทบแล้ว",
+      icon: "success",
+      confirmButtonText: "ตกลง",
+      confirmButtonColor: "#4338ca",
+    });
     setPreview(undefined); setPendingInput(undefined); setAdding(false);
   }
 

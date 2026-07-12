@@ -13,8 +13,8 @@ describe("budget categories", () => {
     [5_000_001, "FIVE_TO_TEN_MILLION"],
     [10_000_000, "FIVE_TO_TEN_MILLION"],
     [10_000_001, "TEN_TO_TWENTY_MILLION"],
-    [20_000_000, "TEN_TO_TWENTY_MILLION"],
-    [20_000_001, "ABOVE_TWENTY_MILLION"],
+    [50_000_000, "TEN_TO_TWENTY_MILLION"],
+    [50_000_001, "ABOVE_TWENTY_MILLION"],
   ] as const)("maps %s to %s", (amount, expected) => {
     expect(budgetCategoryFor(amount)).toBe(expected);
   });
@@ -31,8 +31,8 @@ describe("budget categories", () => {
     expect(BUDGET_CATEGORY_OPTIONS.map((option) => option.label)).toEqual([
       "1,000,000–5,000,000 บาท",
       "5,000,001–10,000,000 บาท",
-      "10,000,001–20,000,000 บาท",
-      "20,000,001 บาทขึ้นไป",
+      "10,000,001–50,000,000 บาท",
+      "50,000,001 บาทขึ้นไป",
     ]);
     expect(budgetCategoryLabel("FIVE_TO_TEN_MILLION")).toBe(
       "5,000,001–10,000,000 บาท",

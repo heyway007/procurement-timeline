@@ -1,9 +1,27 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import Swal from "sweetalert2";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { HolidayManager } from "@/components/holidays/holiday-manager";
 
+vi.mock("sweetalert2", () => ({
+  default: {
+    fire: vi.fn(),
+  },
+}));
+
+const swalFire = vi.mocked(Swal.fire);
+
 describe("HolidayManager", () => {
+  beforeEach(() => {
+    swalFire.mockReset();
+    swalFire.mockResolvedValue({ isConfirmed: true } as never);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }),
+    );
+  });
+
   it("shows holidays and previews a new holiday before confirming", async () => {
     const user = userEvent.setup();
     const previewMutation = vi.fn().mockResolvedValue({
@@ -50,5 +68,44 @@ describe("HolidayManager", () => {
       },
     });
     expect(screen.getByText(/จัดซื้อระบบ/)).toBeInTheDocument();
+  });
+
+  it("confirms and saves a holiday with SweetAlert confirmation and success", async () => {
+    const user = userEvent.setup();
+    const previewMutation = vi.fn().mockResolvedValue({
+      token: "signed-token",
+      affectedProjects: [{ id: "p1", name: "จัดซื้อระบบ", version: 1 }],
+    });
+    render(
+      <HolidayManager
+        initialYear={2026}
+        initialHolidays={[]}
+        previewMutation={previewMutation}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "เพิ่มวันหยุด" }));
+    await user.type(screen.getByLabelText("วันที่หยุด"), "2026-10-16");
+    await user.type(screen.getByLabelText("ชื่อวันหยุด"), "วันหยุดพิเศษ");
+    await user.type(screen.getByLabelText("แหล่งอ้างอิง"), "มติคณะรัฐมนตรี");
+    await user.click(screen.getByRole("button", { name: "ตรวจสอบผลกระทบ" }));
+    await user.click(screen.getByRole("button", { name: "ยืนยันและคำนวณใหม่" }));
+
+    expect(swalFire).toHaveBeenCalledWith(
+      expect.objectContaining({
+        icon: "question",
+        title: "ยืนยันการบันทึกวันหยุด?",
+      }),
+    );
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/holidays/confirm",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(swalFire).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        icon: "success",
+        title: "บันทึกวันหยุดสำเร็จ",
+      }),
+    );
   });
 });

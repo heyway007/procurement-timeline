@@ -8,7 +8,7 @@ export const APPROVED_TEMPLATE_STEPS = [
     order: 1,
     workingDaysToNext: 4,
     label:
-      "ส่วนงานพัสดุฯ จัดทำรายงานขอซื้อขอจ้าง + คำสั่งแต่งตั้งกรรมการ",
+      "จัดทำรายงานขอซื้อขอจ้าง + คำสั่งแต่งตั้งกรรมการ",
   },
   {
     order: 2,
@@ -23,7 +23,7 @@ export const APPROVED_TEMPLATE_STEPS = [
   {
     order: 4,
     workingDaysToNext: 4,
-    label: "ส่วนงานพัสดุฯ จัดทำเอกสารประกาศ + ประกวดราคา",
+    label: "จัดทำเอกสารประกาศ + ประกวดราคา",
   },
   {
     order: 5,
@@ -61,7 +61,7 @@ export const APPROVED_TEMPLATE_STEPS = [
     order: 11,
     workingDaysToNext: 4,
     label:
-      "ส่วนงานพัสดุฯ จัดทำเอกสารรายงานผลการพิจารณา + ประกาศผู้ชนะ",
+      "จัดทำเอกสารรายงานผลการพิจารณา + ประกาศผู้ชนะ",
   },
   {
     order: 12,
@@ -82,11 +82,18 @@ export function approvedTemplateStepsForBudgetCategory(
   if (budgetCategory === "ONE_TO_FIVE_MILLION") {
     return smallBudgetTemplateSteps();
   }
-  if (budgetCategory !== "FIVE_TO_TEN_MILLION") {
-    return APPROVED_TEMPLATE_STEPS;
+  if (budgetCategory === "FIVE_TO_TEN_MILLION") {
+    return documentPickupDurationTemplate(10);
   }
+  if (budgetCategory === "TEN_TO_TWENTY_MILLION") {
+    return documentPickupDurationTemplate(12);
+  }
+  return documentPickupDurationTemplate(20);
+}
+
+function documentPickupDurationTemplate(workingDaysToNext: number): TemplateStep[] {
   return APPROVED_TEMPLATE_STEPS.map((step) =>
-    step.order === 6 ? { ...step, workingDaysToNext: 10 } : step,
+    step.order === 6 ? { ...step, workingDaysToNext } : step,
   );
 }
 

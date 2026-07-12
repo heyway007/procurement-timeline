@@ -8,6 +8,7 @@ export const isoDateSchema = z
 export const createProjectSchema = z.object({
   name: z.string().trim().min(1, "กรุณาระบุชื่อโครงการ").max(200),
   ownerName: z.string().trim().min(1, "กรุณาระบุผู้รับผิดชอบ").max(120),
+  departmentName: z.string().trim().max(120).optional().default(""),
   budget: z.coerce.number().finite().min(1_000_000, "วงเงินจริงต้องไม่น้อยกว่า 1,000,000 บาท"),
   budgetCategory: z.enum(BUDGET_CATEGORIES),
   startDate: isoDateSchema,

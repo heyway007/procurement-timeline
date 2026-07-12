@@ -40,6 +40,24 @@ describe("schedule engine", () => {
     });
   });
 
+  it("turns a manually adjusted Present milestone into a one-day anchor and recalculates downstream", () => {
+    const presentTemplate: TemplateStep[] = [
+      { order: 1, label: "ขั้นตอน 1", workingDaysToNext: 4 },
+      { order: 2, label: "กำหนดวันเวลาในการ Present (เลือกวันใดวันหนึ่ง)", workingDaysToNext: 3 },
+      { order: 3, label: "ขั้นตอนหลัง Present", workingDaysToNext: 4 },
+    ];
+    const base = buildTimeline(presentTemplate, "2026-07-06", new Set());
+
+    const changed = adjustMilestone(base, 2, "2026-07-14", new Set());
+
+    expect(changed.milestones[1]).toMatchObject({
+      scheduledDate: "2026-07-14",
+      workingDaysToNext: 1,
+      isDateManuallyAdjusted: true,
+    });
+    expect(changed.milestones[2].scheduledDate).toBe("2026-07-15");
+  });
+
   it("allows the final process end milestone to change", () => {
     const base = buildTimeline(template, "2026-07-06", new Set());
     const changed = adjustProcessEnd(base, "2026-07-24", new Set());

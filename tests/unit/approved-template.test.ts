@@ -23,6 +23,14 @@ describe("approved procurement template", () => {
     ]);
   });
 
+  it("does not include the procurement unit prefix in labels", () => {
+    expect(
+      APPROVED_TEMPLATE_STEPS.every(
+        (step) => !step.label.includes("ส่วนงานพัสดุฯ"),
+      ),
+    ).toBe(true);
+  });
+
   it("uses the reduced 1,000,000-5,000,000 baht timeline from the approved image", () => {
     const steps = approvedTemplateStepsForBudgetCategory("ONE_TO_FIVE_MILLION");
 
@@ -40,5 +48,17 @@ describe("approved procurement template", () => {
     expect(steps.some((step) => step.label === APPROVED_TEMPLATE_STEPS[2].label)).toBe(false);
     expect(steps[2].label).toBe(APPROVED_TEMPLATE_STEPS[5].label);
     expect(steps[6].label).toBe(APPROVED_TEMPLATE_STEPS[9].label);
+  });
+
+  it("uses longer document pickup durations for higher budget ranges", () => {
+    expect(
+      approvedTemplateStepsForBudgetCategory("FIVE_TO_TEN_MILLION")[5].workingDaysToNext,
+    ).toBe(10);
+    expect(
+      approvedTemplateStepsForBudgetCategory("TEN_TO_TWENTY_MILLION")[5].workingDaysToNext,
+    ).toBe(12);
+    expect(
+      approvedTemplateStepsForBudgetCategory("ABOVE_TWENTY_MILLION")[5].workingDaysToNext,
+    ).toBe(20);
   });
 });

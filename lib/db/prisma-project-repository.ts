@@ -34,6 +34,7 @@ function mapProject(project: DatabaseProject): ProjectRecord {
     id: project.id,
     name: project.name,
     ownerName: project.ownerName,
+    departmentName: project.departmentName,
     budget: project.budget.toNumber(),
     budgetCategory: project.budgetCategory,
     startDate: toIsoDate(project.startDate),
@@ -60,6 +61,7 @@ function projectData(input: NewProjectRecord | ProjectReplacement) {
   return {
     name: input.name,
     ownerName: input.ownerName,
+    departmentName: input.departmentName ?? "",
     budget: input.budget,
     budgetCategory: input.budgetCategory,
     startDate: fromIsoDate(input.startDate),
@@ -81,6 +83,7 @@ export class PrismaProjectRepository
       where.OR = [
         { name: { contains: filter.query, mode: "insensitive" } },
         { ownerName: { contains: filter.query, mode: "insensitive" } },
+        { departmentName: { contains: filter.query, mode: "insensitive" } },
       ];
     }
     if (filter.from) {

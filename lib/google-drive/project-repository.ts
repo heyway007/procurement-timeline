@@ -112,7 +112,8 @@ function matchesProjectFilter(
   if (
     query &&
     !project.name.toLowerCase().includes(query) &&
-    !project.ownerName.toLowerCase().includes(query)
+    !project.ownerName.toLowerCase().includes(query) &&
+    !(project.departmentName ?? "").toLowerCase().includes(query)
   ) {
     return false;
   }

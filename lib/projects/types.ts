@@ -7,6 +7,7 @@ export type ProjectRecord = {
   id: string;
   name: string;
   ownerName: string;
+  departmentName?: string;
   budget: number;
   budgetCategory: BudgetCategory;
   startDate: string;
@@ -41,6 +42,7 @@ export type ListProjectsFilter = {
 export type CreateProjectInput = {
   name: string;
   ownerName: string;
+  departmentName?: string;
   budget: number;
   budgetCategory: BudgetCategory;
   startDate: string;

@@ -22,15 +22,33 @@ async function requestJson<T>(
     ...init,
     headers: { "Content-Type": "application/json", ...init?.headers },
   });
-  const body = (await response.json()) as T & { code?: string; message?: string };
+  const body = await parseJsonBody<T & { code?: string; message?: string }>(
+    response,
+  );
   if (!response.ok) {
     throw new ApiError(
       body.code ?? "INTERNAL_ERROR",
-      body.message ?? "ระบบขัดข้อง กรุณาลองใหม่อีกครั้ง",
+      body.message ?? genericErrorMessage,
       response.status,
     );
   }
   return body;
+}
+
+const genericErrorMessage = "ระบบขัดข้อง กรุณาลองใหม่อีกครั้ง";
+
+async function parseJsonBody<T>(response: Response): Promise<T> {
+  const contentType = response.headers.get("Content-Type") ?? "";
+  if (!contentType.includes("application/json")) {
+    if (!response.ok) return {} as T;
+    throw new ApiError("INTERNAL_ERROR", genericErrorMessage, response.status);
+  }
+
+  try {
+    return (await response.json()) as T;
+  } catch {
+    throw new ApiError("INTERNAL_ERROR", genericErrorMessage, response.status);
+  }
 }
 
 export async function getProjects(
@@ -104,7 +122,9 @@ export async function deleteProject(id: string, version: number): Promise<void> 
     body: JSON.stringify({ version }),
   });
   if (!response.ok) {
-    const body = (await response.json()) as { code?: string; message?: string };
+    const body = await parseJsonBody<{ code?: string; message?: string }>(
+      response,
+    );
     throw new ApiError(
       body.code ?? "INTERNAL_ERROR",
       body.message ?? "ไม่สามารถลบโครงการได้",

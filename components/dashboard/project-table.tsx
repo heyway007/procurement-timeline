@@ -32,6 +32,7 @@ export function ProjectTable({ projects }: { projects: ProjectRecord[] }) {
                 <td className="px-5 py-4">
                   <p className="font-semibold text-slate-950">{project.name}</p>
                   <p className="mt-1 text-sm text-slate-500">{project.ownerName}</p>
+                  {project.departmentName ? <p className="mt-1 text-xs text-slate-500">{project.departmentName}</p> : null}
                 </td>
                 <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-700"><p>{formatBaht(project.budget)}</p><p className="mt-1 text-xs text-slate-500">{budgetCategoryLabel(project.budgetCategory)}</p></td>
                 <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-700">{formatThaiDate(project.startDate)}</td>

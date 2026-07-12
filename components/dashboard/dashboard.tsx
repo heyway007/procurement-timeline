@@ -30,7 +30,8 @@ export function Dashboard({ initialProjects }: { initialProjects?: ProjectRecord
       const matchesQuery =
         !normalized ||
         project.name.toLocaleLowerCase("th").includes(normalized) ||
-        project.ownerName.toLocaleLowerCase("th").includes(normalized);
+        project.ownerName.toLocaleLowerCase("th").includes(normalized) ||
+        (project.departmentName ?? "").toLocaleLowerCase("th").includes(normalized);
       const overlapsFrom = !from || project.processEndDate >= from;
       const overlapsTo = !to || project.startDate <= to;
       return matchesQuery && overlapsFrom && overlapsTo;
@@ -40,7 +41,6 @@ export function Dashboard({ initialProjects }: { initialProjects?: ProjectRecord
   async function handleCreate(input: CreateProjectInput): Promise<{ id: string }> {
     const result = await createProject(input);
     setProjects((current) => [result.project, ...current]);
-    setCreating(false);
     return { id: result.project.id };
   }
 

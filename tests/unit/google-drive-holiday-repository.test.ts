@@ -88,7 +88,7 @@ describe("GoogleDriveHolidayRepository", () => {
       name: "City Expo",
       ownerName: "POND",
       budget: 29000000,
-      budgetCategory: "ABOVE_TWENTY_MILLION",
+      budgetCategory: "TEN_TO_TWENTY_MILLION",
       startDate: "2026-07-13",
       note: "",
       templateKey: APPROVED_TEMPLATE_KEY,

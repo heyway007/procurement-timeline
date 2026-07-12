@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Swal from "sweetalert2";
 import type { CreateProjectInput } from "@/lib/projects/types";
 import { ApiError } from "@/lib/ui/api-client";
 import { formatThaiDate, isWeekendIso } from "@/lib/ui/date-format";
@@ -13,6 +14,14 @@ type ProjectFormProps = {
 
 const fieldClass =
   "mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none transition focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100";
+
+const DEPARTMENT_OPTIONS = [
+  "ฝ่ายพัสดุ",
+  "ฝ่ายการเงิน",
+  "ฝ่ายบริหารงานทั่วไป",
+  "ฝ่ายแผนงานและงบประมาณ",
+  "ฝ่ายวิชาการ",
+];
 
 export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
   const [pending, setPending] = useState(false);
@@ -38,6 +47,7 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
     const input: CreateProjectInput = {
       name: String(form.get("name") ?? ""),
       ownerName: String(form.get("ownerName") ?? ""),
+      departmentName: String(form.get("departmentName") ?? ""),
       budget,
       budgetCategory,
       startDate,
@@ -46,6 +56,14 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
     setPending(true);
     try {
       await onCreate(input);
+      await Swal.fire({
+        title: "บันทึก Timeline สำเร็จ",
+        text: "สร้าง Timeline โครงการเรียบร้อยแล้ว",
+        icon: "success",
+        confirmButtonText: "ตกลง",
+        confirmButtonColor: "#4338ca",
+      });
+      onCancel();
     } catch (caught: unknown) {
       setError(
         caught instanceof ApiError
@@ -83,8 +101,11 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
             <input className={fieldClass} name="name" required maxLength={200} />
           </label>
           <label className="text-sm font-medium text-slate-700">
-            ผู้รับผิดชอบ
-            <input className={fieldClass} name="ownerName" required maxLength={120} />
+            ฝ่าย
+            <select aria-label="ฝ่าย" className={fieldClass} name="departmentName" required defaultValue="">
+              <option value="" disabled>เลือกฝ่าย</option>
+              {DEPARTMENT_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
+            </select>
           </label>
           <label className="text-sm font-medium text-slate-700">
             ประเภทวงเงิน
@@ -112,6 +133,10 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
                 วันที่ภาษาไทย: {formatThaiDate(startDate)}
               </span>
             ) : null}
+          </label>
+          <label className="text-sm font-medium text-slate-700 sm:col-span-2">
+            ผู้รับผิดชอบ
+            <input className={fieldClass} name="ownerName" required maxLength={120} />
           </label>
           <label className="text-sm font-medium text-slate-700 sm:col-span-2">
             หมายเหตุ

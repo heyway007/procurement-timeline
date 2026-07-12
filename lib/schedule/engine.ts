@@ -9,6 +9,12 @@ import type {
   TemplateStep,
 } from "./types";
 
+const PRESENT_MANUAL_WORKING_DAYS_TO_NEXT = 1;
+
+function isPresentMilestone(label: string): boolean {
+  return label.includes("Present");
+}
+
 export function buildTimeline(
   template: TemplateStep[],
   startDate: string,
@@ -76,6 +82,9 @@ export function adjustMilestone(
   const milestones = timeline.milestones.map((item) => ({ ...item }));
   milestones[index].scheduledDate = newDate;
   milestones[index].isDateManuallyAdjusted = true;
+  if (isPresentMilestone(milestones[index].label)) {
+    milestones[index].workingDaysToNext = PRESENT_MANUAL_WORKING_DAYS_TO_NEXT;
+  }
 
   for (let cursor = index + 1; cursor < milestones.length; cursor += 1) {
     const previous = milestones[cursor - 1];

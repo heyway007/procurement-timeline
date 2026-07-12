@@ -28,6 +28,7 @@ export const googleDriveProjectSchema = z.object({
   id: z.string(),
   name: z.string(),
   ownerName: z.string(),
+  departmentName: z.string().optional(),
   budget: z.number(),
   budgetCategory: z.enum([
     "ONE_TO_FIVE_MILLION",

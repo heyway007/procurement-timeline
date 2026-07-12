@@ -1,6 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import Swal from "sweetalert2";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TimelineDetail } from "@/components/timeline/timeline-detail";
 import {
   APPROVED_TEMPLATE_STEPS,
@@ -8,6 +9,14 @@ import {
 } from "@/lib/schedule/approved-template";
 import { buildTimeline } from "@/lib/schedule/engine";
 import type { ProjectRecord } from "@/lib/projects/types";
+
+vi.mock("sweetalert2", () => ({
+  default: {
+    fire: vi.fn(),
+  },
+}));
+
+const swalFire = vi.mocked(Swal.fire);
 
 function projectFixture(): ProjectRecord {
   const timeline = buildTimeline(
@@ -20,7 +29,7 @@ function projectFixture(): ProjectRecord {
     name: "จัดซื้อระบบสารสนเทศ",
     ownerName: "คุณสมชาย",
     budget: 29_000_000,
-    budgetCategory: "ABOVE_TWENTY_MILLION",
+    budgetCategory: "TEN_TO_TWENTY_MILLION",
     startDate: "2026-07-06",
     note: "ทดสอบ",
     templateKey: "procurement-29m-v1",
@@ -50,7 +59,29 @@ function smallBudgetProjectFixture(): ProjectRecord {
   };
 }
 
+function smallBudgetProjectWithPresentDate(
+  isDateManuallyAdjusted: boolean,
+): ProjectRecord {
+  return {
+    ...smallBudgetProjectFixture(),
+    steps: smallBudgetProjectFixture().steps.map((step) =>
+      step.order === 6
+        ? {
+            ...step,
+            scheduledDate: "2026-07-27",
+            isDateManuallyAdjusted,
+          }
+        : step,
+    ),
+  };
+}
+
 describe("TimelineDetail", () => {
+  beforeEach(() => {
+    swalFire.mockReset();
+    swalFire.mockResolvedValue({ isConfirmed: true } as never);
+  });
+
   it("renders all 13 procurement milestones and process end", () => {
     render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
 
@@ -90,16 +121,17 @@ describe("TimelineDetail", () => {
     expect(screen.getByTestId("calendar-popover")).not.toHaveClass("top-11");
   });
 
-  it("shows date ranges for milestones 3 and 6 only", () => {
+  it("shows date ranges for milestones 3, 6, and the final appeal period", () => {
     render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
 
     const rows = screen.getAllByTestId("timeline-step");
     expect(within(rows[2]).getByText("วันจันทร์ 13 ก.ค. 2569 - วันพุธ 15 ก.ค. 2569")).toBeInTheDocument();
     expect(within(rows[5]).getByText("วันพฤหัสบดี 23 ก.ค. 2569 - วันพุธ 29 ก.ค. 2569")).toBeInTheDocument();
+    expect(within(rows[12]).getByText("วันจันทร์ 17 ส.ค. 2569 - วันอังคาร 25 ส.ค. 2569")).toBeInTheDocument();
     expect(within(rows[1]).getByText("วันศุกร์ 10 ก.ค. 2569")).toBeInTheDocument();
   });
 
-  it("shows small-budget date ranges for document pickup and committee selection", () => {
+  it("shows small-budget date ranges for document pickup, committee selection, and the final appeal period", () => {
     render(<TimelineDetail projectId="project-1" initialProject={smallBudgetProjectFixture()} />);
 
     const rows = screen.getAllByTestId("timeline-step");
@@ -107,8 +139,36 @@ describe("TimelineDetail", () => {
     expect(screen.getByText("29 วันทำการ")).toBeInTheDocument();
     expect(within(rows[2]).getByText("วันจันทร์ 13 ก.ค. 2569 - วันศุกร์ 17 ก.ค. 2569")).toBeInTheDocument();
     expect(within(rows[6]).getByText("วันพฤหัสบดี 23 ก.ค. 2569 - วันอังคาร 28 ก.ค. 2569")).toBeInTheDocument();
+    expect(within(rows[9]).getByText("วันพุธ 5 ส.ค. 2569 - วันพฤหัสบดี 13 ส.ค. 2569")).toBeInTheDocument();
     expect(rows[1]).not.toHaveTextContent(" - ");
     expect(rows[7]).not.toHaveTextContent(" - ");
+  });
+
+  it("shows the automatic Present milestone as the three working days before its date", () => {
+    render(
+      <TimelineDetail
+        projectId="project-1"
+        initialProject={smallBudgetProjectWithPresentDate(false)}
+      />,
+    );
+
+    const rows = screen.getAllByTestId("timeline-step");
+    expect(within(rows[5]).getByText("วันพุธ 22 ก.ค. 2569 - วันศุกร์ 24 ก.ค. 2569")).toBeInTheDocument();
+    expect(within(rows[5]).getByText("3 วันทำการก่อน")).toBeInTheDocument();
+  });
+
+  it("shows a manually adjusted Present milestone as a single working day", () => {
+    render(
+      <TimelineDetail
+        projectId="project-1"
+        initialProject={smallBudgetProjectWithPresentDate(true)}
+      />,
+    );
+
+    const rows = screen.getAllByTestId("timeline-step");
+    expect(within(rows[5]).getByText("วันจันทร์ 27 ก.ค. 2569")).toBeInTheDocument();
+    expect(rows[5]).not.toHaveTextContent(" - ");
+    expect(within(rows[5]).getByText(/1 วันทำการถึงขั้นตอนถัดไป/)).toBeInTheDocument();
   });
 
   it("marks timeline rows for print table layout", () => {
@@ -119,7 +179,38 @@ describe("TimelineDetail", () => {
     expect(screen.getAllByTestId("timeline-step")[0]).toHaveClass("print-grid");
   });
 
-  it("submits a manual date edit for the selected milestone", async () => {
+  it("hides the procurement unit prefix from existing timeline labels", () => {
+    render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
+
+    expect(screen.queryByText(/ส่วนงานพัสดุฯ/)).not.toBeInTheDocument();
+  });
+
+  it("shows the choose-one-day note for automatic Present milestone labels", () => {
+    render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
+
+    expect(screen.getByText("กำหนดวันเวลาในการ Present (เลือกวันใดวันหนึ่ง)")).toBeInTheDocument();
+  });
+
+  it("hides the choose-one-day note after the Present milestone is manually adjusted", () => {
+    render(
+      <TimelineDetail
+        projectId="project-1"
+        initialProject={{
+          ...projectFixture(),
+          steps: projectFixture().steps.map((step) =>
+            step.label.includes("Present")
+              ? { ...step, isDateManuallyAdjusted: true }
+              : step,
+          ),
+        }}
+      />,
+    );
+
+    expect(screen.getByText("กำหนดวันเวลาในการ Present")).toBeInTheDocument();
+    expect(screen.queryByText(/เลือกวันใดวันหนึ่ง/)).not.toBeInTheDocument();
+  });
+
+  it("submits a manual date edit after confirmation, shows success, and then closes the editor", async () => {
     const user = userEvent.setup();
     const onAdjustStep = vi.fn().mockResolvedValue(projectFixture());
     render(
@@ -131,11 +222,133 @@ describe("TimelineDetail", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "แก้วันที่ ขั้นตอนที่ 2" }));
+    expect(screen.getByRole("button", { name: "ตกลง" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "ยืนยันการแก้วันที่" })).not.toBeInTheDocument();
     await user.clear(screen.getByLabelText("วันที่ใหม่"));
     await user.type(screen.getByLabelText("วันที่ใหม่"), "2026-07-14");
-    await user.click(screen.getByRole("button", { name: "ยืนยันการแก้วันที่" }));
+    await user.click(screen.getByRole("button", { name: "ตกลง" }));
 
+    expect(swalFire).toHaveBeenCalledWith(
+      expect.objectContaining({
+        icon: "question",
+        showCancelButton: true,
+      }),
+    );
     expect(onAdjustStep).toHaveBeenCalledWith(2, "2026-07-14", 1, false, false);
+    expect(swalFire).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        icon: "success",
+        title: "แก้วันที่สำเร็จ",
+      }),
+    );
+    expect(screen.queryByRole("heading", { name: "แก้วันที่ขั้นตอนที่ 2" })).not.toBeInTheDocument();
+  });
+
+  it("does not submit a manual date edit when the SweetAlert confirmation is cancelled", async () => {
+    const user = userEvent.setup();
+    const onAdjustStep = vi.fn().mockResolvedValue(projectFixture());
+    swalFire.mockResolvedValueOnce({ isConfirmed: false } as never);
+    render(
+      <TimelineDetail
+        projectId="project-1"
+        initialProject={projectFixture()}
+        onAdjustStep={onAdjustStep}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "แก้วันที่ ขั้นตอนที่ 2" }));
+    await user.clear(screen.getByLabelText("วันที่ใหม่"));
+    await user.type(screen.getByLabelText("วันที่ใหม่"), "2026-07-14");
+    await user.click(screen.getByRole("button", { name: "ตกลง" }));
+
+    expect(swalFire).toHaveBeenCalledOnce();
+    expect(onAdjustStep).not.toHaveBeenCalled();
+  });
+
+  it("explains why a date before the previous milestone cannot be selected before submitting", async () => {
+    const user = userEvent.setup();
+    const onAdjustStep = vi.fn().mockResolvedValue(projectFixture());
+    render(
+      <TimelineDetail
+        projectId="project-1"
+        initialProject={projectFixture()}
+        onAdjustStep={onAdjustStep}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "แก้วันที่ ขั้นตอนที่ 9" }));
+    await user.clear(screen.getByLabelText("วันที่ใหม่"));
+    await user.type(screen.getByLabelText("วันที่ใหม่"), "2026-07-30");
+    await user.click(screen.getByRole("button", { name: "ตกลง" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "เลือกไม่ได้ เพราะวันที่ใหม่ต้องอยู่หลังขั้นตอนที่ 8",
+    );
+    expect(screen.getByRole("alert")).toHaveTextContent("วันศุกร์ 31 ก.ค. 2569");
+    expect(onAdjustStep).not.toHaveBeenCalled();
+  });
+
+  it("resets the schedule with SweetAlert confirmation and success instead of window.confirm", async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, "confirm");
+    const onResetSchedule = vi.fn().mockResolvedValue(projectFixture());
+    render(
+      <TimelineDetail
+        projectId="project-1"
+        initialProject={projectFixture()}
+        onResetSchedule={onResetSchedule}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "คืนค่าตามแม่แบบ" }));
+
+    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(swalFire).toHaveBeenCalledWith(
+      expect.objectContaining({
+        icon: "question",
+        title: "คืนค่าตามแม่แบบ?",
+      }),
+    );
+    expect(onResetSchedule).toHaveBeenCalledWith(1);
+    expect(swalFire).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        icon: "success",
+        title: "คืนค่าสำเร็จ",
+      }),
+    );
+  });
+
+  it("deletes the project with SweetAlert confirmation and success instead of window.confirm", async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, "confirm");
+    const onDeleteProject = vi.fn().mockResolvedValue(undefined);
+    const onNavigateHome = vi.fn();
+    render(
+      <TimelineDetail
+        projectId="project-1"
+        initialProject={projectFixture()}
+        onDeleteProject={onDeleteProject}
+        onNavigateHome={onNavigateHome}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "ลบโครงการ" }));
+
+    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(swalFire).toHaveBeenCalledWith(
+      expect.objectContaining({
+        icon: "warning",
+        title: "ลบโครงการ?",
+      }),
+    );
+    expect(onDeleteProject).toHaveBeenCalledWith(1);
+    expect(swalFire).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        icon: "success",
+        title: "ลบโครงการสำเร็จ",
+      }),
+    );
+    expect(onNavigateHome).toHaveBeenCalledOnce();
   });
 
   it("prints the timeline", async () => {

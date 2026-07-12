@@ -50,6 +50,7 @@ export class ProjectService {
     const project = await this.projects.create({
       name: parsed.name,
       ownerName: parsed.ownerName,
+      departmentName: parsed.departmentName,
       budget: parsed.budget,
       budgetCategory: parsed.budgetCategory,
       startDate: parsed.startDate,
@@ -131,6 +132,7 @@ export class ProjectService {
     const replacement: ProjectReplacement = {
       name: parsed.name,
       ownerName: parsed.ownerName,
+      departmentName: parsed.departmentName,
       budget: parsed.budget,
       budgetCategory: parsed.budgetCategory,
       startDate: timeline.milestones[0].scheduledDate,
@@ -215,6 +217,7 @@ export class ProjectService {
     const replacement: ProjectReplacement = {
       name: project.name,
       ownerName: project.ownerName,
+      departmentName: project.departmentName ?? "",
       budget: project.budget,
       budgetCategory: project.budgetCategory,
       startDate: timeline.milestones[0].scheduledDate,
