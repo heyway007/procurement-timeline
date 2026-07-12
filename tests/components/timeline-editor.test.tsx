@@ -41,6 +41,23 @@ describe("TimelineDetail", () => {
     expect(screen.getByText("จัดซื้อระบบสารสนเทศ")).toBeInTheDocument();
   });
 
+  it("shows weekday dates and a focusable calendar preview", async () => {
+    const user = userEvent.setup();
+    render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
+
+    expect(screen.getByText("ปฏิทิน")).toBeInTheDocument();
+    expect(screen.getByText("วันจันทร์ 6 ก.ค. 2569")).toBeInTheDocument();
+
+    const firstCalendar = screen.getByRole("button", {
+      name: "ดูปฏิทิน วันจันทร์ 6 กรกฎาคม 2569",
+    });
+    await user.click(firstCalendar);
+
+    expect(screen.getByText("กรกฎาคม 2569")).toBeInTheDocument();
+    expect(screen.getByText("วันจันทร์ 6 กรกฎาคม 2569")).toBeInTheDocument();
+    expect(screen.getByLabelText("วันที่เลือก 6")).toBeInTheDocument();
+  });
+
   it("submits a manual date edit for the selected milestone", async () => {
     const user = userEvent.setup();
     const onAdjustStep = vi.fn().mockResolvedValue(projectFixture());
