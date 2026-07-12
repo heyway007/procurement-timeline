@@ -1,6 +1,7 @@
 import { PrismaHolidayRepository } from "@/lib/db/prisma-holiday-repository";
 import { PrismaProjectRepository } from "@/lib/db/prisma-project-repository";
 import { HolidayService } from "./service";
+import { SocHolidaySource } from "./official-source";
 
 let service: HolidayService | undefined;
 
@@ -12,6 +13,7 @@ export function getHolidayService(): HolidayService {
       new PrismaHolidayRepository(),
       new PrismaProjectRepository(),
       secret,
+      new SocHolidaySource(),
     );
   }
   return service;

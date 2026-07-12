@@ -21,6 +21,11 @@ describe("HolidayManager", () => {
             sourceNote: "ประกาศทางการ",
             createdAt: "2026-01-01T00:00:00.000Z",
             updatedAt: "2026-01-01T00:00:00.000Z",
+            scope: "BANGKOK",
+            origin: "OFFICIAL_SYNC",
+            officialSourceUrl: "https://www.soc.go.th/?p=33672",
+            officialSourceLabel: "สำนักเลขาธิการคณะรัฐมนตรี",
+            lastConfirmedAt: "2026-01-01T00:00:00.000Z",
           },
         ]}
         previewMutation={previewMutation}
@@ -34,6 +39,8 @@ describe("HolidayManager", () => {
     await user.type(screen.getByLabelText("แหล่งอ้างอิง"), "มติคณะรัฐมนตรี");
     await user.click(screen.getByRole("button", { name: "ตรวจสอบผลกระทบ" }));
 
+    expect(screen.getByText("กรุงเทพมหานคร")).toBeInTheDocument();
+    expect(screen.getByText("ราชการ")).toBeInTheDocument();
     expect(previewMutation).toHaveBeenCalledWith({
       operation: "create",
       holiday: {

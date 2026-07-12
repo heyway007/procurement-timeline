@@ -12,6 +12,22 @@ enum ScheduleStatus {
   NEEDS_REVIEW
 }
 
+enum HolidayScope {
+  NATIONWIDE
+  BANGKOK
+}
+
+enum HolidayOrigin {
+  MANUAL
+  OFFICIAL_SYNC
+}
+
+enum HolidaySyncStatus {
+  FRESH
+  CACHED
+  FAILED
+}
+
 model Template {
   id        String         @id @default(uuid()) @db.Uuid
   key       String         @unique
@@ -74,12 +90,17 @@ model ProjectStep {
 }
 
 model Holiday {
-  id         String   @id @default(uuid()) @db.Uuid
-  date       DateTime @unique @db.Date
-  name       String
-  sourceNote String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id                  String        @id @default(uuid()) @db.Uuid
+  date                DateTime      @unique @db.Date
+  name                String
+  sourceNote          String
+  scope               HolidayScope  @default(NATIONWIDE)
+  origin              HolidayOrigin @default(MANUAL)
+  officialSourceUrl   String?
+  officialSourceLabel String?
+  lastConfirmedAt     DateTime?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
 }
 
 model HolidayCalendarYear {
@@ -87,6 +108,10 @@ model HolidayCalendarYear {
   isVerifiedComplete Boolean   @default(false)
   sourceNote         String
   verifiedAt         DateTime?
+  lastSyncAttemptAt  DateTime?
+  lastSuccessfulSyncAt DateTime?
+  lastSyncStatus     HolidaySyncStatus?
+  lastSyncMessage    String?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 }

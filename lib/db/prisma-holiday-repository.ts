@@ -2,6 +2,7 @@ import { getPrisma } from "./prisma";
 import { PrismaProjectRepository } from "./prisma-project-repository";
 import type {
   HolidayMutation,
+  OfficialHolidayInput,
   HolidayRecord,
   HolidayRepository,
   YearCoverageRecord,
@@ -44,6 +45,11 @@ export class PrismaHolidayRepository implements HolidayRepository {
         sourceNote: holiday.sourceNote,
         createdAt: holiday.createdAt.toISOString(),
         updatedAt: holiday.updatedAt.toISOString(),
+        scope: holiday.scope,
+        origin: holiday.origin,
+        officialSourceUrl: holiday.officialSourceUrl,
+        officialSourceLabel: holiday.officialSourceLabel,
+        lastConfirmedAt: holiday.lastConfirmedAt?.toISOString() ?? null,
       })),
       coverage: coverage
         ? {
@@ -51,6 +57,10 @@ export class PrismaHolidayRepository implements HolidayRepository {
             isVerifiedComplete: coverage.isVerifiedComplete,
             sourceNote: coverage.sourceNote,
             verifiedAt: coverage.verifiedAt?.toISOString() ?? null,
+            lastSyncAttemptAt: coverage.lastSyncAttemptAt?.toISOString() ?? null,
+            lastSuccessfulSyncAt: coverage.lastSuccessfulSyncAt?.toISOString() ?? null,
+            lastSyncStatus: coverage.lastSyncStatus,
+            lastSyncMessage: coverage.lastSyncMessage,
           }
         : null,
     };
@@ -122,7 +132,65 @@ export class PrismaHolidayRepository implements HolidayRepository {
       year: record.year,
       isVerifiedComplete: record.isVerifiedComplete,
       sourceNote: record.sourceNote,
-      verifiedAt: record.verifiedAt?.toISOString() ?? null,
+        verifiedAt: record.verifiedAt?.toISOString() ?? null,
+      lastSyncAttemptAt: record.lastSyncAttemptAt?.toISOString() ?? null,
+      lastSuccessfulSyncAt: record.lastSuccessfulSyncAt?.toISOString() ?? null,
+      lastSyncStatus: record.lastSyncStatus,
+      lastSyncMessage: record.lastSyncMessage,
     };
+  }
+
+  async reconcileOfficialYear(
+    year: number,
+    holidays: OfficialHolidayInput[],
+    confirmedAt: string,
+  ): Promise<{ inserted: number; updated: number; conflicts: string[] }> {
+    const prisma = getPrisma();
+    const confirmed = new Date(confirmedAt);
+    return prisma.$transaction(async (tx) => {
+      let inserted = 0;
+      let updated = 0;
+      const conflicts: string[] = [];
+      for (const holiday of holidays) {
+        if (!holiday.date.startsWith(`${year}-`)) continue;
+        const date = fromIsoDate(holiday.date);
+        const existing = await tx.holiday.findUnique({ where: { date } });
+        if (existing?.origin === "MANUAL") {
+          conflicts.push(holiday.date);
+          continue;
+        }
+        const data = {
+          name: holiday.name,
+          sourceNote: holiday.sourceLabel,
+          scope: holiday.scope,
+          origin: "OFFICIAL_SYNC" as const,
+          officialSourceUrl: holiday.sourceUrl,
+          officialSourceLabel: holiday.sourceLabel,
+          lastConfirmedAt: confirmed,
+        };
+        if (existing) {
+          await tx.holiday.update({ where: { id: existing.id }, data });
+          updated += 1;
+        } else {
+          await tx.holiday.create({ data: { date, ...data } });
+          inserted += 1;
+        }
+      }
+      await tx.holidayCalendarYear.upsert({
+        where: { year },
+        create: { year, sourceNote: "สำนักเลขาธิการคณะรัฐมนตรี", lastSyncAttemptAt: confirmed, lastSuccessfulSyncAt: confirmed, lastSyncStatus: "FRESH" },
+        update: { lastSyncAttemptAt: confirmed, lastSuccessfulSyncAt: confirmed, lastSyncStatus: "FRESH", lastSyncMessage: null },
+      });
+      return { inserted, updated, conflicts };
+    });
+  }
+
+  async recordSyncFailure(year: number, attemptedAt: string, message: string): Promise<void> {
+    const attempted = new Date(attemptedAt);
+    await getPrisma().holidayCalendarYear.upsert({
+      where: { year },
+      create: { year, sourceNote: "สำนักเลขาธิการคณะรัฐมนตรี", lastSyncAttemptAt: attempted, lastSyncStatus: "FAILED", lastSyncMessage: message },
+      update: { lastSyncAttemptAt: attempted, lastSyncStatus: "FAILED", lastSyncMessage: message },
+    });
   }
 }

@@ -9,6 +9,8 @@ import type {
   YearCoverageRecord,
 } from "./repository";
 import { holidayMutationSchema } from "./schema";
+import type { HolidaySource } from "./official-source";
+import type { HolidayRecord, HolidaySyncStatus } from "./repository";
 
 type PreviewPayload = {
   mutation: HolidayMutation;
@@ -23,12 +25,58 @@ export type HolidayConfirmResult = {
 };
 
 export class HolidayService {
+  private readonly inFlightSyncs = new Map<number, Promise<ReturnType<HolidayService["syncYear"]> extends Promise<infer T> ? T : never>>();
+
   constructor(
     private readonly holidays: HolidayRepository,
     private readonly projects: ProjectRepository,
     private readonly previewSecret: string,
+    private readonly officialSource?: HolidaySource,
   ) {
     if (previewSecret.length < 8) throw new Error("HOLIDAY_PREVIEW_SECRET_TOO_SHORT");
+  }
+
+  async listAndSyncYear(year: number): Promise<{
+    holidays: HolidayRecord[];
+    coverage: YearCoverageRecord | null;
+    conflicts: string[];
+    sync: { status: HolidaySyncStatus; cached: boolean; message: string | null; sourceUrl: string | null; lastSuccessfulSyncAt: string | null };
+  }> {
+    if (!Number.isInteger(year) || year < 2000 || year > 2200) throw new Error("INVALID_CALENDAR_YEAR");
+    const cached = await this.holidays.listYear(year);
+    const lastSuccess = cached.coverage?.lastSuccessfulSyncAt;
+    if (lastSuccess && Date.now() - new Date(lastSuccess).getTime() < 15 * 60 * 1000) {
+      return { ...cached, conflicts: [], sync: { status: "FRESH", cached: true, message: null, sourceUrl: this.safeSourceUrl(year), lastSuccessfulSyncAt: lastSuccess } };
+    }
+    if (!this.officialSource) {
+      return { ...cached, conflicts: [], sync: { status: cached.holidays.length ? "CACHED" : "FAILED", cached: true, message: "ไม่ได้กำหนดแหล่งข้อมูลราชการ", sourceUrl: null, lastSuccessfulSyncAt: lastSuccess ?? null } };
+    }
+    let pending = this.inFlightSyncs.get(year);
+    if (!pending) {
+      pending = this.syncYear(year);
+      this.inFlightSyncs.set(year, pending);
+      void pending.finally(() => this.inFlightSyncs.delete(year));
+    }
+    return pending;
+  }
+
+  private async syncYear(year: number) {
+    const attemptedAt = new Date().toISOString();
+    try {
+      const official = await this.officialSource!.fetchYear(year);
+      const reconciliation = await this.holidays.reconcileOfficialYear(year, official, attemptedAt);
+      const stored = await this.holidays.listYear(year);
+      return { ...stored, conflicts: reconciliation.conflicts, sync: { status: "FRESH" as const, cached: false, message: null, sourceUrl: this.safeSourceUrl(year), lastSuccessfulSyncAt: attemptedAt } };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "OFFICIAL_SOURCE_UNAVAILABLE";
+      await this.holidays.recordSyncFailure(year, attemptedAt, message);
+      const stored = await this.holidays.listYear(year);
+      return { ...stored, conflicts: [], sync: { status: (stored.holidays.length ? "CACHED" : "FAILED") as HolidaySyncStatus, cached: true, message, sourceUrl: this.safeSourceUrl(year), lastSuccessfulSyncAt: stored.coverage?.lastSuccessfulSyncAt ?? null } };
+    }
+  }
+
+  private safeSourceUrl(year: number): string | null {
+    try { return this.officialSource?.sourceUrl(year) ?? null; } catch { return null; }
   }
 
   listYear(year: number) {
