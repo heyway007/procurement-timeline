@@ -6,7 +6,7 @@ import {
 import { countWorkingDayAdditions } from "@/lib/schedule/date";
 import {
   APPROVED_TEMPLATE_KEY,
-  APPROVED_TEMPLATE_STEPS,
+  approvedTemplateStepsForBudgetCategory,
 } from "@/lib/schedule/approved-template";
 import type { ScheduledTimeline } from "@/lib/schedule/types";
 import type { HolidayCalendarReader, ProjectRepository } from "./repository";
@@ -43,7 +43,7 @@ export class ProjectService {
     const parsed = createProjectSchema.parse(input);
     const holidays = await this.calendar.listHolidayDates();
     const timeline = buildTimeline(
-      APPROVED_TEMPLATE_STEPS,
+      approvedTemplateStepsForBudgetCategory(parsed.budgetCategory),
       parsed.startDate,
       holidays,
     );
@@ -114,14 +114,19 @@ export class ProjectService {
     const parsed = createProjectSchema.parse(input);
     const project = await this.get(id);
     this.assertVersion(project, input.version);
+    const templateChanged = parsed.budgetCategory !== project.budgetCategory;
     const startChanged = parsed.startDate !== project.startDate;
-    if (startChanged && !input.confirmReset) {
+    if ((startChanged || templateChanged) && !input.confirmReset) {
       throw new Error("SCHEDULE_RESET_CONFIRMATION_REQUIRED");
     }
 
     const holidays = await this.calendar.listHolidayDates();
-    const timeline = startChanged
-      ? buildTimeline(project.steps, parsed.startDate, holidays)
+    const timeline = startChanged || templateChanged
+      ? buildTimeline(
+          approvedTemplateStepsForBudgetCategory(parsed.budgetCategory),
+          parsed.startDate,
+          holidays,
+        )
       : this.toTimeline(project);
     const replacement: ProjectReplacement = {
       name: parsed.name,

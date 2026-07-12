@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { budgetCategoryFor, validateBudgetCategory } from "@/lib/projects/budget-category";
+import {
+  BUDGET_CATEGORY_OPTIONS,
+  budgetCategoryFor,
+  budgetCategoryLabel,
+  validateBudgetCategory,
+} from "@/lib/projects/budget-category";
 
 describe("budget categories", () => {
   it.each([
@@ -20,5 +25,17 @@ describe("budget categories", () => {
 
   it("rejects a selected category that does not match the actual amount", () => {
     expect(() => validateBudgetCategory("ONE_TO_FIVE_MILLION", 6_000_000)).toThrow("BUDGET_CATEGORY_MISMATCH");
+  });
+
+  it("uses full numeric labels for every budget range", () => {
+    expect(BUDGET_CATEGORY_OPTIONS.map((option) => option.label)).toEqual([
+      "1,000,000–5,000,000 บาท",
+      "5,000,001–10,000,000 บาท",
+      "10,000,001–20,000,000 บาท",
+      "20,000,001 บาทขึ้นไป",
+    ]);
+    expect(budgetCategoryLabel("FIVE_TO_TEN_MILLION")).toBe(
+      "5,000,001–10,000,000 บาท",
+    );
   });
 });

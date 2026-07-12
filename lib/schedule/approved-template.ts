@@ -1,3 +1,4 @@
+import type { BudgetCategory } from "@/lib/projects/budget-category";
 import type { TemplateStep } from "./types";
 
 export const APPROVED_TEMPLATE_KEY = "procurement-29m-v1";
@@ -74,3 +75,14 @@ export const APPROVED_TEMPLATE_STEPS = [
       "ระยะเวลาอุทธรณ์และติดต่อให้ผู้รับจ้างนำส่งเอกสารเพื่อทำสัญญาและวางหลักประกันสัญญา",
   },
 ] satisfies TemplateStep[];
+
+export function approvedTemplateStepsForBudgetCategory(
+  budgetCategory: BudgetCategory,
+): TemplateStep[] {
+  if (budgetCategory !== "FIVE_TO_TEN_MILLION") {
+    return APPROVED_TEMPLATE_STEPS;
+  }
+  return APPROVED_TEMPLATE_STEPS.map((step) =>
+    step.order === 6 ? { ...step, workingDaysToNext: 10 } : step,
+  );
+}

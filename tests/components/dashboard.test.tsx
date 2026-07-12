@@ -50,7 +50,7 @@ describe("Dashboard", () => {
     expect(screen.getByText("จัดซื้อระบบสารสนเทศ")).toBeInTheDocument();
     expect(screen.getByText("คุณสมชาย")).toBeInTheDocument();
     expect(screen.getByText(/29,000,000/)).toBeInTheDocument();
-    expect(screen.getByText("มากกว่า 20 ล้านบาท")).toBeInTheDocument();
+    expect(screen.getByText("20,000,001 บาทขึ้นไป")).toBeInTheDocument();
     expect(screen.getAllByText(/2569/)).toHaveLength(4);
   });
 

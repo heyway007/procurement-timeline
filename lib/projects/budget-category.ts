@@ -8,10 +8,10 @@ export const BUDGET_CATEGORIES = [
 export type BudgetCategory = (typeof BUDGET_CATEGORIES)[number];
 
 export const BUDGET_CATEGORY_OPTIONS: ReadonlyArray<{ value: BudgetCategory; label: string }> = [
-  { value: "ONE_TO_FIVE_MILLION", label: "1–5 ล้านบาท" },
-  { value: "FIVE_TO_TEN_MILLION", label: "5 ล้าน 1 บาท–10 ล้านบาท" },
-  { value: "TEN_TO_TWENTY_MILLION", label: "10 ล้าน 1 บาท–20 ล้านบาท" },
-  { value: "ABOVE_TWENTY_MILLION", label: "มากกว่า 20 ล้านบาท" },
+  { value: "ONE_TO_FIVE_MILLION", label: "1,000,000–5,000,000 บาท" },
+  { value: "FIVE_TO_TEN_MILLION", label: "5,000,001–10,000,000 บาท" },
+  { value: "TEN_TO_TWENTY_MILLION", label: "10,000,001–20,000,000 บาท" },
+  { value: "ABOVE_TWENTY_MILLION", label: "20,000,001 บาทขึ้นไป" },
 ];
 
 export function budgetCategoryFor(amount: number): BudgetCategory {

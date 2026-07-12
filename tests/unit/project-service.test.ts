@@ -129,6 +129,23 @@ describe("ProjectService", () => {
     expect(result.project.templateVersion).toBe(1);
   });
 
+  it("uses a 10-working-day step 6 duration for the 5,000,001-10,000,000 baht category", async () => {
+    const { service } = makeService();
+
+    const result = await service.create({
+      name: "โครงการช่วงสอง",
+      ownerName: "ผู้รับผิดชอบ",
+      budget: 6_000_000,
+      budgetCategory: "FIVE_TO_TEN_MILLION",
+      startDate: "2026-07-06",
+      note: "",
+    });
+
+    expect(result.project.steps.find((step) => step.order === 6)).toMatchObject({
+      workingDaysToNext: 10,
+    });
+  });
+
   it("rejects a configured holiday as the project start", async () => {
     const { service } = makeService(new Set(["2026-07-28"]));
 
