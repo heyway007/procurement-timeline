@@ -92,18 +92,27 @@ export function approvedTemplateStepsForBudgetCategory(
 
 function smallBudgetTemplateSteps(): TemplateStep[] {
   return [
-    stepFromApprovedTemplate(1, 1),
-    stepFromApprovedTemplate(2, 4),
-    stepFromApprovedTemplate(3, 5),
-    stepFromApprovedTemplate(4, 6),
-    stepFromApprovedTemplate(5, 7),
-    stepFromApprovedTemplate(6, 8),
-    stepFromApprovedTemplate(7, 9),
-    stepFromApprovedTemplate(8, 10),
-    stepFromApprovedTemplate(9, 11),
-    stepFromApprovedTemplate(10, 12),
-    stepFromApprovedTemplate(11, 13),
+    mergedSmallBudgetOpeningStep(),
+    stepFromApprovedTemplate(2, 5),
+    stepFromApprovedTemplate(3, 6),
+    stepFromApprovedTemplate(4, 7),
+    stepFromApprovedTemplate(5, 8),
+    stepFromApprovedTemplate(6, 9),
+    stepFromApprovedTemplate(7, 10),
+    stepFromApprovedTemplate(8, 11),
+    stepFromApprovedTemplate(9, 12),
+    stepFromApprovedTemplate(10, 13),
   ];
+}
+
+function mergedSmallBudgetOpeningStep(): TemplateStep {
+  const reportStep = stepFromApprovedTemplate(1, 1);
+  const announcementStep = stepFromApprovedTemplate(1, 4);
+  return {
+    ...reportStep,
+    label: `${reportStep.label} + ${announcementStep.label}`,
+    workingDaysToNext: 4,
+  };
 }
 
 function stepFromApprovedTemplate(order: number, approvedOrder: number): TemplateStep {

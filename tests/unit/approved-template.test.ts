@@ -26,16 +26,19 @@ describe("approved procurement template", () => {
   it("uses the reduced 1,000,000-5,000,000 baht timeline from the approved image", () => {
     const steps = approvedTemplateStepsForBudgetCategory("ONE_TO_FIVE_MILLION");
 
-    expect(steps).toHaveLength(11);
+    expect(steps).toHaveLength(10);
     expect(steps.map((step) => step.workingDaysToNext)).toEqual([
-      4, 4, 1, 5, 1, 1, 1, 4, 4, 1, 7,
+      4, 1, 5, 1, 1, 1, 4, 4, 1, 7,
     ]);
     expect(steps.map((step) => step.order)).toEqual([
-      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
     ]);
-    expect(steps.some((step) => step.label.includes("ประกาศร่าง"))).toBe(false);
-    expect(steps.some((step) => step.label.includes("เผยแพร่ร่าง"))).toBe(false);
-    expect(steps[3].label).toContain("กำหนดขอรับ/ซื้อเอกสาร");
-    expect(steps[7].label).toContain("คณะกรรมการฯ พิจารณาคัดเลือก");
+    expect(steps[0].label).toBe(
+      `${APPROVED_TEMPLATE_STEPS[0].label} + ${APPROVED_TEMPLATE_STEPS[3].label}`,
+    );
+    expect(steps.some((step) => step.label === APPROVED_TEMPLATE_STEPS[1].label)).toBe(false);
+    expect(steps.some((step) => step.label === APPROVED_TEMPLATE_STEPS[2].label)).toBe(false);
+    expect(steps[2].label).toBe(APPROVED_TEMPLATE_STEPS[5].label);
+    expect(steps[6].label).toBe(APPROVED_TEMPLATE_STEPS[9].label);
   });
 });

@@ -158,9 +158,9 @@ describe("ProjectService", () => {
       note: "",
     });
 
-    expect(result.project.steps).toHaveLength(11);
+    expect(result.project.steps).toHaveLength(10);
     expect(result.project.steps.map((step) => step.workingDaysToNext)).toEqual([
-      4, 4, 1, 5, 1, 1, 1, 4, 4, 1, 7,
+      4, 1, 5, 1, 1, 1, 4, 4, 1, 7,
     ]);
     expect(result.project.steps.some((step) => step.label.includes("ประกาศร่าง"))).toBe(false);
     expect(result.project.steps.some((step) => step.label.includes("เผยแพร่ร่าง"))).toBe(false);

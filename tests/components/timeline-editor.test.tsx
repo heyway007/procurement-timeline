@@ -55,6 +55,8 @@ describe("TimelineDetail", () => {
     render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
 
     expect(screen.getAllByTestId("timeline-step")).toHaveLength(13);
+    expect(screen.getByText("37 วันทำการ")).toBeInTheDocument();
+    expect(screen.getByTestId("print-owner")).toHaveClass("print-hidden");
     expect(screen.getAllByText("วันที่เริ่มทำสัญญา")).not.toHaveLength(0);
     expect(screen.queryByText("วันสิ้นสุดกระบวนการ")).not.toBeInTheDocument();
     expect(screen.getByText("จัดซื้อระบบสารสนเทศ")).toBeInTheDocument();
@@ -101,9 +103,12 @@ describe("TimelineDetail", () => {
     render(<TimelineDetail projectId="project-1" initialProject={smallBudgetProjectFixture()} />);
 
     const rows = screen.getAllByTestId("timeline-step");
-    expect(rows).toHaveLength(11);
-    expect(within(rows[3]).getByText("วันศุกร์ 17 ก.ค. 2569 - วันพฤหัสบดี 23 ก.ค. 2569")).toBeInTheDocument();
-    expect(within(rows[7]).getByText("วันพุธ 29 ก.ค. 2569 - วันจันทร์ 3 ส.ค. 2569")).toBeInTheDocument();
+    expect(rows).toHaveLength(10);
+    expect(screen.getByText("29 วันทำการ")).toBeInTheDocument();
+    expect(within(rows[2]).getByText("วันจันทร์ 13 ก.ค. 2569 - วันศุกร์ 17 ก.ค. 2569")).toBeInTheDocument();
+    expect(within(rows[6]).getByText("วันพฤหัสบดี 23 ก.ค. 2569 - วันอังคาร 28 ก.ค. 2569")).toBeInTheDocument();
+    expect(rows[1]).not.toHaveTextContent(" - ");
+    expect(rows[7]).not.toHaveTextContent(" - ");
   });
 
   it("marks timeline rows for print table layout", () => {
