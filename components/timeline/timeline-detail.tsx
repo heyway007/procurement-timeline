@@ -245,11 +245,11 @@ export function TimelineDetail({
   if (!project) return <p className="p-10 text-center text-rose-700">{error || "ไม่พบโครงการ"}</p>;
 
   return (
-    <main className="mx-auto min-h-screen max-w-6xl px-4 py-8 sm:px-6">
+    <main className="print-page mx-auto min-h-screen max-w-6xl px-4 py-8 sm:px-6">
       <nav className="print-hidden mb-6">
         <Link href="/" className="font-semibold text-indigo-700">← กลับหน้าโครงการ</Link>
       </nav>
-      <header className="rounded-3xl bg-slate-950 p-6 text-white shadow-xl sm:p-8">
+      <header className="print-header rounded-3xl bg-slate-950 p-6 text-white shadow-xl sm:p-8">
         <p className="text-sm font-semibold text-indigo-300">Timeline โครงการ</p>
         <h1 className="mt-2 text-3xl font-semibold">{project.name}</h1>
         <dl className="mt-6 grid gap-4 text-sm sm:grid-cols-3">
@@ -264,12 +264,12 @@ export function TimelineDetail({
       ) : null}
       {error ? <p role="alert" className="mt-5 rounded-xl bg-rose-50 px-4 py-3 text-rose-800">{error}</p> : null}
 
-      <section className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="grid grid-cols-[4rem_1fr_20rem_5rem_7rem] gap-3 bg-slate-100 px-4 py-3 text-xs font-semibold text-slate-600">
+      <section data-testid="timeline-table" className="print-table mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div data-testid="timeline-header-row" className="print-grid grid grid-cols-[4rem_1fr_20rem_5rem_7rem] gap-3 bg-slate-100 px-4 py-3 text-xs font-semibold text-slate-600">
           <span>ลำดับ</span><span>ขั้นตอน</span><span>วันที่กำหนด</span><span className="print-hidden">ปฏิทิน</span><span className="print-hidden">จัดการ</span>
         </div>
         {project.steps.map((step, index) => (
-          <div data-testid="timeline-step" key={step.order} className="grid grid-cols-[4rem_1fr_20rem_5rem_7rem] gap-3 border-t border-slate-100 px-4 py-4 text-sm">
+          <div data-testid="timeline-step" key={step.order} className="print-grid grid grid-cols-[4rem_1fr_20rem_5rem_7rem] gap-3 border-t border-slate-100 px-4 py-4 text-sm">
             <span className="font-semibold text-indigo-700">{step.order}</span>
             <div>
               <p className="font-medium text-slate-900">{step.label}</p>
@@ -280,7 +280,7 @@ export function TimelineDetail({
             <button className="print-hidden h-9 rounded-lg border border-slate-300 font-semibold text-slate-700" type="button" aria-label={`แก้วันที่ ขั้นตอนที่ ${step.order}`} onClick={() => { setEditingOrder(step.order); setNewDate(step.scheduledDate); }}>แก้วันที่</button>
           </div>
         ))}
-        <div className="grid grid-cols-[4rem_1fr_20rem_5rem_7rem] gap-3 border-t-2 border-indigo-100 bg-indigo-50 px-4 py-4 text-sm">
+        <div className="print-grid grid grid-cols-[4rem_1fr_20rem_5rem_7rem] gap-3 border-t-2 border-indigo-100 bg-indigo-50 px-4 py-4 text-sm">
           <span className="font-semibold text-indigo-700">จบ</span><span className="font-semibold text-slate-900">วันสิ้นสุดกระบวนการ</span><span className="font-semibold text-indigo-800">{formatThaiDateWithWeekday(project.processEndDate)}</span><CalendarPreview iso={project.processEndDate} placement="above" /><span />
         </div>
       </section>

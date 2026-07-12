@@ -78,6 +78,14 @@ describe("TimelineDetail", () => {
     expect(within(rows[1]).getByText("วันศุกร์ 10 ก.ค. 2569")).toBeInTheDocument();
   });
 
+  it("marks timeline rows for print table layout", () => {
+    render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
+
+    expect(screen.getByTestId("timeline-table")).toHaveClass("print-table");
+    expect(screen.getByTestId("timeline-header-row")).toHaveClass("print-grid");
+    expect(screen.getAllByTestId("timeline-step")[0]).toHaveClass("print-grid");
+  });
+
   it("submits a manual date edit for the selected milestone", async () => {
     const user = userEvent.setup();
     const onAdjustStep = vi.fn().mockResolvedValue(projectFixture());

@@ -28,19 +28,95 @@ select {
 
 @media print {
   @page {
-    size: A4 portrait;
-    margin: 12mm;
+    size: A4 landscape;
+    margin: 8mm;
+  }
+
+  html {
+    font-size: 10px;
   }
 
   body {
-    background: white;
+    min-height: auto;
+    background: white !important;
+    color: #0f172a;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   .print-hidden {
     display: none !important;
   }
 
+  .print-page {
+    min-height: auto !important;
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  .print-header {
+    margin-bottom: 5mm !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 0 !important;
+    background: white !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    padding: 5mm !important;
+  }
+
+  .print-header p,
+  .print-header dt {
+    color: #475569 !important;
+  }
+
+  .print-header h1 {
+    margin-top: 1mm !important;
+    font-size: 18px !important;
+    line-height: 1.2 !important;
+    color: #0f172a !important;
+  }
+
+  .print-header dl {
+    margin-top: 4mm !important;
+    gap: 4mm !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .print-table {
+    margin-top: 0 !important;
+    overflow: visible !important;
+    border: 1px solid #94a3b8 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .print-grid {
+    display: grid !important;
+    grid-template-columns: 12mm minmax(0, 1fr) 72mm !important;
+    gap: 4mm !important;
+    align-items: start !important;
+    padding: 2.4mm 3mm !important;
+    border-color: #cbd5e1 !important;
+    font-size: 10px !important;
+    line-height: 1.35 !important;
+  }
+
+  .print-grid:first-child {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+    font-weight: 700 !important;
+  }
+
+  .print-grid p {
+    margin: 0 !important;
+  }
+
+  .print-grid p + p {
+    margin-top: 1mm !important;
+  }
+
   [data-testid="timeline-step"] {
     break-inside: avoid;
+    page-break-inside: avoid;
   }
 }
