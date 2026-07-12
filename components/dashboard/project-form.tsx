@@ -94,8 +94,8 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
             </select>
           </label>
           <label className="text-sm font-medium text-slate-700">
-            วงเงินจริง (บาท)
-            <input aria-label="วงเงินจริง (บาท)" className={fieldClass} name="budget" type="number" min="1000000" step="0.01" required />
+            วงเงินจัดจ้าง (บาท)
+            <input aria-label="วงเงินจัดจ้าง (บาท)" className={fieldClass} name="budget" type="number" min="1000000" step="0.01" required />
           </label>
           <label className="text-sm font-medium text-slate-700 sm:col-span-2">
             วันที่เริ่มต้น

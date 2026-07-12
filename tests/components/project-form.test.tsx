@@ -7,7 +7,7 @@ async function fillBase(user: ReturnType<typeof userEvent.setup>, budget = "2900
   await user.type(screen.getByLabelText("ชื่อโครงการ"), "จัดซื้อระบบ");
   await user.type(screen.getByLabelText("ผู้รับผิดชอบ"), "คุณสมชาย");
   await user.selectOptions(screen.getByLabelText("ประเภทวงเงิน"), "ABOVE_TWENTY_MILLION");
-  await user.type(screen.getByLabelText("วงเงินจริง (บาท)"), budget);
+  await user.type(screen.getByLabelText("วงเงินจัดจ้าง (บาท)"), budget);
 }
 
 describe("ProjectForm", () => {
