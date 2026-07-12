@@ -34,7 +34,13 @@ type TimelineDetailProps = {
   onAdjustStep?: AdjustStep;
 };
 
-function CalendarPreview({ iso }: { iso: string }) {
+function CalendarPreview({
+  iso,
+  placement = "below",
+}: {
+  iso: string;
+  placement?: "above" | "below";
+}) {
   const [open, setOpen] = useState(false);
   const fullDate = formatThaiFullDateWithWeekday(iso);
   const monthYear = formatThaiMonthYear(iso);
@@ -57,7 +63,13 @@ function CalendarPreview({ iso }: { iso: string }) {
         {Number(iso.slice(8, 10))}
       </button>
       {open ? (
-        <div className="absolute right-0 top-11 z-20 w-72 rounded-2xl border border-slate-200 bg-white p-4 text-slate-900 shadow-2xl">
+        <div
+          data-testid="calendar-popover"
+          className={[
+            "absolute right-0 z-20 w-72 rounded-2xl border border-slate-200 bg-white p-4 text-slate-900 shadow-2xl",
+            placement === "above" ? "bottom-11" : "top-11",
+          ].join(" ")}
+        >
           <p className="text-sm font-semibold">{fullDate}</p>
           <p className="mt-4 text-base font-semibold">{monthYear}</p>
           <div className="mt-4 grid grid-cols-7 gap-1 text-center text-xs font-semibold text-slate-500">
@@ -214,12 +226,12 @@ export function TimelineDetail({
               <p className="mt-1 text-xs text-slate-500">{step.workingDaysToNext} วันทำการถึงขั้นตอนถัดไป {step.isDateManuallyAdjusted ? "· ปรับกำหนดการ" : ""}</p>
             </div>
             <span className="font-medium text-slate-700">{formatThaiDateWithWeekday(step.scheduledDate)}</span>
-            <CalendarPreview iso={step.scheduledDate} />
+            <CalendarPreview iso={step.scheduledDate} placement={step.order >= 10 ? "above" : "below"} />
             <button className="print-hidden h-9 rounded-lg border border-slate-300 font-semibold text-slate-700" type="button" aria-label={`แก้วันที่ ขั้นตอนที่ ${step.order}`} onClick={() => { setEditingOrder(step.order); setNewDate(step.scheduledDate); }}>แก้วันที่</button>
           </div>
         ))}
         <div className="grid grid-cols-[4rem_1fr_11rem_5rem_7rem] gap-3 border-t-2 border-indigo-100 bg-indigo-50 px-4 py-4 text-sm">
-          <span className="font-semibold text-indigo-700">จบ</span><span className="font-semibold text-slate-900">วันสิ้นสุดกระบวนการ</span><span className="font-semibold text-indigo-800">{formatThaiDateWithWeekday(project.processEndDate)}</span><CalendarPreview iso={project.processEndDate} /><span />
+          <span className="font-semibold text-indigo-700">จบ</span><span className="font-semibold text-slate-900">วันสิ้นสุดกระบวนการ</span><span className="font-semibold text-indigo-800">{formatThaiDateWithWeekday(project.processEndDate)}</span><CalendarPreview iso={project.processEndDate} placement="above" /><span />
         </div>
       </section>
 

@@ -58,6 +58,17 @@ describe("TimelineDetail", () => {
     expect(screen.getByLabelText("วันที่เลือก 6")).toBeInTheDocument();
   });
 
+  it("opens late milestone calendar previews upward", async () => {
+    const user = userEvent.setup();
+    render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
+
+    const calendarButtons = screen.getAllByRole("button", { name: /ปฏิทิน/ });
+    await user.click(calendarButtons[11]);
+
+    expect(screen.getByTestId("calendar-popover")).toHaveClass("bottom-11");
+    expect(screen.getByTestId("calendar-popover")).not.toHaveClass("top-11");
+  });
+
   it("submits a manual date edit for the selected milestone", async () => {
     const user = userEvent.setup();
     const onAdjustStep = vi.fn().mockResolvedValue(projectFixture());
