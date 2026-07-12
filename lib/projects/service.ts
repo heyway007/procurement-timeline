@@ -181,7 +181,11 @@ export class ProjectService {
     const project = await this.get(id);
     this.assertVersion(project, version);
     const holidays = await this.calendar.listHolidayDates();
-    const timeline = buildTimeline(project.steps, project.startDate, holidays);
+    const timeline = buildTimeline(
+      approvedTemplateStepsForBudgetCategory(project.budgetCategory),
+      project.startDate,
+      holidays,
+    );
     return this.replaceTimeline(project, timeline, version);
   }
 

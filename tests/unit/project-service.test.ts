@@ -5,6 +5,8 @@ import type {
   ProjectRepository,
 } from "@/lib/projects/repository";
 import { ProjectService } from "@/lib/projects/service";
+import { APPROVED_TEMPLATE_STEPS } from "@/lib/schedule/approved-template";
+import { buildTimeline } from "@/lib/schedule/engine";
 import type {
   ListProjectsFilter,
   NewProjectRecord,
@@ -220,6 +222,51 @@ describe("ProjectService", () => {
     await expect(
       service.resetSchedule(created.project.id, created.project.version),
     ).rejects.toThrow("PROJECT_VERSION_CONFLICT");
+  });
+
+  it("resets an old snapshotted small-budget timeline to the latest 10-step template", async () => {
+    const { service, repository } = makeService();
+    const oldTimeline = buildTimeline(
+      [
+        { ...APPROVED_TEMPLATE_STEPS[0], order: 1 },
+        { ...APPROVED_TEMPLATE_STEPS[3], order: 2 },
+        { ...APPROVED_TEMPLATE_STEPS[4], order: 3 },
+        { ...APPROVED_TEMPLATE_STEPS[5], order: 4 },
+        { ...APPROVED_TEMPLATE_STEPS[6], order: 5 },
+        { ...APPROVED_TEMPLATE_STEPS[7], order: 6 },
+        { ...APPROVED_TEMPLATE_STEPS[8], order: 7 },
+        { ...APPROVED_TEMPLATE_STEPS[9], order: 8 },
+        { ...APPROVED_TEMPLATE_STEPS[10], order: 9 },
+        { ...APPROVED_TEMPLATE_STEPS[11], order: 10 },
+        { ...APPROVED_TEMPLATE_STEPS[12], order: 11 },
+      ],
+      "2026-07-06",
+      new Set(),
+    );
+    const oldProject = await repository.create({
+      name: "โครงการแม่แบบเก่า",
+      ownerName: "ผู้รับผิดชอบ",
+      budget: 2_000_000,
+      budgetCategory: "ONE_TO_FIVE_MILLION",
+      startDate: "2026-07-06",
+      note: "",
+      templateKey: "procurement-29m-v1",
+      templateVersion: 1,
+      processEndDate: oldTimeline.processEndDate,
+      isProcessEndManuallyAdjusted: false,
+      scheduleStatus: "NORMAL",
+      steps: oldTimeline.milestones,
+    });
+
+    const reset = await service.resetSchedule(oldProject.id, oldProject.version);
+
+    expect(reset.steps).toHaveLength(10);
+    expect(reset.steps.map((step) => step.workingDaysToNext)).toEqual([
+      4, 1, 5, 1, 1, 1, 4, 4, 1, 7,
+    ]);
+    expect(reset.steps.map((step) => step.order)).toEqual([
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+    ]);
   });
 
   it("searches by owner and date overlap", async () => {
