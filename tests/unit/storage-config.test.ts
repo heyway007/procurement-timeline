@@ -41,6 +41,17 @@ describe("storage config", () => {
     });
   });
 
+  it("supports base64-encoded private keys for hosted secrets", () => {
+    const privateKey = "-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----\n";
+    const config = assertGoogleDriveEnv({
+      GOOGLE_DRIVE_CLIENT_EMAIL: "timeline@example.iam.gserviceaccount.com",
+      GOOGLE_DRIVE_PRIVATE_KEY_BASE64: Buffer.from(privateKey, "utf8").toString("base64"),
+      GOOGLE_DRIVE_FILE_ID: "drive-file-id",
+    });
+
+    expect(config.privateKey).toBe(privateKey);
+  });
+
   it("requires service account credentials in google drive mode", () => {
     expect(() => assertGoogleDriveEnv({ GOOGLE_DRIVE_FILE_ID: "file" })).toThrow(
       "GOOGLE_DRIVE_CLIENT_EMAIL_NOT_CONFIGURED",

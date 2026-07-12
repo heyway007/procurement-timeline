@@ -27,7 +27,9 @@ export function assertGoogleDriveEnv(
   const clientEmail = required(env.GOOGLE_DRIVE_CLIENT_EMAIL);
   if (!clientEmail) throw new Error("GOOGLE_DRIVE_CLIENT_EMAIL_NOT_CONFIGURED");
 
-  const rawPrivateKey = required(env.GOOGLE_DRIVE_PRIVATE_KEY);
+  const rawPrivateKey =
+    required(env.GOOGLE_DRIVE_PRIVATE_KEY) ??
+    decodeBase64PrivateKey(required(env.GOOGLE_DRIVE_PRIVATE_KEY_BASE64));
   if (!rawPrivateKey) throw new Error("GOOGLE_DRIVE_PRIVATE_KEY_NOT_CONFIGURED");
 
   const fileId = required(env.GOOGLE_DRIVE_FILE_ID);
@@ -44,4 +46,9 @@ export function assertGoogleDriveEnv(
     fileName:
       required(env.GOOGLE_DRIVE_FILE_NAME) ?? DEFAULT_GOOGLE_DRIVE_FILE_NAME,
   };
+}
+
+function decodeBase64PrivateKey(value: string | null): string | null {
+  if (!value) return null;
+  return Buffer.from(value, "base64").toString("utf8");
 }
