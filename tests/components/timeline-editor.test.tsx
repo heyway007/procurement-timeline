@@ -2,7 +2,10 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { TimelineDetail } from "@/components/timeline/timeline-detail";
-import { APPROVED_TEMPLATE_STEPS } from "@/lib/schedule/approved-template";
+import {
+  APPROVED_TEMPLATE_STEPS,
+  approvedTemplateStepsForBudgetCategory,
+} from "@/lib/schedule/approved-template";
 import { buildTimeline } from "@/lib/schedule/engine";
 import type { ProjectRecord } from "@/lib/projects/types";
 
@@ -28,6 +31,21 @@ function projectFixture(): ProjectRecord {
     version: 1,
     createdAt: "2026-07-12T00:00:00.000Z",
     updatedAt: "2026-07-12T00:00:00.000Z",
+    steps: timeline.milestones,
+  };
+}
+
+function smallBudgetProjectFixture(): ProjectRecord {
+  const timeline = buildTimeline(
+    approvedTemplateStepsForBudgetCategory("ONE_TO_FIVE_MILLION"),
+    "2026-07-06",
+    new Set(),
+  );
+  return {
+    ...projectFixture(),
+    budget: 2_000_000,
+    budgetCategory: "ONE_TO_FIVE_MILLION",
+    processEndDate: timeline.processEndDate,
     steps: timeline.milestones,
   };
 }
@@ -77,6 +95,15 @@ describe("TimelineDetail", () => {
     expect(within(rows[2]).getByText("วันจันทร์ 13 ก.ค. 2569 - วันพุธ 15 ก.ค. 2569")).toBeInTheDocument();
     expect(within(rows[5]).getByText("วันพฤหัสบดี 23 ก.ค. 2569 - วันพุธ 29 ก.ค. 2569")).toBeInTheDocument();
     expect(within(rows[1]).getByText("วันศุกร์ 10 ก.ค. 2569")).toBeInTheDocument();
+  });
+
+  it("shows small-budget date ranges for document pickup and committee selection", () => {
+    render(<TimelineDetail projectId="project-1" initialProject={smallBudgetProjectFixture()} />);
+
+    const rows = screen.getAllByTestId("timeline-step");
+    expect(rows).toHaveLength(11);
+    expect(within(rows[3]).getByText("วันศุกร์ 17 ก.ค. 2569 - วันพฤหัสบดี 23 ก.ค. 2569")).toBeInTheDocument();
+    expect(within(rows[7]).getByText("วันพุธ 29 ก.ค. 2569 - วันจันทร์ 3 ส.ค. 2569")).toBeInTheDocument();
   });
 
   it("marks timeline rows for print table layout", () => {

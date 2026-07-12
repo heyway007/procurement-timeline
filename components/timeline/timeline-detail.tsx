@@ -108,7 +108,10 @@ function collectTimelineYears(project: ProjectRecord): number[] {
   return [...new Set(dates.map((date) => Number(date.slice(0, 4))))].sort();
 }
 
-function isDateRangeMilestone(order: number): boolean {
+function isDateRangeMilestone(project: ProjectRecord, order: number): boolean {
+  if (project.budgetCategory === "ONE_TO_FIVE_MILLION") {
+    return order === 4 || order === 8;
+  }
   return order === 3 || order === 6;
 }
 
@@ -157,7 +160,7 @@ export function TimelineDetail({
     const step = project?.steps[stepIndex];
     const nextStep = project?.steps[stepIndex + 1];
     if (!step) return "";
-    if (!nextStep || !isDateRangeMilestone(step.order)) {
+    if (!nextStep || !isDateRangeMilestone(project, step.order)) {
       return formatThaiDateWithWeekday(step.scheduledDate);
     }
 

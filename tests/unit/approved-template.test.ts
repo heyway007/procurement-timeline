@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { APPROVED_TEMPLATE_STEPS } from "@/lib/schedule/approved-template";
+import {
+  APPROVED_TEMPLATE_STEPS,
+  approvedTemplateStepsForBudgetCategory,
+} from "@/lib/schedule/approved-template";
 
 describe("approved procurement template", () => {
   it("contains 13 steps whose outgoing durations total 37", () => {
@@ -18,5 +21,21 @@ describe("approved procurement template", () => {
     expect(APPROVED_TEMPLATE_STEPS.map((step) => step.order)).toEqual([
       1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
     ]);
+  });
+
+  it("uses the reduced 1,000,000-5,000,000 baht timeline from the approved image", () => {
+    const steps = approvedTemplateStepsForBudgetCategory("ONE_TO_FIVE_MILLION");
+
+    expect(steps).toHaveLength(11);
+    expect(steps.map((step) => step.workingDaysToNext)).toEqual([
+      4, 4, 1, 5, 1, 1, 1, 4, 4, 1, 7,
+    ]);
+    expect(steps.map((step) => step.order)).toEqual([
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+    ]);
+    expect(steps.some((step) => step.label.includes("ประกาศร่าง"))).toBe(false);
+    expect(steps.some((step) => step.label.includes("เผยแพร่ร่าง"))).toBe(false);
+    expect(steps[3].label).toContain("กำหนดขอรับ/ซื้อเอกสาร");
+    expect(steps[7].label).toContain("คณะกรรมการฯ พิจารณาคัดเลือก");
   });
 });

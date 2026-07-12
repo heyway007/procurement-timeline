@@ -79,10 +79,35 @@ export const APPROVED_TEMPLATE_STEPS = [
 export function approvedTemplateStepsForBudgetCategory(
   budgetCategory: BudgetCategory,
 ): TemplateStep[] {
+  if (budgetCategory === "ONE_TO_FIVE_MILLION") {
+    return smallBudgetTemplateSteps();
+  }
   if (budgetCategory !== "FIVE_TO_TEN_MILLION") {
     return APPROVED_TEMPLATE_STEPS;
   }
   return APPROVED_TEMPLATE_STEPS.map((step) =>
     step.order === 6 ? { ...step, workingDaysToNext: 10 } : step,
   );
+}
+
+function smallBudgetTemplateSteps(): TemplateStep[] {
+  return [
+    stepFromApprovedTemplate(1, 1),
+    stepFromApprovedTemplate(2, 4),
+    stepFromApprovedTemplate(3, 5),
+    stepFromApprovedTemplate(4, 6),
+    stepFromApprovedTemplate(5, 7),
+    stepFromApprovedTemplate(6, 8),
+    stepFromApprovedTemplate(7, 9),
+    stepFromApprovedTemplate(8, 10),
+    stepFromApprovedTemplate(9, 11),
+    stepFromApprovedTemplate(10, 12),
+    stepFromApprovedTemplate(11, 13),
+  ];
+}
+
+function stepFromApprovedTemplate(order: number, approvedOrder: number): TemplateStep {
+  const source = APPROVED_TEMPLATE_STEPS.find((step) => step.order === approvedOrder);
+  if (!source) throw new Error("APPROVED_TEMPLATE_STEP_NOT_FOUND");
+  return { ...source, order };
 }

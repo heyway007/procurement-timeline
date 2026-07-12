@@ -146,6 +146,26 @@ describe("ProjectService", () => {
     });
   });
 
+  it("creates the reduced 1,000,000-5,000,000 baht category timeline", async () => {
+    const { service } = makeService();
+
+    const result = await service.create({
+      name: "โครงการช่วงหนึ่ง",
+      ownerName: "ผู้รับผิดชอบ",
+      budget: 2_000_000,
+      budgetCategory: "ONE_TO_FIVE_MILLION",
+      startDate: "2026-07-06",
+      note: "",
+    });
+
+    expect(result.project.steps).toHaveLength(11);
+    expect(result.project.steps.map((step) => step.workingDaysToNext)).toEqual([
+      4, 4, 1, 5, 1, 1, 1, 4, 4, 1, 7,
+    ]);
+    expect(result.project.steps.some((step) => step.label.includes("ประกาศร่าง"))).toBe(false);
+    expect(result.project.steps.some((step) => step.label.includes("เผยแพร่ร่าง"))).toBe(false);
+  });
+
   it("rejects a configured holiday as the project start", async () => {
     const { service } = makeService(new Set(["2026-07-28"]));
 
@@ -166,8 +186,8 @@ describe("ProjectService", () => {
     const created = await service.create({
       name: "จัดซื้อระบบ",
       ownerName: "คุณสมชาย",
-      budget: 1_000_000,
-      budgetCategory: "ONE_TO_FIVE_MILLION",
+      budget: 29_000_000,
+      budgetCategory: "ABOVE_TWENTY_MILLION",
       startDate: "2026-07-06",
       note: "",
     });
