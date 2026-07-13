@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import type {
   HolidayCalendarReader,
   ProjectMutationResult,
@@ -38,7 +37,7 @@ export class GoogleDriveProjectRepository
       const now = new Date().toISOString();
       const project: ProjectRecord = {
         ...input,
-        id: randomUUID(),
+        id: crypto.randomUUID(),
         version: 1,
         createdAt: now,
         updatedAt: now,
