@@ -90,19 +90,26 @@ textarea:disabled {
   .print-header p,
   .print-header dt {
     color: #475569 !important;
+    font-size: 16px !important;
+    line-height: 1.35 !important;
   }
 
   .print-header h1 {
     margin-top: 1mm !important;
-    font-size: 18px !important;
+    font-size: 22px !important;
     line-height: 1.2 !important;
     color: #0f172a !important;
+  }
+
+  .print-header dd {
+    font-size: 16px !important;
+    line-height: 1.35 !important;
   }
 
   .print-header dl {
     margin-top: 4mm !important;
     gap: 4mm !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
   }
 
   .print-table {
@@ -120,7 +127,7 @@ textarea:disabled {
     align-items: start !important;
     padding: 2.4mm 3mm !important;
     border-color: #cbd5e1 !important;
-    font-size: 10px !important;
+    font-size: 16px !important;
     line-height: 1.35 !important;
   }
 
@@ -136,6 +143,10 @@ textarea:disabled {
 
   .print-grid p + p {
     margin-top: 1mm !important;
+  }
+
+  .print-step-hint {
+    display: none !important;
   }
 
   [data-testid="timeline-step"] {

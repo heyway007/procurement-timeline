@@ -28,6 +28,7 @@ function projectFixture(): ProjectRecord {
     id: "project-1",
     name: "จัดซื้อระบบสารสนเทศ",
     ownerName: "คุณสมชาย",
+    departmentName: "ฝ่ายบริหาร",
     budget: 29_000_000,
     budgetCategory: "TEN_TO_TWENTY_MILLION",
     startDate: "2026-07-06",
@@ -86,8 +87,12 @@ describe("TimelineDetail", () => {
     render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
 
     expect(screen.getAllByTestId("timeline-step")).toHaveLength(13);
-    expect(screen.getByText("37 วันทำการ")).toBeInTheDocument();
-    expect(screen.getByTestId("print-owner")).toHaveClass("print-hidden");
+    expect(screen.getByText(/37 วันทำการ/)).toBeInTheDocument();
+    expect(screen.getByTestId("print-owner")).not.toHaveClass("print-hidden");
+    expect(screen.getByTestId("print-owner")).toHaveTextContent("คุณสมชาย");
+    expect(screen.getByTestId("print-department")).toHaveTextContent("ฝ่ายบริหาร");
+    expect(screen.getByTestId("print-total-days")).toHaveTextContent("37 วันทำการ · เป็นไปตาม SLA");
+    expect(within(screen.getByTestId("print-header")).queryByText("วันที่เริ่มทำสัญญา")).not.toBeInTheDocument();
     expect(screen.getAllByText("วันที่เริ่มทำสัญญา")).not.toHaveLength(0);
     expect(screen.queryByText("วันสิ้นสุดกระบวนการ")).not.toBeInTheDocument();
     expect(screen.getByText("จัดซื้อระบบสารสนเทศ")).toBeInTheDocument();
@@ -136,7 +141,7 @@ describe("TimelineDetail", () => {
 
     const rows = screen.getAllByTestId("timeline-step");
     expect(rows).toHaveLength(10);
-    expect(screen.getByText("29 วันทำการ")).toBeInTheDocument();
+    expect(screen.getByText(/29 วันทำการ/)).toBeInTheDocument();
     expect(within(rows[2]).getByText("วันจันทร์ 13 ก.ค. 2569 - วันศุกร์ 17 ก.ค. 2569")).toBeInTheDocument();
     expect(within(rows[6]).getByText("วันพฤหัสบดี 23 ก.ค. 2569 - วันอังคาร 28 ก.ค. 2569")).toBeInTheDocument();
     expect(within(rows[9]).getByText("วันพุธ 5 ส.ค. 2569 - วันพฤหัสบดี 13 ส.ค. 2569")).toBeInTheDocument();
@@ -177,6 +182,23 @@ describe("TimelineDetail", () => {
     expect(screen.getByTestId("timeline-table")).toHaveClass("print-table");
     expect(screen.getByTestId("timeline-header-row")).toHaveClass("print-grid");
     expect(screen.getAllByTestId("timeline-step")[0]).toHaveClass("print-grid");
+  });
+
+  it("marks a shortened manually adjusted timeline as not meeting SLA", () => {
+    const shortened = {
+      ...projectFixture(),
+      steps: projectFixture().steps.map((step, index) =>
+        index === 0
+          ? { ...step, workingDaysToNext: 1, isDateManuallyAdjusted: true }
+          : step,
+      ),
+    };
+
+    render(<TimelineDetail projectId="project-1" initialProject={shortened} />);
+
+    expect(screen.getByTestId("print-total-days")).toHaveTextContent(
+      "34 วันทำการ · ไม่เป็นไปตาม SLA",
+    );
   });
 
   it("hides the procurement unit prefix from existing timeline labels", () => {

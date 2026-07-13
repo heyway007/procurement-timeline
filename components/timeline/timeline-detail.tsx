@@ -11,10 +11,10 @@ import {
   getProject,
   resetProjectSchedule,
 } from "@/lib/ui/api-client";
+import { approvedTemplateStepsForBudgetCategory } from "@/lib/schedule/approved-template";
 import {
   buildMonthCalendar,
   formatBaht,
-  formatThaiDate,
   formatThaiDateRangeWithWeekday,
   formatThaiDateWithWeekday,
   formatThaiFullDateWithWeekday,
@@ -125,6 +125,27 @@ function isPresentMilestone(label: string): boolean {
 
 function totalWorkingDays(project: ProjectRecord): number {
   return project.steps.reduce((sum, step) => sum + step.workingDaysToNext, 0);
+}
+
+function templateWorkingDays(project: ProjectRecord): number {
+  return approvedTemplateStepsForBudgetCategory(project.budgetCategory).reduce(
+    (sum, step) => sum + step.workingDaysToNext,
+    0,
+  );
+}
+
+function hasManualScheduleAdjustment(project: ProjectRecord): boolean {
+  return (
+    project.isProcessEndManuallyAdjusted ||
+    project.steps.some((step) => step.isDateManuallyAdjusted)
+  );
+}
+
+function slaStatusText(project: ProjectRecord): string {
+  return hasManualScheduleAdjustment(project) &&
+    totalWorkingDays(project) < templateWorkingDays(project)
+    ? "ไม่เป็นไปตาม SLA"
+    : "เป็นไปตาม SLA";
 }
 
 function displayStepLabel(step: ProjectRecord["steps"][number]): string {
@@ -403,18 +424,18 @@ export function TimelineDetail({
   }
 
   return (
-    <main className="print-page mx-auto min-h-screen max-w-6xl px-4 py-8 sm:px-6">
+    <main className="print-page mx-auto min-h-screen max-w-6xl px-4 py-8 text-base sm:px-6">
       <nav className="print-hidden mb-6">
         <Link href="/" className="font-semibold text-indigo-700">← กลับหน้าโครงการ</Link>
       </nav>
-      <header className="print-header rounded-3xl bg-slate-950 p-6 text-white shadow-xl sm:p-8">
+      <header data-testid="print-header" className="print-header rounded-3xl bg-slate-950 p-6 text-white shadow-xl sm:p-8">
         <p className="text-sm font-semibold text-indigo-300">Timeline โครงการ</p>
         <h1 className="mt-2 text-3xl font-semibold">{project.name}</h1>
-        <dl className="mt-6 grid gap-4 text-sm sm:grid-cols-4">
-          <div data-testid="print-owner" className="print-hidden"><dt className="text-slate-400">ผู้จัดทำ Timeline</dt><dd className="mt-1 font-semibold">{project.ownerName}{project.departmentName ? ` / ${project.departmentName}` : ""}</dd></div>
+        <dl className="mt-6 grid gap-4 text-base sm:grid-cols-2 lg:grid-cols-4">
+          <div data-testid="print-owner"><dt className="text-slate-400">ผู้จัดทำ Timeline</dt><dd className="mt-1 font-semibold">{project.ownerName}</dd></div>
+          <div data-testid="print-department"><dt className="text-slate-400">ฝ่าย</dt><dd className="mt-1 font-semibold">{project.departmentName || "-"}</dd></div>
           <div><dt className="text-slate-400">วงเงิน</dt><dd className="mt-1 font-semibold">{formatBaht(project.budget)}</dd></div>
-          <div><dt className="text-slate-400">วันที่เริ่มทำสัญญา</dt><dd className="mt-1 font-semibold">{formatThaiDate(project.processEndDate)}</dd></div>
-          <div><dt className="text-slate-400">จำนวนวันทำการทั้งหมด</dt><dd className="mt-1 font-semibold">{totalWorkingDays(project)} วันทำการ</dd></div>
+          <div data-testid="print-total-days"><dt className="text-slate-400">จำนวนวันทำการทั้งหมด</dt><dd className="mt-1 font-semibold">{totalWorkingDays(project)} วันทำการ · {slaStatusText(project)}</dd></div>
         </dl>
       </header>
 
@@ -424,22 +445,22 @@ export function TimelineDetail({
       {error ? <p role="alert" className="mt-5 rounded-xl bg-rose-50 px-4 py-3 text-rose-800">{error}</p> : null}
 
       <section data-testid="timeline-table" className="print-table mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div data-testid="timeline-header-row" className="print-grid grid grid-cols-[4rem_1fr_20rem_5rem_7rem] gap-3 bg-slate-100 px-4 py-3 text-xs font-semibold text-slate-600">
+        <div data-testid="timeline-header-row" className="print-grid hidden grid-cols-[4rem_1fr_20rem_5rem_7rem] gap-3 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-600 md:grid">
           <span>ลำดับ</span><span>ขั้นตอน</span><span>วันที่กำหนด</span><span className="print-hidden">ปฏิทิน</span><span className="print-hidden">จัดการ</span>
         </div>
         {project.steps.map((step, index) => (
-          <div data-testid="timeline-step" key={step.order} className="print-grid grid grid-cols-[4rem_1fr_20rem_5rem_7rem] gap-3 border-t border-slate-100 px-4 py-4 text-sm">
+          <div data-testid="timeline-step" key={step.order} className="print-grid grid gap-3 border-t border-slate-100 px-4 py-4 text-base md:grid-cols-[4rem_1fr_20rem_5rem_7rem]">
             <span className="font-semibold text-indigo-700">{step.order}</span>
             <div>
               <p className="font-medium text-slate-900">{displayStepLabel(step)}</p>
-              <p className="mt-1 text-xs text-slate-500">{formatWorkingDaysText(step)} {step.isDateManuallyAdjusted ? "· ปรับกำหนดการ" : ""}</p>
+              <p className="print-step-hint mt-1 text-sm text-slate-500">{formatWorkingDaysText(step)} {step.isDateManuallyAdjusted ? "· ปรับกำหนดการ" : ""}</p>
             </div>
             <span className="font-medium text-slate-700">{formatStepScheduledDate(index)}</span>
             <CalendarPreview iso={step.scheduledDate} placement={step.order >= 10 ? "above" : "below"} />
             <button className="print-hidden h-9 rounded-lg border border-slate-300 font-semibold text-slate-700" type="button" aria-label={`แก้วันที่ ขั้นตอนที่ ${step.order}`} onClick={() => { setEditingOrder(step.order); setNewDate(step.scheduledDate); setEditError(""); }}>แก้วันที่</button>
           </div>
         ))}
-        <div className="print-grid grid grid-cols-[4rem_1fr_20rem_5rem_7rem] gap-3 border-t-2 border-indigo-100 bg-indigo-50 px-4 py-4 text-sm">
+        <div className="print-grid grid gap-3 border-t-2 border-indigo-100 bg-indigo-50 px-4 py-4 text-base md:grid-cols-[4rem_1fr_20rem_5rem_7rem]">
           <span className="font-semibold text-indigo-700">จบ</span><span className="font-semibold text-slate-900">วันที่เริ่มทำสัญญา</span><span className="font-semibold text-indigo-800">{formatThaiDateWithWeekday(project.processEndDate)}</span><CalendarPreview iso={project.processEndDate} placement="above" /><span />
         </div>
       </section>
