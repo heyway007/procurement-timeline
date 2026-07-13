@@ -98,32 +98,13 @@ describe("TimelineDetail", () => {
     expect(screen.getByText("จัดซื้อระบบสารสนเทศ")).toBeInTheDocument();
   });
 
-  it("shows weekday dates and a focusable calendar preview", async () => {
-    const user = userEvent.setup();
+  it("shows weekday dates without the calendar preview column", () => {
     render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
 
-    expect(screen.getByText("ปฏิทิน")).toBeInTheDocument();
+    expect(screen.queryByText("ปฏิทิน")).not.toBeInTheDocument();
     expect(screen.getByText("วันจันทร์ 6 ก.ค. 2569")).toBeInTheDocument();
-
-    const firstCalendar = screen.getByRole("button", {
-      name: "ดูปฏิทิน วันจันทร์ 6 กรกฎาคม 2569",
-    });
-    await user.click(firstCalendar);
-
-    expect(screen.getByText("กรกฎาคม 2569")).toBeInTheDocument();
-    expect(screen.getByText("วันจันทร์ 6 กรกฎาคม 2569")).toBeInTheDocument();
-    expect(screen.getByLabelText("วันที่เลือก 6")).toBeInTheDocument();
-  });
-
-  it("opens late milestone calendar previews upward", async () => {
-    const user = userEvent.setup();
-    render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
-
-    const calendarButtons = screen.getAllByRole("button", { name: /ปฏิทิน/ });
-    await user.click(calendarButtons[11]);
-
-    expect(screen.getByTestId("calendar-popover")).toHaveClass("bottom-11");
-    expect(screen.getByTestId("calendar-popover")).not.toHaveClass("top-11");
+    expect(screen.queryByRole("button", { name: /ดูปฏิทิน/ })).not.toBeInTheDocument();
+    expect(screen.queryByTestId("calendar-popover")).not.toBeInTheDocument();
   });
 
   it("shows date ranges for milestones 3, 6, and the final appeal period", () => {

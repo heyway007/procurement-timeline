@@ -13,12 +13,9 @@ import {
 } from "@/lib/ui/api-client";
 import { approvedTemplateStepsForBudgetCategory } from "@/lib/schedule/approved-template";
 import {
-  buildMonthCalendar,
   formatBaht,
   formatThaiDateRangeWithWeekday,
   formatThaiDateWithWeekday,
-  formatThaiFullDateWithWeekday,
-  formatThaiMonthYear,
   isWeekendIso,
   previousWorkingDate,
 } from "@/lib/ui/date-format";
@@ -39,70 +36,6 @@ type TimelineDetailProps = {
   onDeleteProject?: (version: number) => Promise<void>;
   onNavigateHome?: () => void;
 };
-
-function CalendarPreview({
-  iso,
-  placement = "below",
-}: {
-  iso: string;
-  placement?: "above" | "below";
-}) {
-  const [open, setOpen] = useState(false);
-  const fullDate = formatThaiFullDateWithWeekday(iso);
-  const monthYear = formatThaiMonthYear(iso);
-  const days = buildMonthCalendar(iso);
-
-  return (
-    <div
-      className="print-hidden relative inline-flex"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-      onFocus={() => setOpen(true)}
-      onBlur={() => setOpen(false)}
-    >
-      <button
-        type="button"
-        aria-label={`ดูปฏิทิน ${fullDate}`}
-        onClick={() => setOpen(true)}
-        className="grid h-9 w-10 place-items-center rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 shadow-sm hover:border-indigo-400 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      >
-        {Number(iso.slice(8, 10))}
-      </button>
-      {open ? (
-        <div
-          data-testid="calendar-popover"
-          className={[
-            "absolute right-0 z-20 w-72 rounded-2xl border border-slate-200 bg-white p-4 text-slate-900 shadow-2xl",
-            placement === "above" ? "bottom-11" : "top-11",
-          ].join(" ")}
-        >
-          <p className="text-sm font-semibold">{fullDate}</p>
-          <p className="mt-4 text-base font-semibold">{monthYear}</p>
-          <div className="mt-4 grid grid-cols-7 gap-1 text-center text-xs font-semibold text-slate-500">
-            {["จ", "อ", "พ", "พฤ", "ศ", "ส", "อา"].map((label) => (
-              <span key={label}>{label}</span>
-            ))}
-          </div>
-          <div className="mt-2 grid grid-cols-7 gap-1 text-center text-sm">
-            {days.map((day) => (
-              <span
-                key={day.iso}
-                aria-label={day.selected ? `วันที่เลือก ${day.day}` : undefined}
-                className={[
-                  "grid h-8 w-8 place-items-center rounded-full",
-                  day.inMonth ? "text-slate-800" : "text-slate-300",
-                  day.selected ? "bg-indigo-600 font-semibold text-white" : "",
-                ].join(" ")}
-              >
-                {day.day}
-              </span>
-            ))}
-          </div>
-        </div>
-      ) : null}
-    </div>
-  );
-}
 
 function collectTimelineYears(project: ProjectRecord): number[] {
   const dates = [
@@ -445,23 +378,22 @@ export function TimelineDetail({
       {error ? <p role="alert" className="mt-5 rounded-xl bg-rose-50 px-4 py-3 text-rose-800">{error}</p> : null}
 
       <section data-testid="timeline-table" className="print-table mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div data-testid="timeline-header-row" className="print-grid hidden grid-cols-[4rem_1fr_20rem_5rem_7rem] gap-3 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-600 md:grid">
-          <span>ลำดับ</span><span>ขั้นตอน</span><span>วันที่กำหนด</span><span className="print-hidden">ปฏิทิน</span><span className="print-hidden">จัดการ</span>
+        <div data-testid="timeline-header-row" className="print-grid hidden grid-cols-[4rem_1fr_20rem_7rem] gap-3 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-600 md:grid">
+          <span>ลำดับ</span><span>ขั้นตอน</span><span>วันที่กำหนด</span><span className="print-hidden">จัดการ</span>
         </div>
         {project.steps.map((step, index) => (
-          <div data-testid="timeline-step" key={step.order} className="print-grid grid gap-3 border-t border-slate-100 px-4 py-4 text-base md:grid-cols-[4rem_1fr_20rem_5rem_7rem]">
+          <div data-testid="timeline-step" key={step.order} className="print-grid grid gap-3 border-t border-slate-100 px-4 py-4 text-base md:grid-cols-[4rem_1fr_20rem_7rem]">
             <span className="font-semibold text-indigo-700">{step.order}</span>
             <div>
               <p className="font-medium text-slate-900">{displayStepLabel(step)}</p>
               <p className="print-step-hint mt-1 text-sm text-slate-500">{formatWorkingDaysText(step)} {step.isDateManuallyAdjusted ? "· ปรับกำหนดการ" : ""}</p>
             </div>
             <span className="font-medium text-slate-700">{formatStepScheduledDate(index)}</span>
-            <CalendarPreview iso={step.scheduledDate} placement={step.order >= 10 ? "above" : "below"} />
             <button className="print-hidden h-9 rounded-lg border border-slate-300 font-semibold text-slate-700" type="button" aria-label={`แก้วันที่ ขั้นตอนที่ ${step.order}`} onClick={() => { setEditingOrder(step.order); setNewDate(step.scheduledDate); setEditError(""); }}>แก้วันที่</button>
           </div>
         ))}
-        <div className="print-grid grid gap-3 border-t-2 border-indigo-100 bg-indigo-50 px-4 py-4 text-base md:grid-cols-[4rem_1fr_20rem_5rem_7rem]">
-          <span className="font-semibold text-indigo-700">จบ</span><span className="font-semibold text-slate-900">วันที่เริ่มทำสัญญา</span><span className="font-semibold text-indigo-800">{formatThaiDateWithWeekday(project.processEndDate)}</span><CalendarPreview iso={project.processEndDate} placement="above" /><span />
+        <div className="print-grid grid gap-3 border-t-2 border-indigo-100 bg-indigo-50 px-4 py-4 text-base md:grid-cols-[4rem_1fr_20rem_7rem]">
+          <span className="font-semibold text-indigo-700">จบ</span><span className="font-semibold text-slate-900">วันที่เริ่มทำสัญญา</span><span className="font-semibold text-indigo-800">{formatThaiDateWithWeekday(project.processEndDate)}</span><span />
         </div>
       </section>
 
