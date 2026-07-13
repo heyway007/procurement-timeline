@@ -1,10 +1,14 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   assertGoogleDriveEnv,
   storageModeFromEnv,
 } from "@/lib/storage/config";
 
 describe("storage config", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it("uses postgres storage when STORAGE_MODE is not set", () => {
     expect(storageModeFromEnv({})).toBe("postgres");
   });
@@ -46,6 +50,18 @@ describe("storage config", () => {
     const config = assertGoogleDriveEnv({
       GOOGLE_DRIVE_CLIENT_EMAIL: "timeline@example.iam.gserviceaccount.com",
       GOOGLE_DRIVE_PRIVATE_KEY_BASE64: Buffer.from(privateKey, "utf8").toString("base64"),
+      GOOGLE_DRIVE_FILE_ID: "drive-file-id",
+    });
+
+    expect(config.privateKey).toBe(privateKey);
+  });
+
+  it("decodes base64 private keys without Node Buffer", () => {
+    vi.stubGlobal("Buffer", undefined);
+    const privateKey = "-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----\n";
+    const config = assertGoogleDriveEnv({
+      GOOGLE_DRIVE_CLIENT_EMAIL: "timeline@example.iam.gserviceaccount.com",
+      GOOGLE_DRIVE_PRIVATE_KEY_BASE64: btoa(privateKey),
       GOOGLE_DRIVE_FILE_ID: "drive-file-id",
     });
 

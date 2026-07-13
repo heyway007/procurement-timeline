@@ -50,5 +50,10 @@ export function assertGoogleDriveEnv(
 
 function decodeBase64PrivateKey(value: string | null): string | null {
   if (!value) return null;
-  return Buffer.from(value, "base64").toString("utf8");
+  const binary = atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return new TextDecoder().decode(bytes);
 }
