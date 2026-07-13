@@ -12,6 +12,13 @@ export interface GoogleDriveFileClient {
   writeText(content: string): Promise<void>;
 }
 
+type GoogleDriveDataStoreCacheOptions = {
+  ttlMs?: number;
+  nowMs?: () => number;
+};
+
+const DEFAULT_GOOGLE_DRIVE_CACHE_TTL_MS = 60_000;
+
 export function createEmptyGoogleDriveDocument(
   nowIso: string,
 ): GoogleDriveDocument {
@@ -33,19 +40,35 @@ export function createEmptyGoogleDriveDocument(
 }
 
 export class GoogleDriveDataStore {
+  private cachedDocument:
+    | { document: GoogleDriveDocument; expiresAtMs: number }
+    | undefined;
+  private pendingRead: Promise<GoogleDriveDocument> | undefined;
+  private readonly cacheTtlMs: number;
+  private readonly nowMs: () => number;
+
   constructor(
     private readonly client: GoogleDriveFileClient,
     private readonly now: () => string = () => new Date().toISOString(),
-  ) {}
+    options: GoogleDriveDataStoreCacheOptions = {},
+  ) {
+    this.cacheTtlMs = options.ttlMs ?? DEFAULT_GOOGLE_DRIVE_CACHE_TTL_MS;
+    this.nowMs = options.nowMs ?? (() => Date.now());
+  }
 
   async read(): Promise<GoogleDriveDocument> {
-    const content = await this.client.readText();
-    if (!content) {
-      const document = createEmptyGoogleDriveDocument(this.now());
-      await this.client.writeText(JSON.stringify(document, null, 2));
-      return document;
+    const cached = this.cachedDocument;
+    if (cached && cached.expiresAtMs > this.nowMs()) {
+      return cloneDocument(cached.document);
     }
-    return parseDocument(content);
+    if (this.pendingRead) return cloneDocument(await this.pendingRead);
+
+    this.pendingRead = this.readFromDrive();
+    try {
+      return cloneDocument(await this.pendingRead);
+    } finally {
+      this.pendingRead = undefined;
+    }
   }
 
   async mutate<T>(
@@ -57,8 +80,37 @@ export class GoogleDriveDataStore {
     const parsed = googleDriveDocumentSchema.safeParse(document);
     if (!parsed.success) throw new Error("GOOGLE_DRIVE_DATA_INVALID");
     await this.client.writeText(JSON.stringify(parsed.data, null, 2));
+    this.setCache(parsed.data);
     return result;
   }
+
+  private async readFromDrive(): Promise<GoogleDriveDocument> {
+    const content = await this.client.readText();
+    if (!content) {
+      const document = createEmptyGoogleDriveDocument(this.now());
+      await this.client.writeText(JSON.stringify(document, null, 2));
+      this.setCache(document);
+      return document;
+    }
+    const document = parseDocument(content);
+    this.setCache(document);
+    return document;
+  }
+
+  private setCache(document: GoogleDriveDocument): void {
+    if (this.cacheTtlMs <= 0) {
+      this.cachedDocument = undefined;
+      return;
+    }
+    this.cachedDocument = {
+      document: cloneDocument(document),
+      expiresAtMs: this.nowMs() + this.cacheTtlMs,
+    };
+  }
+}
+
+function cloneDocument(document: GoogleDriveDocument): GoogleDriveDocument {
+  return JSON.parse(JSON.stringify(document)) as GoogleDriveDocument;
 }
 
 function parseDocument(content: string): GoogleDriveDocument {

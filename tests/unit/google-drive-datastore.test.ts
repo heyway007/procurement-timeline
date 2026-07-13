@@ -9,6 +9,7 @@ import {
 
 class FakeDriveFileClient implements GoogleDriveFileClient {
   content: string | null = null;
+  reads = 0;
   writes: string[] = [];
 
   constructor(initialContent: string | null = null) {
@@ -16,6 +17,7 @@ class FakeDriveFileClient implements GoogleDriveFileClient {
   }
 
   async readText(): Promise<string | null> {
+    this.reads += 1;
     return this.content;
   }
 
@@ -87,6 +89,78 @@ describe("GoogleDriveDataStore", () => {
 
     expect(document.projects[0].name).toBe("City Expo");
     expect(client.writes).toHaveLength(0);
+  });
+
+  it("caches Drive reads during the configured ttl", async () => {
+    const existing = createEmptyGoogleDriveDocument(nowIso);
+    existing.projects.push({
+      id: "project-1",
+      name: "City Expo",
+      ownerName: "POND",
+      budget: 29000000,
+      budgetCategory: "TEN_TO_TWENTY_MILLION",
+      startDate: "2026-07-13",
+      note: "",
+      templateKey: APPROVED_TEMPLATE_KEY,
+      templateVersion: 1,
+      processEndDate: "2026-09-04",
+      isProcessEndManuallyAdjusted: false,
+      scheduleStatus: "NORMAL",
+      version: 1,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+      steps: [],
+    });
+    let nowMs = 1_000;
+    const client = new FakeDriveFileClient(JSON.stringify(existing));
+    const store = new GoogleDriveDataStore(client, () => nowIso, {
+      ttlMs: 60_000,
+      nowMs: () => nowMs,
+    });
+
+    const first = await store.read();
+    first.projects[0].name = "Mutated local copy";
+    const second = await store.read();
+    nowMs += 60_001;
+    const third = await store.read();
+
+    expect(second.projects[0].name).toBe("City Expo");
+    expect(third.projects[0].name).toBe("City Expo");
+    expect(client.reads).toBe(2);
+  });
+
+  it("updates the cache after mutations without rereading Drive", async () => {
+    const client = new FakeDriveFileClient(JSON.stringify(createEmptyGoogleDriveDocument(nowIso)));
+    const store = new GoogleDriveDataStore(client, () => "2026-07-13T00:00:00.000Z", {
+      ttlMs: 60_000,
+      nowMs: () => 1_000,
+    });
+
+    await store.mutate((document) => {
+      document.projects.push({
+        id: "project-1",
+        name: "City Expo",
+        ownerName: "POND",
+        budget: 29000000,
+        budgetCategory: "TEN_TO_TWENTY_MILLION",
+        startDate: "2026-07-13",
+        note: "",
+        templateKey: APPROVED_TEMPLATE_KEY,
+        templateVersion: 1,
+        processEndDate: "2026-09-04",
+        isProcessEndManuallyAdjusted: false,
+        scheduleStatus: "NORMAL",
+        version: 1,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+        steps: [],
+      });
+    });
+    const document = await store.read();
+
+    expect(document.projects[0].name).toBe("City Expo");
+    expect(client.reads).toBe(1);
+    expect(client.writes).toHaveLength(1);
   });
 
   it("saves mutations back to Drive", async () => {
