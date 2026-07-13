@@ -2,7 +2,7 @@
 
 ## Goal
 
-Add a persistent bid-submission time selector to every budget category, update the displayed procurement copy from that selection, and remove redundant per-row labels from printed timelines.
+Add a persistent bid-submission time selector to every budget category, update the displayed procurement copy from that selection, remove redundant per-row labels from printed timelines, and correct automatic Present duration chaining.
 
 ## Scope
 
@@ -15,6 +15,7 @@ Add a persistent bid-submission time selector to every budget category, update t
 - Do not recalculate milestone dates or working-day durations when the time changes.
 - Remove `(8.30 น. - 12.00 น.)` from the displayed inspection milestone `ตรวจสอบเอกสารเสนอราคา`.
 - Hide the repeated mobile label `วันที่กำหนด` in print while retaining the table column header.
+- Make the automatic Present milestone consume three working days in the schedule engine so the next milestone begins after the displayed Present range ends.
 
 ## Data Model
 
@@ -57,13 +58,26 @@ The inspection milestone displays only `ตรวจสอบเอกสาร�
 - Schedule reset preserves the default or reinitializes the bid-submission milestone to `MORNING`, consistent with rebuilding the approved template.
 - Date adjustment and holiday recalculation preserve the selected time slot.
 
+## Present Duration Correction
+
+The approved automatic Present milestone uses `workingDaysToNext: 3`, not a display-only hardcoded three-day label. The normal schedule engine therefore calculates the following milestone from the end of the three-working-day Present window.
+
+For the reported example:
+
+- The prior inspection milestone is Friday 24 July 2026.
+- The three eligible Present working days are Monday 27 July, Friday 31 July, and Monday 3 August after excluding the configured holidays and weekend.
+- The Present display remains Monday 27 July through Monday 3 August.
+- The following four-working-day milestone starts Tuesday 4 August and ends Friday 7 August. It must not start from 27 July or overlap the Present window.
+
+When a user manually chooses one Present date, the existing behavior remains: that milestone becomes a one-working-day anchor and downstream milestones recalculate from the selected date. Total working days and SLA text use the real stored duration, so automatic timelines increase by two working days compared with the former inconsistent template.
+
 ## Testing
 
-- Template and schedule tests verify the default morning slot for every budget category.
+- Template and schedule tests verify the default morning slot for every budget category and verify that automatic Present consumes three working days before the following milestone begins.
 - Service and route tests verify immediate persistent updates, version conflicts, and invalid values.
 - Google Drive and Prisma mapping tests verify backward compatibility and persistence.
 - Component tests verify both dropdown options, immediate save, afternoon copy, second-line bidder instruction, inspection copy cleanup, disabled saving state, error rollback, and print-only behavior.
-- Existing regression tests continue to cover working-day ranges and printed step numbers.
+- Existing regression tests continue to cover working-day ranges and printed step numbers, including the 27 July–3 August Present window followed by the non-overlapping 4–7 August milestone.
 
 ## Deployment
 
