@@ -1,0 +1,70 @@
+# Bid Submission Time and Print Label Design
+
+## Goal
+
+Add a persistent bid-submission time selector to every budget category, update the displayed procurement copy from that selection, and remove redundant per-row labels from printed timelines.
+
+## Scope
+
+- Apply the time selector to the milestone whose canonical label contains `กำหนดวันเสนอราคา`, regardless of whether it is step 4 or step 7.
+- Provide exactly two time slots:
+  - `8.30–12.00 น.`
+  - `13.30–16.30 น.`
+- Existing projects and new projects default to `8.30–12.00 น.`.
+- Save a selection immediately and persist it across refreshes, devices, and users.
+- Do not recalculate milestone dates or working-day durations when the time changes.
+- Remove `(8.30 น. - 12.00 น.)` from the displayed inspection milestone `ตรวจสอบเอกสารเสนอราคา`.
+- Hide the repeated mobile label `วันที่กำหนด` in print while retaining the table column header.
+
+## Data Model
+
+Add an optional `bidSubmissionTimeSlot` field to scheduled project steps with the allowed values:
+
+- `MORNING`
+- `AFTERNOON`
+
+Only the bid-submission milestone uses the field. Missing values deserialize as `MORNING` so existing Google Drive records and database rows remain compatible. New timelines initialize the bid-submission milestone to `MORNING`.
+
+The Google Drive schema accepts the optional field without increasing the document schema version. The Prisma `ProjectStep` model receives a nullable enum-backed field and a migration. Repository mappings preserve the value during create and replace operations.
+
+## API and Service
+
+Add a dedicated update operation for a project's bid-submission time slot. The request contains:
+
+- project version
+- selected time slot
+
+The service verifies optimistic concurrency, locates the bid-submission milestone by canonical label rather than order, updates only its time slot, increments the project version once, and returns the updated project. Invalid slots, missing projects, version conflicts, and missing bid-submission milestones use the existing API error response conventions.
+
+## Timeline UI
+
+The bid-submission row displays:
+
+1. `กำหนดวันเสนอราคา (ตั้งแต่เวลา <selected time>)`
+2. A separate second line: `ผู้ยื่นใบเสนอราคาผ่านเว็บไซต์ของกรมบัญชีกลางเท่านั้น`
+
+The date column shows the scheduled date followed by a labeled select control with two options. Selecting an option sends the update immediately. The select is disabled while saving. On success, the returned project replaces local state. On failure, the prior value remains visible and an error message is shown.
+
+In print, the select control is hidden and the selected time appears as plain text after the scheduled date. The repeated responsive label `วันที่กำหนด` is hidden, while the main table heading `วันที่กำหนด` remains.
+
+The inspection milestone displays only `ตรวจสอบเอกสารเสนอราคา`; its legacy parenthesized time is removed at display time so existing stored project labels also render correctly.
+
+## Compatibility
+
+- Budget category mappings remain unchanged.
+- Step numbers are not used to identify the bid-submission milestone.
+- Existing project records with no time-slot value behave as `MORNING`.
+- Schedule reset preserves the default or reinitializes the bid-submission milestone to `MORNING`, consistent with rebuilding the approved template.
+- Date adjustment and holiday recalculation preserve the selected time slot.
+
+## Testing
+
+- Template and schedule tests verify the default morning slot for every budget category.
+- Service and route tests verify immediate persistent updates, version conflicts, and invalid values.
+- Google Drive and Prisma mapping tests verify backward compatibility and persistence.
+- Component tests verify both dropdown options, immediate save, afternoon copy, second-line bidder instruction, inspection copy cleanup, disabled saving state, error rollback, and print-only behavior.
+- Existing regression tests continue to cover working-day ranges and printed step numbers.
+
+## Deployment
+
+Run component and unit tests, type checking, focused linting, and the Sites production build. Publish the validated version to the existing public Procurement Timeline site after the user's existing deployment authorization.
