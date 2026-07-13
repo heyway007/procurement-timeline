@@ -2,6 +2,7 @@ import {
   adjustMilestone,
   adjustProcessEnd,
   buildTimeline,
+  recalculateWithManualAnchors,
 } from "@/lib/schedule/engine";
 import { countWorkingDayAdditions } from "@/lib/schedule/date";
 import {
@@ -9,8 +10,9 @@ import {
   approvedTemplateStepsForBudgetCategory,
 } from "@/lib/schedule/approved-template";
 import type { ScheduledTimeline } from "@/lib/schedule/types";
+import { isBidSubmissionMilestone, isPresentMilestone } from "@/lib/schedule/milestone-kind";
 import type { HolidayCalendarReader, ProjectRepository } from "./repository";
-import { createProjectSchema, listProjectsSchema, versionSchema } from "./schema";
+import { createProjectSchema, listProjectsSchema, updateBidSubmissionTimeSchema, versionSchema } from "./schema";
 import type {
   AdjustStepInput,
   CreateProjectInput,
@@ -18,6 +20,7 @@ import type {
   ProjectRecord,
   ProjectReplacement,
   UpdateProjectInput,
+  UpdateBidSubmissionTimeInput,
 } from "./types";
 
 export class ProjectService {
@@ -31,9 +34,26 @@ export class ProjectService {
   }
 
   async get(id: string): Promise<ProjectRecord> {
-    const project = await this.projects.findById(id);
-    if (!project) throw new Error("PROJECT_NOT_FOUND");
-    return project;
+    const project = await this.getRaw(id);
+    const present = project.steps.find((step) => isPresentMilestone(step.label));
+    if (!present || present.isDateManuallyAdjusted || present.workingDaysToNext === 3) {
+      return project;
+    }
+    const holidays = await this.calendar.listHolidayDates();
+    const legacyTimeline = this.toTimeline({
+      ...project,
+      steps: project.steps.map((step) =>
+        step.order === present.order ? { ...step, workingDaysToNext: 3 } : step,
+      ),
+    });
+    const recalculated = recalculateWithManualAnchors(legacyTimeline, holidays);
+    const timeline = recalculated.kind === "ok" ? recalculated.timeline : legacyTimeline;
+    return this.replaceProjectTimeline(
+      project,
+      timeline,
+      project.version,
+      recalculated.kind === "ok" ? "NORMAL" : "NEEDS_REVIEW",
+    );
   }
 
   async create(input: CreateProjectInput): Promise<{
@@ -71,7 +91,7 @@ export class ProjectService {
 
   async adjustStep(id: string, input: AdjustStepInput): Promise<ProjectRecord> {
     versionSchema.parse(input.version);
-    const project = await this.get(id);
+    const project = await this.getRaw(id);
     this.assertVersion(project, input.version);
     const index = project.steps.findIndex((step) => step.order === input.order);
     if (index < 0) throw new Error("MILESTONE_NOT_FOUND");
@@ -108,12 +128,35 @@ export class ProjectService {
     return this.replaceTimeline(project, changed, input.version);
   }
 
+  async updateBidSubmissionTime(
+    id: string,
+    input: UpdateBidSubmissionTimeInput,
+  ): Promise<ProjectRecord> {
+    const parsed = updateBidSubmissionTimeSchema.parse(input);
+    const project = await this.getRaw(id);
+    this.assertVersion(project, parsed.version);
+    const index = project.steps.findIndex((step) =>
+      isBidSubmissionMilestone(step.label),
+    );
+    if (index < 0) throw new Error("BID_SUBMISSION_MILESTONE_NOT_FOUND");
+    const steps = project.steps.map((step, stepIndex) =>
+      stepIndex === index
+        ? { ...step, bidSubmissionTimeSlot: parsed.timeSlot }
+        : step,
+    );
+    return this.replaceTimeline(
+      project,
+      { ...this.toTimeline(project), milestones: steps },
+      parsed.version,
+    );
+  }
+
   async updateDetails(
     id: string,
     input: UpdateProjectInput,
   ): Promise<ProjectRecord> {
     const parsed = createProjectSchema.parse(input);
-    const project = await this.get(id);
+    const project = await this.getRaw(id);
     this.assertVersion(project, input.version);
     const templateChanged = parsed.budgetCategory !== project.budgetCategory;
     const startChanged = parsed.startDate !== project.startDate;
@@ -160,7 +203,7 @@ export class ProjectService {
     version: number,
     confirmShortening: boolean,
   ): Promise<ProjectRecord> {
-    const project = await this.get(id);
+    const project = await this.getRaw(id);
     this.assertVersion(project, version);
     const holidays = await this.calendar.listHolidayDates();
     const last = project.steps[project.steps.length - 1];
@@ -180,7 +223,7 @@ export class ProjectService {
   }
 
   async resetSchedule(id: string, version: number): Promise<ProjectRecord> {
-    const project = await this.get(id);
+    const project = await this.getRaw(id);
     this.assertVersion(project, version);
     const holidays = await this.calendar.listHolidayDates();
     const timeline = buildTimeline(
@@ -201,6 +244,12 @@ export class ProjectService {
     if (project.version !== version) throw new Error("PROJECT_VERSION_CONFLICT");
   }
 
+  private async getRaw(id: string): Promise<ProjectRecord> {
+    const project = await this.projects.findById(id);
+    if (!project) throw new Error("PROJECT_NOT_FOUND");
+    return project;
+  }
+
   private toTimeline(project: ProjectRecord): ScheduledTimeline {
     return {
       milestones: project.steps,
@@ -214,6 +263,15 @@ export class ProjectService {
     timeline: ScheduledTimeline,
     expectedVersion: number,
   ): Promise<ProjectRecord> {
+    return this.replaceProjectTimeline(project, timeline, expectedVersion, "NORMAL");
+  }
+
+  private async replaceProjectTimeline(
+    project: ProjectRecord,
+    timeline: ScheduledTimeline,
+    expectedVersion: number,
+    scheduleStatus: ProjectRecord["scheduleStatus"],
+  ): Promise<ProjectRecord> {
     const replacement: ProjectReplacement = {
       name: project.name,
       ownerName: project.ownerName,
@@ -226,7 +284,7 @@ export class ProjectService {
       templateVersion: project.templateVersion,
       processEndDate: timeline.processEndDate,
       isProcessEndManuallyAdjusted: timeline.isProcessEndManuallyAdjusted,
-      scheduleStatus: "NORMAL",
+      scheduleStatus,
       steps: timeline.milestones,
     };
     const result = await this.projects.replace(

@@ -2,6 +2,7 @@ import { z } from "zod";
 
 const isoDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const isoDateTimeSchema = z.string().datetime();
+const bidSubmissionTimeSlotSchema = z.enum(["MORNING", "AFTERNOON"]);
 
 export const googleDriveStepSchema = z.object({
   order: z.number().int().positive(),
@@ -9,6 +10,7 @@ export const googleDriveStepSchema = z.object({
   workingDaysToNext: z.number().int().nonnegative(),
   scheduledDate: isoDateSchema.optional(),
   isDateManuallyAdjusted: z.boolean().optional(),
+  bidSubmissionTimeSlot: bidSubmissionTimeSlotSchema.optional(),
 });
 
 export const googleDriveTemplateSchema = z.object({
@@ -20,6 +22,7 @@ export const googleDriveTemplateSchema = z.object({
       order: z.number().int().positive(),
       label: z.string(),
       workingDaysToNext: z.number().int().nonnegative(),
+      bidSubmissionTimeSlot: bidSubmissionTimeSlotSchema.optional(),
     }),
   ),
 });
@@ -53,6 +56,7 @@ export const googleDriveProjectSchema = z.object({
       workingDaysToNext: z.number().int().nonnegative(),
       scheduledDate: isoDateSchema,
       isDateManuallyAdjusted: z.boolean(),
+      bidSubmissionTimeSlot: bidSubmissionTimeSlotSchema.optional(),
     }),
   ),
 });

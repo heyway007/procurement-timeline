@@ -3,6 +3,7 @@ import type {
   ListProjectsFilter,
   ProjectRecord,
 } from "@/lib/projects/types";
+import type { BidSubmissionTimeSlot } from "@/lib/schedule/milestone-kind";
 
 export class ApiError extends Error {
   constructor(
@@ -111,6 +112,21 @@ export async function resetProjectSchedule(
   const result = await requestJson<{ project: ProjectRecord }>(
     `/api/projects/${id}/reset-schedule`,
     { method: "POST", body: JSON.stringify({ version }) },
+  );
+  return result.project;
+}
+
+export async function updateBidSubmissionTime(
+  id: string,
+  timeSlot: BidSubmissionTimeSlot,
+  version: number,
+): Promise<ProjectRecord> {
+  const result = await requestJson<{ project: ProjectRecord }>(
+    `/api/projects/${id}/bid-submission-time`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ timeSlot, version }),
+    },
   );
   return result.project;
 }

@@ -131,6 +131,27 @@ describe("ProjectService", () => {
     expect(result.project.templateVersion).toBe(1);
   });
 
+  it("updates the bid submission time without changing schedule dates", async () => {
+    const { service } = makeService();
+    const created = await service.create({
+      name: "จัดซื้อระบบ",
+      ownerName: "คุณสมชาย",
+      budget: 6_000_000,
+      budgetCategory: "FIVE_TO_TEN_MILLION",
+      startDate: "2026-07-06",
+      note: "",
+    });
+    const dates = created.project.steps.map((step) => step.scheduledDate);
+
+    const updated = await service.updateBidSubmissionTime(created.project.id, {
+      timeSlot: "AFTERNOON",
+      version: created.project.version,
+    });
+
+    expect(updated.steps[6].bidSubmissionTimeSlot).toBe("AFTERNOON");
+    expect(updated.steps.map((step) => step.scheduledDate)).toEqual(dates);
+  });
+
   it("uses a 10-working-day step 6 duration for the 5,000,001-10,000,000 baht category", async () => {
     const { service } = makeService();
 
@@ -162,7 +183,7 @@ describe("ProjectService", () => {
 
     expect(result.project.steps).toHaveLength(10);
     expect(result.project.steps.map((step) => step.workingDaysToNext)).toEqual([
-      4, 1, 5, 1, 1, 1, 4, 4, 1, 7,
+      4, 1, 5, 1, 1, 3, 4, 4, 1, 7,
     ]);
     expect(result.project.steps.some((step) => step.label.includes("ประกาศร่าง"))).toBe(false);
     expect(result.project.steps.some((step) => step.label.includes("เผยแพร่ร่าง"))).toBe(false);
@@ -262,7 +283,7 @@ describe("ProjectService", () => {
 
     expect(reset.steps).toHaveLength(10);
     expect(reset.steps.map((step) => step.workingDaysToNext)).toEqual([
-      4, 1, 5, 1, 1, 1, 4, 4, 1, 7,
+      4, 1, 5, 1, 1, 3, 4, 4, 1, 7,
     ]);
     expect(reset.steps.map((step) => step.order)).toEqual([
       1, 2, 3, 4, 5, 6, 7, 8, 9, 10,

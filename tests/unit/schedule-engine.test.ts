@@ -58,6 +58,23 @@ describe("schedule engine", () => {
     expect(changed.milestones[2].scheduledDate).toBe("2026-07-15");
   });
 
+  it("keeps the automatic Present window and following milestone from overlapping across holidays", () => {
+    const presentTemplate: TemplateStep[] = [
+      { order: 1, label: "ตรวจสอบเอกสารเสนอราคา", workingDaysToNext: 1 },
+      { order: 2, label: "กำหนดวันเวลาในการ Present (เลือกวันใดวันหนึ่ง)", workingDaysToNext: 3 },
+      { order: 3, label: "คณะกรรมการฯ พิจารณาคัดเลือกผู้ชนะ", workingDaysToNext: 4 },
+    ];
+    const holidays = new Set(["2026-07-28", "2026-07-29", "2026-07-30"]);
+
+    const result = buildTimeline(presentTemplate, "2026-07-24", holidays);
+
+    expect(result.milestones.map((step) => step.scheduledDate)).toEqual([
+      "2026-07-24",
+      "2026-07-27",
+      "2026-08-04",
+    ]);
+  });
+
   it("allows the final process end milestone to change", () => {
     const base = buildTimeline(template, "2026-07-06", new Set());
     const changed = adjustProcessEnd(base, "2026-07-24", new Set());

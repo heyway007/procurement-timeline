@@ -5,14 +5,14 @@ import {
 } from "@/lib/schedule/approved-template";
 
 describe("approved procurement template", () => {
-  it("contains 13 steps whose outgoing durations total 37", () => {
+  it("contains 13 steps whose outgoing durations total 39", () => {
     expect(APPROVED_TEMPLATE_STEPS).toHaveLength(13);
     expect(
       APPROVED_TEMPLATE_STEPS.reduce(
         (sum, step) => sum + step.workingDaysToNext,
         0,
       ),
-    ).toBe(37);
+    ).toBe(39);
     expect(APPROVED_TEMPLATE_STEPS[0].workingDaysToNext).toBe(4);
     expect(APPROVED_TEMPLATE_STEPS[12].workingDaysToNext).toBe(7);
   });
@@ -36,7 +36,7 @@ describe("approved procurement template", () => {
 
     expect(steps).toHaveLength(10);
     expect(steps.map((step) => step.workingDaysToNext)).toEqual([
-      4, 1, 5, 1, 1, 1, 4, 4, 1, 7,
+      4, 1, 5, 1, 1, 3, 4, 4, 1, 7,
     ]);
     expect(steps.map((step) => step.order)).toEqual([
       1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
@@ -48,6 +48,11 @@ describe("approved procurement template", () => {
     expect(steps.some((step) => step.label === APPROVED_TEMPLATE_STEPS[2].label)).toBe(false);
     expect(steps[2].label).toBe(APPROVED_TEMPLATE_STEPS[5].label);
     expect(steps[6].label).toBe(APPROVED_TEMPLATE_STEPS[9].label);
+  });
+
+  it("defaults the bid submission milestone to the morning time slot", () => {
+    expect(APPROVED_TEMPLATE_STEPS[6].bidSubmissionTimeSlot).toBe("MORNING");
+    expect(APPROVED_TEMPLATE_STEPS[8].workingDaysToNext).toBe(3);
   });
 
   it("uses longer document pickup durations for higher budget ranges", () => {

@@ -28,3 +28,8 @@ export const listProjectsSchema = z.object({
 });
 
 export const versionSchema = z.number().int().positive();
+
+export const updateBidSubmissionTimeSchema = z.object({
+  timeSlot: z.enum(["MORNING", "AFTERNOON"]),
+  version: versionSchema,
+});

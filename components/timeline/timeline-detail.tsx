@@ -10,9 +10,18 @@ import {
   deleteProject,
   getProject,
   resetProjectSchedule,
+  updateBidSubmissionTime,
 } from "@/lib/ui/api-client";
 import { approvedTemplateStepsForBudgetCategory } from "@/lib/schedule/approved-template";
 import { addWorkingDays } from "@/lib/schedule/date";
+import {
+  BID_SUBMISSION_TIME_LABELS,
+  bidSubmissionTimeLabel,
+  effectiveBidSubmissionTimeSlot,
+  isBidSubmissionMilestone,
+  isPresentMilestone,
+  type BidSubmissionTimeSlot,
+} from "@/lib/schedule/milestone-kind";
 import {
   formatBaht,
   formatThaiDateRangeWithWeekday,
@@ -35,6 +44,10 @@ type TimelineDetailProps = {
   onAdjustStep?: AdjustStep;
   onResetSchedule?: (version: number) => Promise<ProjectRecord>;
   onDeleteProject?: (version: number) => Promise<void>;
+  onUpdateBidSubmissionTime?: (
+    slot: BidSubmissionTimeSlot,
+    version: number,
+  ) => Promise<ProjectRecord>;
   onNavigateHome?: () => void;
 };
 
@@ -51,10 +64,6 @@ function isDateRangeMilestone(project: ProjectRecord, order: number): boolean {
     return order === 3 || order === 7;
   }
   return order === 3 || order === 6;
-}
-
-function isPresentMilestone(label: string): boolean {
-  return label.includes("Present");
 }
 
 function totalWorkingDays(project: ProjectRecord): number {
@@ -84,6 +93,12 @@ function slaStatusText(project: ProjectRecord): string {
 
 function displayStepLabel(step: ProjectRecord["steps"][number]): string {
   const label = step.label.replaceAll("ส่วนงานพัสดุฯ ", "");
+  if (isBidSubmissionMilestone(label)) {
+    return `กำหนดวันเสนอราคา (ตั้งแต่เวลา ${bidSubmissionTimeLabel(step.bidSubmissionTimeSlot)})`;
+  }
+  if (label.includes("ตรวจสอบเอกสารเสนอราคา")) {
+    return "ตรวจสอบเอกสารเสนอราคา";
+  }
   if (isPresentMilestone(step.label) && step.isDateManuallyAdjusted) {
     return label.replaceAll(" (เลือกวันใดวันหนึ่ง)", "");
   }
@@ -96,6 +111,7 @@ export function TimelineDetail({
   onAdjustStep,
   onResetSchedule,
   onDeleteProject,
+  onUpdateBidSubmissionTime,
   onNavigateHome = () => window.location.assign("/"),
 }: TimelineDetailProps) {
   const [project, setProject] = useState(initialProject);
@@ -105,6 +121,7 @@ export function TimelineDetail({
   const [editingOrder, setEditingOrder] = useState<number | null>(null);
   const [newDate, setNewDate] = useState("");
   const [holidayDates, setHolidayDates] = useState<ReadonlySet<string>>(new Set());
+  const [savingBidTime, setSavingBidTime] = useState(false);
 
   useEffect(() => {
     if (initialProject) return;
@@ -307,6 +324,21 @@ export function TimelineDetail({
     }
   }
 
+  async function saveBidSubmissionTime(timeSlot: BidSubmissionTimeSlot) {
+    if (!project) return;
+    setSavingBidTime(true);
+    setError("");
+    try {
+      const update = onUpdateBidSubmissionTime ??
+        ((slot, version) => updateBidSubmissionTime(project.id, slot, version));
+      setProject(await update(timeSlot, project.version));
+    } catch (caught: unknown) {
+      setError(caught instanceof Error ? caught.message : "ไม่สามารถบันทึกเวลาเสนอราคาได้");
+    } finally {
+      setSavingBidTime(false);
+    }
+  }
+
   async function removeProject() {
     if (!project) return;
     const confirmation = await Swal.fire({
@@ -379,9 +411,31 @@ export function TimelineDetail({
             <span className="font-semibold text-indigo-700"><span className="print-hidden lg:hidden">ขั้นตอนที่ </span>{step.order}</span>
             <div className="min-w-0">
               <p className="font-medium text-slate-900">{displayStepLabel(step)}</p>
+              {isBidSubmissionMilestone(step.label) ? (
+                <p className="font-medium text-slate-900">ผู้ยื่นใบเสนอราคาผ่านเว็บไซต์ของกรมบัญชีกลางเท่านั้น</p>
+              ) : null}
               <p className="print-step-hint mt-1 text-sm text-slate-500">{formatWorkingDaysText(step)} {step.isDateManuallyAdjusted ? "· ปรับกำหนดการ" : ""}</p>
             </div>
-            <span className="font-medium text-slate-700"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 lg:hidden">วันที่กำหนด</span>{formatStepScheduledDate(index)}</span>
+            <div className="font-medium text-slate-700">
+              <span className="print-hidden mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 lg:hidden">วันที่กำหนด</span>
+              <span>{formatStepScheduledDate(index)}</span>
+              {isBidSubmissionMilestone(step.label) ? (
+                <>
+                  <select
+                    aria-label="เวลาเสนอราคา"
+                    className="print-hidden mt-2 min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3"
+                    value={effectiveBidSubmissionTimeSlot(step.bidSubmissionTimeSlot)}
+                    disabled={savingBidTime}
+                    onChange={(event) => void saveBidSubmissionTime(event.target.value as BidSubmissionTimeSlot)}
+                  >
+                    {Object.entries(BID_SUBMISSION_TIME_LABELS).map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </select>
+                  <span className="print-only"> · {bidSubmissionTimeLabel(step.bidSubmissionTimeSlot)}</span>
+                </>
+              ) : null}
+            </div>
             <button className="print-hidden min-h-10 rounded-lg border border-slate-300 px-4 font-semibold text-slate-700 lg:h-9" type="button" aria-label={`แก้วันที่ ขั้นตอนที่ ${step.order}`} onClick={() => { setEditingOrder(step.order); setNewDate(step.scheduledDate); setEditError(""); }}>แก้วันที่</button>
           </div>
         ))}

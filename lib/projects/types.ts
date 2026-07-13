@@ -1,4 +1,5 @@
 import type { ScheduledMilestone } from "@/lib/schedule/types";
+import type { BidSubmissionTimeSlot } from "@/lib/schedule/milestone-kind";
 import type { BudgetCategory } from "./budget-category";
 
 export type ScheduleStatus = "NORMAL" | "NEEDS_REVIEW";
@@ -55,6 +56,11 @@ export type AdjustStepInput = {
   version: number;
   confirmShortening: boolean;
   confirmOverwrite: boolean;
+};
+
+export type UpdateBidSubmissionTimeInput = {
+  timeSlot: BidSubmissionTimeSlot;
+  version: number;
 };
 
 export type UpdateProjectInput = CreateProjectInput & {

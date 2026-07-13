@@ -53,6 +53,7 @@ function mapProject(project: DatabaseProject): ProjectRecord {
       workingDaysToNext: step.workingDaysToNext,
       scheduledDate: toIsoDate(step.scheduledDate),
       isDateManuallyAdjusted: step.isDateManuallyAdjusted,
+      bidSubmissionTimeSlot: step.bidSubmissionTimeSlot ?? undefined,
     })),
   };
 }
@@ -124,6 +125,7 @@ export class PrismaProjectRepository
               workingDaysToNext: step.workingDaysToNext,
               scheduledDate: fromIsoDate(step.scheduledDate),
               isDateManuallyAdjusted: step.isDateManuallyAdjusted,
+              bidSubmissionTimeSlot: step.bidSubmissionTimeSlot,
             })),
           },
         },
@@ -156,6 +158,7 @@ export class PrismaProjectRepository
           workingDaysToNext: step.workingDaysToNext,
           scheduledDate: fromIsoDate(step.scheduledDate),
           isDateManuallyAdjusted: step.isDateManuallyAdjusted,
+          bidSubmissionTimeSlot: step.bidSubmissionTimeSlot,
         })),
       });
       const project = await transaction.project.findUniqueOrThrow({

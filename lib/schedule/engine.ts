@@ -8,12 +8,9 @@ import type {
   ScheduledTimeline,
   TemplateStep,
 } from "./types";
+import { isPresentMilestone } from "./milestone-kind";
 
 const PRESENT_MANUAL_WORKING_DAYS_TO_NEXT = 1;
-
-function isPresentMilestone(label: string): boolean {
-  return label.includes("Present");
-}
 
 export function buildTimeline(
   template: TemplateStep[],
@@ -31,6 +28,7 @@ export function buildTimeline(
     order: step.order,
     label: step.label,
     workingDaysToNext: step.workingDaysToNext,
+    bidSubmissionTimeSlot: step.bidSubmissionTimeSlot,
     scheduledDate: index === 0 ? startDate : "",
     isDateManuallyAdjusted: false,
   }));

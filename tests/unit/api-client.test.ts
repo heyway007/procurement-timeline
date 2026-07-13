@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { adjustProjectStep, ApiError } from "@/lib/ui/api-client";
+import { adjustProjectStep, ApiError, updateBidSubmissionTime } from "@/lib/ui/api-client";
 
 describe("api client", () => {
   afterEach(() => {
@@ -24,5 +24,20 @@ describe("api client", () => {
       message: "ระบบขัดข้อง กรุณาลองใหม่อีกครั้ง",
       status: 500,
     } satisfies Partial<ApiError>);
+  });
+
+  it("sends the selected bid submission slot immediately", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ project: { id: "project-1" } }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await updateBidSubmissionTime("project-1", "AFTERNOON", 2);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/projects/project-1/bid-submission-time",
+      expect.objectContaining({ method: "PATCH", body: JSON.stringify({ timeSlot: "AFTERNOON", version: 2 }) }),
+    );
   });
 });

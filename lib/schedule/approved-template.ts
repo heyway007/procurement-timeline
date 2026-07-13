@@ -39,6 +39,7 @@ export const APPROVED_TEMPLATE_STEPS = [
   {
     order: 7,
     workingDaysToNext: 1,
+    bidSubmissionTimeSlot: "MORNING",
     label:
       "กำหนดวันเสนอราคา (ตั้งแต่เวลา 8.30 น. - 12.00 น.) ผู้ยื่นใบเสนอราคาผ่านเว็บไซต์ของกรมบัญชีกลางเท่านั้น",
   },
@@ -49,7 +50,7 @@ export const APPROVED_TEMPLATE_STEPS = [
   },
   {
     order: 9,
-    workingDaysToNext: 1,
+    workingDaysToNext: 3,
     label: "กำหนดวันเวลาในการ Present (เลือกวันใดวันหนึ่ง)",
   },
   {

@@ -1,7 +1,10 @@
+import type { BidSubmissionTimeSlot } from "./milestone-kind";
+
 export type TemplateStep = {
   order: number;
   label: string;
   workingDaysToNext: number;
+  bidSubmissionTimeSlot?: BidSubmissionTimeSlot;
 };
 
 export type ScheduledMilestone = TemplateStep & {

@@ -71,6 +71,7 @@ function smallBudgetProjectWithPresentDate(
             ...step,
             scheduledDate: "2026-07-27",
             isDateManuallyAdjusted,
+            workingDaysToNext: isDateManuallyAdjusted ? 1 : step.workingDaysToNext,
           }
         : step,
     ),
@@ -87,15 +88,52 @@ describe("TimelineDetail", () => {
     render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
 
     expect(screen.getAllByTestId("timeline-step")).toHaveLength(13);
-    expect(screen.getByText(/37 วันทำการ/)).toBeInTheDocument();
+    expect(screen.getByText(/39 วันทำการ/)).toBeInTheDocument();
     expect(screen.getByTestId("print-owner")).not.toHaveClass("print-hidden");
     expect(screen.getByTestId("print-owner")).toHaveTextContent("คุณสมชาย");
     expect(screen.getByTestId("print-department")).toHaveTextContent("ฝ่ายบริหาร");
-    expect(screen.getByTestId("print-total-days")).toHaveTextContent("37 วันทำการ · เป็นไปตาม SLA");
+    expect(screen.getByTestId("print-total-days")).toHaveTextContent("39 วันทำการ · เป็นไปตาม SLA");
     expect(within(screen.getByTestId("print-header")).queryByText("วันที่เริ่มทำสัญญา")).not.toBeInTheDocument();
     expect(screen.getAllByText("วันที่เริ่มทำสัญญา")).not.toHaveLength(0);
     expect(screen.queryByText("วันสิ้นสุดกระบวนการ")).not.toBeInTheDocument();
     expect(screen.getByText("จัดซื้อระบบสารสนเทศ")).toBeInTheDocument();
+  });
+
+  it("renders and immediately saves the bid submission time dropdown", async () => {
+    const user = userEvent.setup();
+    const onUpdateBidSubmissionTime = vi.fn().mockImplementation(async (slot) => ({
+      ...projectFixture(),
+      version: 2,
+      steps: projectFixture().steps.map((step) =>
+        step.order === 7 ? { ...step, bidSubmissionTimeSlot: slot } : step,
+      ),
+    }));
+    render(
+      <TimelineDetail
+        projectId="project-1"
+        initialProject={projectFixture()}
+        onUpdateBidSubmissionTime={onUpdateBidSubmissionTime}
+      />,
+    );
+
+    const selector = screen.getByRole("combobox", { name: "เวลาเสนอราคา" });
+    expect(selector).toHaveValue("MORNING");
+    expect(screen.getByText("กำหนดวันเสนอราคา (ตั้งแต่เวลา 8.30 น. - 12.00 น.)")).toBeInTheDocument();
+    expect(screen.getByText("ผู้ยื่นใบเสนอราคาผ่านเว็บไซต์ของกรมบัญชีกลางเท่านั้น")).toBeInTheDocument();
+    expect(screen.getByText("ตรวจสอบเอกสารเสนอราคา")).toBeInTheDocument();
+    expect(screen.queryByText("ตรวจสอบเอกสารเสนอราคา (8.30 น. - 12.00 น.)")).not.toBeInTheDocument();
+
+    await user.selectOptions(selector, "AFTERNOON");
+
+    expect(onUpdateBidSubmissionTime).toHaveBeenCalledWith("AFTERNOON", 1);
+    expect(await screen.findByText("กำหนดวันเสนอราคา (ตั้งแต่เวลา 13.30 น. - 16.30 น.)")).toBeInTheDocument();
+  });
+
+  it("hides repeated mobile date labels and the selector when printing", () => {
+    render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
+
+    expect(screen.getAllByText("วันที่กำหนด").slice(1).every((node) => node.classList.contains("print-hidden"))).toBe(true);
+    expect(screen.getByRole("combobox", { name: "เวลาเสนอราคา" })).toHaveClass("print-hidden");
   });
 
   it("shows weekday dates without the calendar preview column", () => {
@@ -113,7 +151,7 @@ describe("TimelineDetail", () => {
     const rows = screen.getAllByTestId("timeline-step");
     expect(within(rows[2]).getByText("วันจันทร์ 13 ก.ค. 2569 - วันพุธ 15 ก.ค. 2569")).toBeInTheDocument();
     expect(within(rows[5]).getByText("วันพฤหัสบดี 23 ก.ค. 2569 - วันพุธ 29 ก.ค. 2569")).toBeInTheDocument();
-    expect(within(rows[12]).getByText("วันจันทร์ 17 ส.ค. 2569 - วันอังคาร 25 ส.ค. 2569")).toBeInTheDocument();
+    expect(within(rows[12]).getByText("วันพุธ 19 ส.ค. 2569 - วันพฤหัสบดี 27 ส.ค. 2569")).toBeInTheDocument();
     expect(within(rows[1]).getByText("วันศุกร์ 10 ก.ค. 2569")).toBeInTheDocument();
   });
 
@@ -141,10 +179,10 @@ describe("TimelineDetail", () => {
 
     const rows = screen.getAllByTestId("timeline-step");
     expect(rows).toHaveLength(10);
-    expect(screen.getByText(/29 วันทำการ/)).toBeInTheDocument();
+    expect(screen.getByText(/31 วันทำการ/)).toBeInTheDocument();
     expect(within(rows[2]).getByText("วันจันทร์ 13 ก.ค. 2569 - วันศุกร์ 17 ก.ค. 2569")).toBeInTheDocument();
-    expect(within(rows[6]).getByText("วันพฤหัสบดี 23 ก.ค. 2569 - วันอังคาร 28 ก.ค. 2569")).toBeInTheDocument();
-    expect(within(rows[9]).getByText("วันพุธ 5 ส.ค. 2569 - วันพฤหัสบดี 13 ส.ค. 2569")).toBeInTheDocument();
+    expect(within(rows[6]).getByText("วันจันทร์ 27 ก.ค. 2569 - วันพฤหัสบดี 30 ก.ค. 2569")).toBeInTheDocument();
+    expect(within(rows[9]).getByText("วันศุกร์ 7 ส.ค. 2569 - วันจันทร์ 17 ส.ค. 2569")).toBeInTheDocument();
     expect(rows[1]).not.toHaveTextContent(" - ");
     expect(rows[7]).not.toHaveTextContent(" - ");
   });
@@ -198,7 +236,7 @@ describe("TimelineDetail", () => {
     render(<TimelineDetail projectId="project-1" initialProject={shortened} />);
 
     expect(screen.getByTestId("print-total-days")).toHaveTextContent(
-      "34 วันทำการ · ไม่เป็นไปตาม SLA",
+      "36 วันทำการ · ไม่เป็นไปตาม SLA",
     );
   });
 
