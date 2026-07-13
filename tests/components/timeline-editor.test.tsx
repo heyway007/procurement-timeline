@@ -117,6 +117,25 @@ describe("TimelineDetail", () => {
     expect(within(rows[1]).getByText("วันศุกร์ 10 ก.ค. 2569")).toBeInTheDocument();
   });
 
+  it("counts milestone 3 and 6 ranges forward from their start instead of backward from the next milestone", () => {
+    const project = projectFixture();
+    project.steps = project.steps.map((step) => {
+      if (step.order === 4) {
+        return { ...step, scheduledDate: "2026-07-20", isDateManuallyAdjusted: true };
+      }
+      if (step.order === 7) {
+        return { ...step, scheduledDate: "2026-08-03", isDateManuallyAdjusted: true };
+      }
+      return step;
+    });
+
+    render(<TimelineDetail projectId="project-1" initialProject={project} />);
+
+    const rows = screen.getAllByTestId("timeline-step");
+    expect(within(rows[2]).getByText("วันจันทร์ 13 ก.ค. 2569 - วันพุธ 15 ก.ค. 2569")).toBeInTheDocument();
+    expect(within(rows[5]).getByText("วันพฤหัสบดี 23 ก.ค. 2569 - วันพุธ 29 ก.ค. 2569")).toBeInTheDocument();
+  });
+
   it("shows small-budget date ranges for document pickup, committee selection, and the final appeal period", () => {
     render(<TimelineDetail projectId="project-1" initialProject={smallBudgetProjectFixture()} />);
 

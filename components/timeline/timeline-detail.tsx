@@ -157,7 +157,11 @@ export function TimelineDetail({
 
     return formatThaiDateRangeWithWeekday(
       step.scheduledDate,
-      previousWorkingDate(nextStep.scheduledDate, holidayDates),
+      addWorkingDays(
+        step.scheduledDate,
+        step.workingDaysToNext - 1,
+        holidayDates,
+      ),
     );
   }
 
