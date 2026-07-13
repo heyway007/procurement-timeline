@@ -99,7 +99,10 @@ export function mapProjectError(error: unknown): MappedProjectError {
     status: 500,
     body: {
       code: "INTERNAL_ERROR",
-      message: "ระบบขัดข้อง กรุณาลองใหม่อีกครั้ง",
+      message:
+        error instanceof Error
+          ? `ระบบขัดข้อง: ${error.name}: ${error.message.slice(0, 160)}`
+          : "ระบบขัดข้อง กรุณาลองใหม่อีกครั้ง",
     },
   };
 }
