@@ -37,7 +37,7 @@ export class GoogleDriveProjectRepository
       const now = new Date().toISOString();
       const project: ProjectRecord = {
         ...input,
-        id: crypto.randomUUID(),
+        id: globalThis.crypto.randomUUID(),
         version: 1,
         createdAt: now,
         updatedAt: now,

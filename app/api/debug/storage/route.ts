@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { getGoogleDriveDataStore } from "@/lib/google-drive/container";
 import { assertGoogleDriveEnv, storageModeFromEnv } from "@/lib/storage/config";
@@ -9,7 +10,7 @@ function errorInfo(error: unknown): { name: string; message: string } {
   return { name: typeof error, message: String(error).slice(0, 240) };
 }
 
-export async function GET(): Promise<NextResponse> {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   const env = process.env;
   const base = {
     hasProcessEnv: Boolean(env),
@@ -25,8 +26,13 @@ export async function GET(): Promise<NextResponse> {
   try {
     const mode = storageModeFromEnv(env);
     const config = mode === "google_drive" ? assertGoogleDriveEnv(env) : null;
-    const document = mode === "google_drive"
-      ? await getGoogleDriveDataStore().read()
+    const store = mode === "google_drive" ? getGoogleDriveDataStore() : null;
+    const document = store ? await store.read() : null;
+    const writeResult = request.nextUrl.searchParams.get("write") === "1" && store
+      ? await store.mutate((draft) => ({
+          projects: draft.projects.length,
+          updatedAt: draft.updatedAt,
+        }))
       : null;
     return NextResponse.json({
       ok: true,
@@ -48,6 +54,7 @@ export async function GET(): Promise<NextResponse> {
             templates: document.templates.length,
           }
         : null,
+      writeResult,
     });
   } catch (error) {
     return NextResponse.json({
