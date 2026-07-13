@@ -410,7 +410,16 @@ export function TimelineDetail({
           <div data-testid="timeline-step" key={step.order} className="print-grid grid gap-3 border-t border-slate-100 px-4 py-4 text-base lg:grid-cols-[4rem_1fr_20rem_7rem]">
             <span className="font-semibold text-indigo-700"><span className="print-hidden lg:hidden">ขั้นตอนที่ </span>{step.order}</span>
             <div className="min-w-0">
-              <p className="font-medium text-slate-900">{displayStepLabel(step)}</p>
+              {step.order === 1 ? (
+                <>
+                  <p className="text-lg font-semibold text-slate-900">จัดทำเอกสาร</p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    รายงานขอซื้อขอจ้าง • แต่งตั้งคณะกรรมการ • ประกวดราคา
+                  </p>
+                </>
+              ) : (
+                <p className="font-medium text-slate-900">{displayStepLabel(step)}</p>
+              )}
               {isBidSubmissionMilestone(step.label) ? (
                 <p className="font-medium text-slate-900">ผู้ยื่นใบเสนอราคาผ่านเว็บไซต์ของกรมบัญชีกลางเท่านั้น</p>
               ) : null}

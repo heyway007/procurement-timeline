@@ -99,6 +99,30 @@ describe("TimelineDetail", () => {
     expect(screen.getByText("จัดซื้อระบบสารสนเทศ")).toBeInTheDocument();
   });
 
+  it("renders step one with a heading and smaller bullet-separated detail", () => {
+    render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
+
+    const firstRow = screen.getAllByTestId("timeline-step")[0];
+    const heading = within(firstRow).getByText("จัดทำเอกสาร");
+    const detail = within(firstRow).getByText(
+      "รายงานขอซื้อขอจ้าง • แต่งตั้งคณะกรรมการ • ประกวดราคา",
+    );
+
+    expect(heading).toHaveClass("text-lg", "font-semibold");
+    expect(detail).toHaveClass("text-sm", "text-slate-500");
+    expect(detail).not.toHaveClass("print-hidden");
+  });
+
+  it("does not replace the wording of later steps", () => {
+    render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
+
+    const secondRow = screen.getAllByTestId("timeline-step")[1];
+    expect(secondRow).toHaveTextContent(
+      "ประกาศร่างประกาศและเอกสารประกวดราคาเพื่อรับฟังคำวิจารณ์",
+    );
+    expect(within(secondRow).queryByText("จัดทำเอกสาร")).not.toBeInTheDocument();
+  });
+
   it("renders and immediately saves the bid submission time dropdown", async () => {
     const user = userEvent.setup();
     const onUpdateBidSubmissionTime = vi.fn().mockImplementation(async (slot) => ({
