@@ -357,13 +357,13 @@ export function TimelineDetail({
   }
 
   return (
-    <main className="print-page mx-auto min-h-screen max-w-6xl px-4 py-8 text-base sm:px-6">
+    <main className="print-page mx-auto min-h-screen max-w-6xl overflow-x-hidden px-4 py-6 text-base sm:px-6 sm:py-8">
       <nav className="print-hidden mb-6">
         <Link href="/" className="font-semibold text-indigo-700">← กลับหน้าโครงการ</Link>
       </nav>
-      <header data-testid="print-header" className="print-header rounded-3xl bg-slate-950 p-6 text-white shadow-xl sm:p-8">
+      <header data-testid="print-header" className="print-header rounded-3xl bg-slate-950 p-5 text-white shadow-xl sm:p-8">
         <p className="text-sm font-semibold text-indigo-300">Timeline โครงการ</p>
-        <h1 className="mt-2 text-3xl font-semibold">{project.name}</h1>
+        <h1 className="mt-2 break-words text-2xl font-semibold sm:text-3xl">{project.name}</h1>
         <dl className="mt-6 grid gap-4 text-base sm:grid-cols-2 lg:grid-cols-4">
           <div data-testid="print-owner"><dt className="text-slate-400">ผู้จัดทำ Timeline</dt><dd className="mt-1 font-semibold">{project.ownerName}</dd></div>
           <div data-testid="print-department"><dt className="text-slate-400">ฝ่าย</dt><dd className="mt-1 font-semibold">{project.departmentName || "-"}</dd></div>
@@ -378,38 +378,38 @@ export function TimelineDetail({
       {error ? <p role="alert" className="mt-5 rounded-xl bg-rose-50 px-4 py-3 text-rose-800">{error}</p> : null}
 
       <section data-testid="timeline-table" className="print-table mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div data-testid="timeline-header-row" className="print-grid hidden grid-cols-[4rem_1fr_20rem_7rem] gap-3 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-600 md:grid">
+        <div data-testid="timeline-header-row" className="print-grid hidden grid-cols-[4rem_1fr_20rem_7rem] gap-3 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-600 lg:grid">
           <span>ลำดับ</span><span>ขั้นตอน</span><span>วันที่กำหนด</span><span className="print-hidden">จัดการ</span>
         </div>
         {project.steps.map((step, index) => (
-          <div data-testid="timeline-step" key={step.order} className="print-grid grid gap-3 border-t border-slate-100 px-4 py-4 text-base md:grid-cols-[4rem_1fr_20rem_7rem]">
-            <span className="font-semibold text-indigo-700">{step.order}</span>
-            <div>
+          <div data-testid="timeline-step" key={step.order} className="print-grid grid gap-3 border-t border-slate-100 px-4 py-4 text-base lg:grid-cols-[4rem_1fr_20rem_7rem]">
+            <span className="font-semibold text-indigo-700"><span className="lg:hidden">ขั้นตอนที่ </span>{step.order}</span>
+            <div className="min-w-0">
               <p className="font-medium text-slate-900">{displayStepLabel(step)}</p>
               <p className="print-step-hint mt-1 text-sm text-slate-500">{formatWorkingDaysText(step)} {step.isDateManuallyAdjusted ? "· ปรับกำหนดการ" : ""}</p>
             </div>
-            <span className="font-medium text-slate-700">{formatStepScheduledDate(index)}</span>
-            <button className="print-hidden h-9 rounded-lg border border-slate-300 font-semibold text-slate-700" type="button" aria-label={`แก้วันที่ ขั้นตอนที่ ${step.order}`} onClick={() => { setEditingOrder(step.order); setNewDate(step.scheduledDate); setEditError(""); }}>แก้วันที่</button>
+            <span className="font-medium text-slate-700"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 lg:hidden">วันที่กำหนด</span>{formatStepScheduledDate(index)}</span>
+            <button className="print-hidden min-h-10 rounded-lg border border-slate-300 px-4 font-semibold text-slate-700 lg:h-9" type="button" aria-label={`แก้วันที่ ขั้นตอนที่ ${step.order}`} onClick={() => { setEditingOrder(step.order); setNewDate(step.scheduledDate); setEditError(""); }}>แก้วันที่</button>
           </div>
         ))}
-        <div className="print-grid grid gap-3 border-t-2 border-indigo-100 bg-indigo-50 px-4 py-4 text-base md:grid-cols-[4rem_1fr_20rem_7rem]">
+        <div className="print-grid grid gap-3 border-t-2 border-indigo-100 bg-indigo-50 px-4 py-4 text-base lg:grid-cols-[4rem_1fr_20rem_7rem]">
           <span className="font-semibold text-indigo-700">จบ</span><span className="font-semibold text-slate-900">วันที่เริ่มทำสัญญา</span><span className="font-semibold text-indigo-800">{formatThaiDateWithWeekday(project.processEndDate)}</span><span />
         </div>
       </section>
 
-      <div className="print-hidden mt-6 flex flex-wrap justify-end gap-3">
-        <button type="button" onClick={() => window.print()} className="rounded-xl border border-slate-300 px-4 py-2 font-semibold">พิมพ์ Timeline</button>
-        <button type="button" onClick={resetSchedule} className="rounded-xl border border-slate-300 px-4 py-2 font-semibold">คืนค่าตามแม่แบบ</button>
-        <button type="button" onClick={removeProject} className="rounded-xl bg-rose-700 px-4 py-2 font-semibold text-white">ลบโครงการ</button>
+      <div className="print-hidden mt-6 grid gap-3 sm:flex sm:flex-wrap sm:justify-end">
+        <button type="button" onClick={() => window.print()} className="min-h-11 rounded-xl border border-slate-300 px-4 py-2 font-semibold">พิมพ์ Timeline</button>
+        <button type="button" onClick={resetSchedule} className="min-h-11 rounded-xl border border-slate-300 px-4 py-2 font-semibold">คืนค่าตามแม่แบบ</button>
+        <button type="button" onClick={removeProject} className="min-h-11 rounded-xl bg-rose-700 px-4 py-2 font-semibold text-white">ลบโครงการ</button>
       </div>
 
       {editingOrder !== null ? (
         <div className="print-hidden fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4">
-          <form className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" onSubmit={(event) => { event.preventDefault(); void saveEdit(); }}>
+          <form className="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl sm:p-6" onSubmit={(event) => { event.preventDefault(); void saveEdit(); }}>
             <h2 className="text-xl font-semibold">แก้วันที่ขั้นตอนที่ {editingOrder}</h2>
             <label className="mt-5 block text-sm font-medium">วันที่ใหม่<input aria-label="วันที่ใหม่" className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 px-3" type="date" value={newDate} onChange={(event) => { setNewDate(event.target.value); setEditError(""); }} required /></label>
             {editError ? <p role="alert" className="mt-3 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-800">{editError}</p> : null}
-            <div className="mt-6 flex justify-end gap-3"><button type="button" onClick={() => { setEditingOrder(null); setEditError(""); }} className="rounded-xl border px-4 py-2">ยกเลิก</button><button type="submit" className="rounded-xl bg-indigo-700 px-4 py-2 font-semibold text-white">ตกลง</button></div>
+            <div className="mt-6 grid gap-3 sm:flex sm:justify-end"><button type="button" onClick={() => { setEditingOrder(null); setEditError(""); }} className="min-h-11 rounded-xl border px-4 py-2">ยกเลิก</button><button type="submit" className="min-h-11 rounded-xl bg-indigo-700 px-4 py-2 font-semibold text-white">ตกลง</button></div>
           </form>
         </div>
       ) : null}

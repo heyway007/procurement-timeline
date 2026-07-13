@@ -15,7 +15,38 @@ export function ProjectTable({ projects }: { projects: ProjectRecord[] }) {
 
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="overflow-x-auto">
+      <div className="divide-y divide-slate-100 md:hidden">
+        {projects.map((project) => (
+          <article key={project.id} className="p-4">
+            <div className="min-w-0">
+              <p className="break-words font-semibold text-slate-950">{project.name}</p>
+              <p className="mt-1 text-sm text-slate-500">{project.ownerName}</p>
+              {project.departmentName ? <p className="mt-1 break-words text-xs text-slate-500">{project.departmentName}</p> : null}
+            </div>
+            <dl className="mt-4 grid gap-3 text-sm">
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">วงเงิน</dt>
+                <dd className="mt-1 text-slate-800">{formatBaht(project.budget)}</dd>
+                <dd className="mt-1 text-xs text-slate-500">{budgetCategoryLabel(project.budgetCategory)}</dd>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">วันเริ่ม</dt>
+                  <dd className="mt-1 text-slate-800">{formatThaiDate(project.startDate)}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">เริ่มทำสัญญา</dt>
+                  <dd className="mt-1 text-slate-800">{formatThaiDate(project.processEndDate)}</dd>
+                </div>
+              </div>
+            </dl>
+            <Link className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-indigo-700 px-4 font-semibold text-white" href={`/projects/${project.id}`}>
+              เปิด Timeline
+            </Link>
+          </article>
+        ))}
+      </div>
+      <div className="hidden overflow-x-auto md:block">
         <table className="min-w-full divide-y divide-slate-200">
           <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
             <tr>

@@ -45,17 +45,17 @@ export function Dashboard({ initialProjects }: { initialProjects?: ProjectRecord
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <main className="mx-auto min-h-screen max-w-7xl overflow-x-hidden px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
       <header className="flex flex-col justify-between gap-5 border-b border-slate-200 pb-7 sm:flex-row sm:items-center">
-        <div>
+        <div className="min-w-0">
           <p className="text-sm font-semibold tracking-wide text-indigo-700">Procurement Timeline</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">แผนงานจัดซื้อจัดจ้าง</h1>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950 sm:text-4xl">แผนงานจัดซื้อจัดจ้าง</h1>
           <p className="mt-2 text-sm leading-6 text-slate-600">วางแผนวันดำเนินงานอัตโนมัติตามวันทำการราชการไทย</p>
         </div>
-        <div className="flex gap-3"><Link href="/holidays" className="inline-flex min-h-12 items-center rounded-xl border border-slate-300 px-4 font-semibold text-slate-700">จัดการวันหยุด</Link><button className="inline-flex min-h-12 items-center justify-center rounded-xl bg-indigo-700 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-800" type="button" onClick={() => setCreating(true)}>สร้าง Timeline</button></div>
+        <div className="grid gap-3 sm:flex sm:shrink-0"><Link href="/holidays" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-300 px-4 font-semibold text-slate-700">จัดการวันหยุด</Link><button className="inline-flex min-h-12 items-center justify-center rounded-xl bg-indigo-700 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-800" type="button" onClick={() => setCreating(true)}>สร้าง Timeline</button></div>
       </header>
 
-      <section aria-label="ตัวกรองโครงการ" className="my-7 grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-3">
+      <section aria-label="ตัวกรองโครงการ" className="my-6 grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:my-7 sm:grid-cols-3">
         <label className="text-sm font-medium text-slate-700">
           ค้นหาโครงการ
           <input className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 px-3" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="ชื่อโครงการหรือผู้รับผิดชอบ" />

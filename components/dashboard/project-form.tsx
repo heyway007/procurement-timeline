@@ -13,7 +13,7 @@ type ProjectFormProps = {
 };
 
 const fieldClass =
-  "mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none transition focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100";
+  "mt-2 min-h-11 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none transition focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100";
 
 const DEPARTMENT_OPTIONS = [
   "ฝ่ายส่งเสริมการจัดประชุมนานาชาติ",
@@ -91,18 +91,18 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-0 sm:items-center sm:p-6">
+    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-hidden bg-slate-950/40 p-2 sm:items-center sm:p-6">
       <section
         aria-labelledby="create-project-title"
-        className="flex max-h-[95vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl"
+        className="flex max-h-[95vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
         role="dialog"
         aria-modal="true"
       >
-        <div className="overflow-y-auto px-6 py-6 [scrollbar-gutter:stable] sm:px-8 sm:py-8">
+        <div className="min-w-0 overflow-y-auto px-4 py-5 [scrollbar-gutter:stable] sm:px-8 sm:py-8">
           <div className="flex items-start justify-between gap-4">
-            <div>
+            <div className="min-w-0">
               <p className="text-sm font-semibold text-indigo-700">Timeline ใหม่</p>
-              <h2 id="create-project-title" className="mt-1 text-2xl font-semibold text-slate-950">
+              <h2 id="create-project-title" className="mt-1 text-xl font-semibold text-slate-950 sm:text-2xl">
                 ข้อมูลโครงการ
               </h2>
             </div>
@@ -112,33 +112,33 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
           </div>
 
           <form className="mt-6 grid gap-5 sm:grid-cols-2" onSubmit={handleSubmit}>
-            <label className="text-sm font-medium text-slate-700 sm:col-span-2">
+            <label className="min-w-0 text-sm font-medium text-slate-700 sm:col-span-2">
               ชื่อโครงการ
               <input className={fieldClass} name="name" required maxLength={200} />
             </label>
-            <label className="text-sm font-medium text-slate-700">
+            <label className="min-w-0 text-sm font-medium text-slate-700">
               ฝ่าย
               <select aria-label="ฝ่าย" className={fieldClass} name="departmentName" required defaultValue="">
                 <option value="" disabled>เลือกฝ่าย</option>
                 {DEPARTMENT_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
               </select>
             </label>
-            <label className="text-sm font-medium text-slate-700">
+            <label className="min-w-0 text-sm font-medium text-slate-700">
               ประเภทวงเงิน
               <select aria-label="ประเภทวงเงิน" className={fieldClass} name="budgetCategory" required defaultValue="">
                 <option value="" disabled>เลือกประเภทวงเงิน</option>
                 {BUDGET_CATEGORY_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
               </select>
             </label>
-            <label className="text-sm font-medium text-slate-700">
+            <label className="min-w-0 text-sm font-medium text-slate-700">
               วงเงินจัดจ้าง (บาท)
               <input aria-label="วงเงินจัดจ้าง (บาท)" className={fieldClass} name="budget" type="number" min="1000000" step="0.01" required />
             </label>
-            <label className="text-sm font-medium text-slate-700">
+            <label className="min-w-0 text-sm font-medium text-slate-700">
               ผู้จัดทำ Timeline
               <input className={fieldClass} name="ownerName" required maxLength={120} />
             </label>
-            <label className="text-sm font-medium text-slate-700 sm:col-span-2">
+            <label className="min-w-0 text-sm font-medium text-slate-700 sm:col-span-2">
               วันที่เริ่มต้น
               <input
                 className={fieldClass}
@@ -154,7 +154,7 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
                 </span>
               ) : null}
             </label>
-            <label className="text-sm font-medium text-slate-700 sm:col-span-2">
+            <label className="min-w-0 text-sm font-medium text-slate-700 sm:col-span-2">
               หมายเหตุ
               <textarea className={`${fieldClass} min-h-24`} name="note" maxLength={2000} />
             </label>
