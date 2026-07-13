@@ -411,7 +411,7 @@ export function TimelineDetail({
         <p className="text-sm font-semibold text-indigo-300">Timeline โครงการ</p>
         <h1 className="mt-2 text-3xl font-semibold">{project.name}</h1>
         <dl className="mt-6 grid gap-4 text-sm sm:grid-cols-4">
-          <div data-testid="print-owner" className="print-hidden"><dt className="text-slate-400">ผู้รับผิดชอบ</dt><dd className="mt-1 font-semibold">{project.ownerName}{project.departmentName ? ` / ${project.departmentName}` : ""}</dd></div>
+          <div data-testid="print-owner" className="print-hidden"><dt className="text-slate-400">ผู้จัดทำ Timeline</dt><dd className="mt-1 font-semibold">{project.ownerName}{project.departmentName ? ` / ${project.departmentName}` : ""}</dd></div>
           <div><dt className="text-slate-400">วงเงิน</dt><dd className="mt-1 font-semibold">{formatBaht(project.budget)}</dd></div>
           <div><dt className="text-slate-400">วันที่เริ่มทำสัญญา</dt><dd className="mt-1 font-semibold">{formatThaiDate(project.processEndDate)}</dd></div>
           <div><dt className="text-slate-400">จำนวนวันทำการทั้งหมด</dt><dd className="mt-1 font-semibold">{totalWorkingDays(project)} วันทำการ</dd></div>

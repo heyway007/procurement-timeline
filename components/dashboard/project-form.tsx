@@ -16,11 +16,26 @@ const fieldClass =
   "mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none transition focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100";
 
 const DEPARTMENT_OPTIONS = [
-  "ฝ่ายพัสดุ",
-  "ฝ่ายการเงิน",
-  "ฝ่ายบริหารงานทั่วไป",
-  "ฝ่ายแผนงานและงบประมาณ",
-  "ฝ่ายวิชาการ",
+  "ฝ่ายส่งเสริมการจัดประชุมนานาชาติ",
+  "ฝ่ายการตลาดไมซ์ในประเทศ",
+  "สำนักส่งเสริมการจัดประชุมและนิทรรศการ ภาคเหนือ",
+  "ฝ่ายส่งเสริมการจัดประชุมและการเดินทางเพื่อเป็นรางวัล",
+  "ฝ่ายบริหาร",
+  "ฝ่ายภาพลักษณ์และสื่อสารองค์กร",
+  "ทีมบริหารดิจิทัล",
+  "สำนักผู้อำนวยการ",
+  "ฝ่ายพัฒนาการจัดงานเมกะอีเว้นท์และเทศกาลนานาชาติ",
+  "สำนักส่งเสริมการจัดประชุมและนิทรรศการ ภาคตะวันออกเฉียงเหนือ",
+  "ฝ่ายไมซ์อินเทลลิเจนท์และนวัตกรรม",
+  "ฝ่ายอุตสาหกรรมการแสดงสินค้านานาชาติ",
+  "ฝ่ายพัฒนาศักยภาพอุตสาหกรรมไมซ์",
+  "สำนักส่งเสริมการจัดประชุมและนิทรรศการ ภาคกลาง",
+  "สำนักส่งเสริมการจัดประชุมและนิทรรศการ ภาคใต้",
+  "ส่วนงานตลาดดิจิทัล",
+  "ผู้ชำนาญการ",
+  "ฝ่ายตรวจสอบภายใน",
+  "ฝ่ายพัฒนากลยุทธ์องค์กร",
+  "ฝ่ายบัญชีและการเงิน",
 ];
 
 export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
@@ -135,7 +150,7 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
             ) : null}
           </label>
           <label className="text-sm font-medium text-slate-700 sm:col-span-2">
-            ผู้รับผิดชอบ
+            ผู้จัดทำ Timeline
             <input className={fieldClass} name="ownerName" required maxLength={120} />
           </label>
           <label className="text-sm font-medium text-slate-700 sm:col-span-2">
