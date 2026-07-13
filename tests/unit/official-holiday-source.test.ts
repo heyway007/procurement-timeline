@@ -1,6 +1,11 @@
 import { readFile } from "node:fs/promises";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { parseSocHolidayCalendar } from "@/lib/holidays/official-calendar";
+import { SocHolidaySource } from "@/lib/holidays/official-source";
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe("parseSocHolidayCalendar", () => {
   it("normalizes Buddhist-year dates and Bangkok scope", async () => {
@@ -18,5 +23,22 @@ describe("parseSocHolidayCalendar", () => {
 
   it("ignores dates outside the requested year", () => {
     expect(() => parseSocHolidayCalendar("<p>1 มกราคม 2568 วันขึ้นปีใหม่</p>", 2026, "https://www.soc.go.th/")).toThrow("OFFICIAL_SOURCE_INVALID");
+  });
+});
+
+describe("SocHolidaySource", () => {
+  it("falls back to the curated 2026 cabinet holiday list when the official page is unavailable", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network down")));
+
+    const holidays = await new SocHolidaySource().fetchYear(2026);
+
+    expect(holidays).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ date: "2026-01-02", scope: "NATIONWIDE" }),
+        expect.objectContaining({ date: "2026-05-11", scope: "NATIONWIDE" }),
+        expect.objectContaining({ date: "2026-10-16", scope: "BANGKOK" }),
+        expect.objectContaining({ date: "2026-12-31", scope: "NATIONWIDE" }),
+      ]),
+    );
   });
 });
