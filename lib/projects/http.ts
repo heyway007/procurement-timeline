@@ -84,6 +84,17 @@ export function mapProjectError(error: unknown): MappedProjectError {
     return knownErrors[error.message];
   }
 
+  if (error instanceof Error && error.message.startsWith("GOOGLE_DRIVE_")) {
+    const code = error.message.split(":")[0] ?? "GOOGLE_DRIVE_ERROR";
+    return {
+      status: 500,
+      body: {
+        code,
+        message: `Google Drive storage error: ${code}`,
+      },
+    };
+  }
+
   return {
     status: 500,
     body: {

@@ -272,19 +272,24 @@ async function signServiceAccountJwt({
     base64UrlEncodeJson(header),
     base64UrlEncodeJson(payload),
   ].join(".");
-  const key = await crypto.subtle.importKey(
-    "pkcs8",
-    pemToArrayBuffer(privateKey),
-    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
-  const signature = await crypto.subtle.sign(
-    "RSASSA-PKCS1-v1_5",
-    key,
-    new TextEncoder().encode(signingInput),
-  );
-  return `${signingInput}.${base64UrlEncode(signature)}`;
+  try {
+    if (!globalThis.crypto?.subtle) throw new Error("WEB_CRYPTO_UNAVAILABLE");
+    const key = await globalThis.crypto.subtle.importKey(
+      "pkcs8",
+      pemToArrayBuffer(privateKey),
+      { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+      false,
+      ["sign"],
+    );
+    const signature = await globalThis.crypto.subtle.sign(
+      "RSASSA-PKCS1-v1_5",
+      key,
+      new TextEncoder().encode(signingInput),
+    );
+    return `${signingInput}.${base64UrlEncode(signature)}`;
+  } catch {
+    throw new Error("GOOGLE_DRIVE_JWT_SIGN_FAILED");
+  }
 }
 
 function base64UrlEncodeJson(value: unknown): string {
