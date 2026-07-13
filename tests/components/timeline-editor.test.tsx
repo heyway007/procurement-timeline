@@ -182,6 +182,7 @@ describe("TimelineDetail", () => {
     expect(screen.getByTestId("timeline-table")).toHaveClass("print-table");
     expect(screen.getByTestId("timeline-header-row")).toHaveClass("print-grid");
     expect(screen.getAllByTestId("timeline-step")[0]).toHaveClass("print-grid");
+    expect(screen.getAllByText("ขั้นตอนที่")[0]).toHaveClass("print-hidden");
   });
 
   it("marks a shortened manually adjusted timeline as not meeting SLA", () => {

@@ -376,7 +376,7 @@ export function TimelineDetail({
         </div>
         {project.steps.map((step, index) => (
           <div data-testid="timeline-step" key={step.order} className="print-grid grid gap-3 border-t border-slate-100 px-4 py-4 text-base lg:grid-cols-[4rem_1fr_20rem_7rem]">
-            <span className="font-semibold text-indigo-700"><span className="lg:hidden">ขั้นตอนที่ </span>{step.order}</span>
+            <span className="font-semibold text-indigo-700"><span className="print-hidden lg:hidden">ขั้นตอนที่ </span>{step.order}</span>
             <div className="min-w-0">
               <p className="font-medium text-slate-900">{displayStepLabel(step)}</p>
               <p className="print-step-hint mt-1 text-sm text-slate-500">{formatWorkingDaysText(step)} {step.isDateManuallyAdjusted ? "· ปรับกำหนดการ" : ""}</p>
