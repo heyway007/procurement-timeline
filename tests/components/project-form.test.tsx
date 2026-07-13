@@ -26,7 +26,7 @@ describe("ProjectForm", () => {
     swalFire.mockResolvedValue({ isConfirmed: true } as never);
   });
 
-  it("places the owner field below the start date field", () => {
+  it("places the owner field after the budget field and before the start date field", () => {
     render(<ProjectForm onCancel={() => undefined} onCreate={vi.fn()} />);
 
     const form = screen.getByLabelText("ชื่อโครงการ").closest("form");
@@ -35,9 +35,8 @@ describe("ProjectForm", () => {
       form?.querySelectorAll("input, select, textarea") ?? [],
     ).map((element) => element.getAttribute("name"));
 
-    expect(controls.indexOf("ownerName")).toBeGreaterThan(
-      controls.indexOf("startDate"),
-    );
+    expect(controls.indexOf("ownerName")).toBeGreaterThan(controls.indexOf("budget"));
+    expect(controls.indexOf("ownerName")).toBeLessThan(controls.indexOf("startDate"));
   });
 
   it("submits category and actual budget", async () => {

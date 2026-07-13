@@ -94,85 +94,87 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-0 sm:items-center sm:p-6">
       <section
         aria-labelledby="create-project-title"
-        className="max-h-[95vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl bg-white p-6 shadow-2xl sm:rounded-3xl sm:p-8"
+        className="flex max-h-[95vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl"
         role="dialog"
         aria-modal="true"
       >
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold text-indigo-700">Timeline ใหม่</p>
-            <h2 id="create-project-title" className="mt-1 text-2xl font-semibold text-slate-950">
-              ข้อมูลโครงการ
-            </h2>
+        <div className="overflow-y-auto px-6 py-6 [scrollbar-gutter:stable] sm:px-8 sm:py-8">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-indigo-700">Timeline ใหม่</p>
+              <h2 id="create-project-title" className="mt-1 text-2xl font-semibold text-slate-950">
+                ข้อมูลโครงการ
+              </h2>
+            </div>
+            <button type="button" onClick={onCancel} className="rounded-lg px-3 py-2 text-slate-600 hover:bg-slate-100">
+              ปิด
+            </button>
           </div>
-          <button type="button" onClick={onCancel} className="rounded-lg px-3 py-2 text-slate-600 hover:bg-slate-100">
-            ปิด
-          </button>
-        </div>
 
-        <form className="mt-6 grid gap-5 sm:grid-cols-2" onSubmit={handleSubmit}>
-          <label className="text-sm font-medium text-slate-700 sm:col-span-2">
-            ชื่อโครงการ
-            <input className={fieldClass} name="name" required maxLength={200} />
-          </label>
-          <label className="text-sm font-medium text-slate-700">
-            ฝ่าย
-            <select aria-label="ฝ่าย" className={fieldClass} name="departmentName" required defaultValue="">
-              <option value="" disabled>เลือกฝ่าย</option>
-              {DEPARTMENT_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
-            </select>
-          </label>
-          <label className="text-sm font-medium text-slate-700">
-            ประเภทวงเงิน
-            <select aria-label="ประเภทวงเงิน" className={fieldClass} name="budgetCategory" required defaultValue="">
-              <option value="" disabled>เลือกประเภทวงเงิน</option>
-              {BUDGET_CATEGORY_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-            </select>
-          </label>
-          <label className="text-sm font-medium text-slate-700">
-            วงเงินจัดจ้าง (บาท)
-            <input aria-label="วงเงินจัดจ้าง (บาท)" className={fieldClass} name="budget" type="number" min="1000000" step="0.01" required />
-          </label>
-          <label className="text-sm font-medium text-slate-700 sm:col-span-2">
-            วันที่เริ่มต้น
-            <input
-              className={fieldClass}
-              name="startDate"
-              type="date"
-              required
-              value={startDate}
-              onChange={(event) => setStartDate(event.target.value)}
-            />
-            {startDate ? (
-              <span className="mt-2 block text-xs font-normal text-slate-500">
-                วันที่ภาษาไทย: {formatThaiDate(startDate)}
-              </span>
+          <form className="mt-6 grid gap-5 sm:grid-cols-2" onSubmit={handleSubmit}>
+            <label className="text-sm font-medium text-slate-700 sm:col-span-2">
+              ชื่อโครงการ
+              <input className={fieldClass} name="name" required maxLength={200} />
+            </label>
+            <label className="text-sm font-medium text-slate-700">
+              ฝ่าย
+              <select aria-label="ฝ่าย" className={fieldClass} name="departmentName" required defaultValue="">
+                <option value="" disabled>เลือกฝ่าย</option>
+                {DEPARTMENT_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
+              </select>
+            </label>
+            <label className="text-sm font-medium text-slate-700">
+              ประเภทวงเงิน
+              <select aria-label="ประเภทวงเงิน" className={fieldClass} name="budgetCategory" required defaultValue="">
+                <option value="" disabled>เลือกประเภทวงเงิน</option>
+                {BUDGET_CATEGORY_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+              </select>
+            </label>
+            <label className="text-sm font-medium text-slate-700">
+              วงเงินจัดจ้าง (บาท)
+              <input aria-label="วงเงินจัดจ้าง (บาท)" className={fieldClass} name="budget" type="number" min="1000000" step="0.01" required />
+            </label>
+            <label className="text-sm font-medium text-slate-700">
+              ผู้จัดทำ Timeline
+              <input className={fieldClass} name="ownerName" required maxLength={120} />
+            </label>
+            <label className="text-sm font-medium text-slate-700 sm:col-span-2">
+              วันที่เริ่มต้น
+              <input
+                className={fieldClass}
+                name="startDate"
+                type="date"
+                required
+                value={startDate}
+                onChange={(event) => setStartDate(event.target.value)}
+              />
+              {startDate ? (
+                <span className="mt-2 block text-xs font-normal text-slate-500">
+                  วันที่ภาษาไทย: {formatThaiDate(startDate)}
+                </span>
+              ) : null}
+            </label>
+            <label className="text-sm font-medium text-slate-700 sm:col-span-2">
+              หมายเหตุ
+              <textarea className={`${fieldClass} min-h-24`} name="note" maxLength={2000} />
+            </label>
+
+            {error ? (
+              <p className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-800 sm:col-span-2" role="alert">
+                {error}
+              </p>
             ) : null}
-          </label>
-          <label className="text-sm font-medium text-slate-700 sm:col-span-2">
-            ผู้จัดทำ Timeline
-            <input className={fieldClass} name="ownerName" required maxLength={120} />
-          </label>
-          <label className="text-sm font-medium text-slate-700 sm:col-span-2">
-            หมายเหตุ
-            <textarea className={`${fieldClass} min-h-24`} name="note" maxLength={2000} />
-          </label>
 
-          {error ? (
-            <p className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-800 sm:col-span-2" role="alert">
-              {error}
-            </p>
-          ) : null}
-
-          <div className="flex flex-col-reverse gap-3 sm:col-span-2 sm:flex-row sm:justify-end">
-            <button type="button" onClick={onCancel} className="min-h-11 rounded-xl border border-slate-300 px-5 font-semibold text-slate-700">
-              ยกเลิก
-            </button>
-            <button type="submit" disabled={pending} className="min-h-11 rounded-xl bg-indigo-700 px-5 font-semibold text-white disabled:opacity-60">
-              {pending ? "กำลังบันทึก..." : "บันทึก Timeline"}
-            </button>
-          </div>
-        </form>
+            <div className="flex flex-col-reverse gap-3 sm:col-span-2 sm:flex-row sm:justify-end">
+              <button type="button" onClick={onCancel} className="min-h-11 rounded-xl border border-slate-300 px-5 font-semibold text-slate-700">
+                ยกเลิก
+              </button>
+              <button type="submit" disabled={pending} className="min-h-11 rounded-xl bg-indigo-700 px-5 font-semibold text-white disabled:opacity-60">
+                {pending ? "กำลังบันทึก..." : "บันทึก Timeline"}
+              </button>
+            </div>
+          </form>
+        </div>
       </section>
     </div>
   );
