@@ -11,7 +11,8 @@ export async function GET(
 ): Promise<NextResponse> {
   try {
     const { id } = await context.params;
-    return NextResponse.json({ project: await getProjectService().get(id) });
+    const service = await getProjectService();
+    return NextResponse.json({ project: await service.get(id) });
   } catch (error: unknown) {
     return projectErrorResponse(error);
   }
@@ -23,7 +24,8 @@ export async function PATCH(
 ): Promise<NextResponse> {
   try {
     const { id } = await context.params;
-    const project = await getProjectService().updateDetails(
+    const service = await getProjectService();
+    const project = await service.updateDetails(
       id,
       await request.json(),
     );
@@ -40,7 +42,8 @@ export async function DELETE(
   try {
     const { id } = await context.params;
     const body = (await request.json()) as { version: number };
-    await getProjectService().remove(id, body.version);
+    const service = await getProjectService();
+    await service.remove(id, body.version);
     return new NextResponse(null, { status: 204 });
   } catch (error: unknown) {
     return projectErrorResponse(error);

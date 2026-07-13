@@ -6,7 +6,8 @@ import { projectErrorResponse } from "@/lib/projects/route-utils";
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const search = request.nextUrl.searchParams;
-    const projects = await getProjectService().list({
+    const service = await getProjectService();
+    const projects = await service.list({
       query: search.get("query") || undefined,
       from: search.get("from") || undefined,
       to: search.get("to") || undefined,
@@ -19,7 +20,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    const result = await getProjectService().create(await request.json());
+    const service = await getProjectService();
+    const result = await service.create(await request.json());
     return NextResponse.json(result, { status: 201 });
   } catch (error: unknown) {
     return projectErrorResponse(error);

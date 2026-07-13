@@ -12,8 +12,9 @@ export async function PUT(
   try {
     const { year } = await context.params;
     const body = (await request.json()) as { sourceNote: string };
+    const service = await getHolidayService();
     return NextResponse.json({
-      coverage: await getHolidayService().verifyYear(
+      coverage: await service.verifyYear(
         Number(year),
         body.sourceNote,
       ),

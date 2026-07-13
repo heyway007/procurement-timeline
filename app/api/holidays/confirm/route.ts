@@ -6,8 +6,9 @@ import { holidayErrorResponse } from "@/lib/holidays/route-utils";
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body = (await request.json()) as { token: string };
+    const service = await getHolidayService();
     return NextResponse.json(
-      await getHolidayService().confirmMutation(body.token),
+      await service.confirmMutation(body.token),
     );
   } catch (error: unknown) {
     return holidayErrorResponse(error);

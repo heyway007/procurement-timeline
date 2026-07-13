@@ -5,8 +5,9 @@ import { holidayErrorResponse } from "@/lib/holidays/route-utils";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    const service = await getHolidayService();
     return NextResponse.json(
-      await getHolidayService().previewMutation(await request.json()),
+      await service.previewMutation(await request.json()),
     );
   } catch (error: unknown) {
     return holidayErrorResponse(error);

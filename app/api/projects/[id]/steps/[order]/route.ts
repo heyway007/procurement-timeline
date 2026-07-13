@@ -17,7 +17,8 @@ export async function PATCH(
       confirmShortening?: boolean;
       confirmOverwrite?: boolean;
     };
-    const project = await getProjectService().adjustStep(id, {
+    const service = await getProjectService();
+    const project = await service.adjustStep(id, {
       order: Number(order),
       newDate: body.newDate,
       version: body.version,

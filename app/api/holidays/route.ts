@@ -6,7 +6,8 @@ import { holidayErrorResponse } from "@/lib/holidays/route-utils";
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const year = Number(request.nextUrl.searchParams.get("year"));
-    return NextResponse.json(await getHolidayService().listAndSyncYear(year));
+    const service = await getHolidayService();
+    return NextResponse.json(await service.listAndSyncYear(year));
   } catch (error: unknown) {
     return holidayErrorResponse(error);
   }

@@ -16,7 +16,8 @@ export async function PATCH(
       version: number;
       confirmShortening?: boolean;
     };
-    const project = await getProjectService().adjustEnd(
+    const service = await getProjectService();
+    const project = await service.adjustEnd(
       id,
       body.newDate,
       body.version,

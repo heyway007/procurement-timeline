@@ -12,7 +12,8 @@ export async function POST(
   try {
     const { id } = await context.params;
     const body = (await request.json()) as { version: number };
-    const project = await getProjectService().resetSchedule(id, body.version);
+    const service = await getProjectService();
+    const project = await service.resetSchedule(id, body.version);
     return NextResponse.json({ project });
   } catch (error: unknown) {
     return projectErrorResponse(error);
