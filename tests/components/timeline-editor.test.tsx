@@ -130,17 +130,17 @@ describe("TimelineDetail", () => {
     expect(rows[7]).not.toHaveTextContent(" - ");
   });
 
-  it("shows the automatic Present milestone as the three working days before its date", () => {
+  it("shows the automatic Present milestone as three working days after the previous milestone", () => {
     render(
       <TimelineDetail
         projectId="project-1"
-        initialProject={smallBudgetProjectWithPresentDate(false)}
+        initialProject={smallBudgetProjectFixture()}
       />,
     );
 
     const rows = screen.getAllByTestId("timeline-step");
     expect(within(rows[5]).getByText("วันพุธ 22 ก.ค. 2569 - วันศุกร์ 24 ก.ค. 2569")).toBeInTheDocument();
-    expect(within(rows[5]).getByText("3 วันทำการก่อน")).toBeInTheDocument();
+    expect(within(rows[5]).getByText("3 วันทำการจากขั้นตอนก่อนหน้า")).toBeInTheDocument();
   });
 
   it("shows a manually adjusted Present milestone as a single working day", () => {

@@ -12,6 +12,7 @@ import {
   resetProjectSchedule,
 } from "@/lib/ui/api-client";
 import { approvedTemplateStepsForBudgetCategory } from "@/lib/schedule/approved-template";
+import { addWorkingDays } from "@/lib/schedule/date";
 import {
   formatBaht,
   formatThaiDateRangeWithWeekday,
@@ -89,18 +90,6 @@ function displayStepLabel(step: ProjectRecord["steps"][number]): string {
   return label;
 }
 
-function previousWorkingDateBy(
-  iso: string,
-  amount: number,
-  holidays: ReadonlySet<string>,
-): string {
-  let cursor = iso;
-  for (let index = 0; index < amount; index += 1) {
-    cursor = previousWorkingDate(cursor, holidays);
-  }
-  return cursor;
-}
-
 export function TimelineDetail({
   projectId,
   initialProject,
@@ -152,8 +141,8 @@ export function TimelineDetail({
     if (!step) return "";
     if (isPresentMilestone(step.label) && !step.isDateManuallyAdjusted) {
       return formatThaiDateRangeWithWeekday(
-        previousWorkingDateBy(step.scheduledDate, 3, holidayDates),
-        previousWorkingDate(step.scheduledDate, holidayDates),
+        step.scheduledDate,
+        addWorkingDays(step.scheduledDate, 2, holidayDates),
       );
     }
     if (!nextStep) {
@@ -351,7 +340,7 @@ export function TimelineDetail({
 
   function formatWorkingDaysText(step: ProjectRecord["steps"][number]): string {
     if (isPresentMilestone(step.label) && !step.isDateManuallyAdjusted) {
-      return "3 วันทำการก่อน";
+      return "3 วันทำการจากขั้นตอนก่อนหน้า";
     }
     return `${step.workingDaysToNext} วันทำการถึงขั้นตอนถัดไป`;
   }
