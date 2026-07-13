@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev --webpack",
-    "build": "vinext build",
+    "build": "vinext build && node scripts/clean-sites-dist.mjs",
     "build:next": "next build",
     "start": "vinext start",
     "lint": "eslint .",
