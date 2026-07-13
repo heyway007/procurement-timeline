@@ -96,7 +96,7 @@ export class GoogleDriveApiFileClient implements GoogleDriveFileClient {
     const auth = new google.auth.JWT({
       email: config.clientEmail,
       key: config.privateKey,
-      scopes: ["https://www.googleapis.com/auth/drive.file"],
+      scopes: ["https://www.googleapis.com/auth/drive"],
     });
     return new GoogleDriveApiFileClient(
       google.drive({ version: "v3", auth }),
