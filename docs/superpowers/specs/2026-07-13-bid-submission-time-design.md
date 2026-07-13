@@ -8,9 +8,9 @@ Add a persistent bid-submission time selector to every budget category, update t
 
 - Apply the time selector to the milestone whose canonical label contains `กำหนดวันเสนอราคา`, regardless of whether it is step 4 or step 7.
 - Provide exactly two time slots:
-  - `8.30–12.00 น.`
-  - `13.30–16.30 น.`
-- Existing projects and new projects default to `8.30–12.00 น.`.
+  - `8.30 น. - 12.00 น.`
+  - `13.30 น. - 16.30 น.`
+- Existing projects and new projects default to `8.30 น. - 12.00 น.`.
 - Save a selection immediately and persist it across refreshes, devices, and users.
 - Do not recalculate milestone dates or working-day durations when the time changes.
 - Remove `(8.30 น. - 12.00 น.)` from the displayed inspection milestone `ตรวจสอบเอกสารเสนอราคา`.
