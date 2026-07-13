@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { APPROVED_TEMPLATE_KEY, APPROVED_TEMPLATE_STEPS } from "@/lib/schedule/approved-template";
 import {
+  GoogleDriveApiFileClient,
   GoogleDriveDataStore,
   createEmptyGoogleDriveDocument,
   type GoogleDriveFileClient,
@@ -25,6 +26,10 @@ class FakeDriveFileClient implements GoogleDriveFileClient {
 }
 
 const nowIso = "2026-07-12T12:00:00.000Z";
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe("GoogleDriveDataStore", () => {
   it("creates an empty document seeded with the approved template", () => {
@@ -115,5 +120,46 @@ describe("GoogleDriveDataStore", () => {
     const store = new GoogleDriveDataStore(client, () => nowIso);
 
     await expect(store.read()).rejects.toThrow("GOOGLE_DRIVE_DATA_INVALID");
+  });
+});
+
+describe("GoogleDriveApiFileClient", () => {
+  it("uses fetch-based Google Drive REST calls for shared files", async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ access_token: "access-token", expires_in: 3600 }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+      )
+      .mockResolvedValueOnce(new Response("{}", { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const client = GoogleDriveApiFileClient.fromConfig(
+      {
+        clientEmail: "service@example.iam.gserviceaccount.com",
+        privateKey: "unused-in-test",
+        fileId: "drive-file-id",
+        folderId: null,
+        fileName: "procurement-timeline-data.json",
+      },
+      {
+        signJwt: async () => "signed.jwt",
+        nowSeconds: () => 1_000,
+      },
+    );
+
+    const content = await client.readText();
+
+    expect(content).toBe("{}");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[0][0]).toBe("https://oauth2.googleapis.com/token");
+    expect(fetchMock.mock.calls[1][0]).toBe(
+      "https://www.googleapis.com/drive/v3/files/drive-file-id?alt=media",
+    );
+    expect(fetchMock.mock.calls[1][1]).toMatchObject({
+      headers: { Authorization: "Bearer access-token" },
+    });
   });
 });
