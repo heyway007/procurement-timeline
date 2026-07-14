@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Swal from "sweetalert2";
 import type { CreateProjectInput, ProjectRecord } from "@/lib/projects/types";
-import { createProject, getProjects } from "@/lib/ui/api-client";
+import { createProject, deleteProject, getProjects } from "@/lib/ui/api-client";
 import { ProjectForm } from "./project-form";
 import { ProjectTable } from "./project-table";
 
@@ -44,6 +45,33 @@ export function Dashboard({ initialProjects }: { initialProjects?: ProjectRecord
     return { id: result.project.id };
   }
 
+  async function handleDelete(project: ProjectRecord) {
+    const confirmation = await Swal.fire({
+      title: "ลบ Timeline นี้?",
+      text: `ต้องการลบ ${project.name} ใช่หรือไม่`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "ลบ Timeline",
+      cancelButtonText: "ยกเลิก",
+      confirmButtonColor: "#be123c",
+      cancelButtonColor: "#64748b",
+      reverseButtons: true,
+    });
+    if (!confirmation.isConfirmed) return;
+    try {
+      await deleteProject(project.id, project.version);
+      setProjects((current) => current.filter((item) => item.id !== project.id));
+      await Swal.fire({
+        title: "ลบ Timeline สำเร็จ",
+        icon: "success",
+        confirmButtonText: "ตกลง",
+        confirmButtonColor: "#4338ca",
+      });
+    } catch {
+      setError("ไม่สามารถลบ Timeline ได้ กรุณาลองใหม่อีกครั้ง");
+    }
+  }
+
   return (
     <main className="mx-auto min-h-screen max-w-7xl overflow-x-hidden px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
       <header className="flex flex-col justify-between gap-5 border-b border-slate-200 pb-7 sm:flex-row sm:items-center">
@@ -72,7 +100,7 @@ export function Dashboard({ initialProjects }: { initialProjects?: ProjectRecord
 
       {loading ? <p className="py-12 text-center text-slate-600">กำลังโหลด Timeline...</p> : null}
       {error ? <p className="rounded-xl bg-rose-50 px-4 py-3 text-rose-800" role="alert">{error}</p> : null}
-      {!loading ? <ProjectTable projects={visibleProjects} /> : null}
+      {!loading ? <ProjectTable projects={visibleProjects} onDelete={handleDelete} /> : null}
       {creating ? <ProjectForm onCancel={() => setCreating(false)} onCreate={handleCreate} /> : null}
     </main>
   );

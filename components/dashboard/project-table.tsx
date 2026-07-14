@@ -1,9 +1,18 @@
+"use client";
+
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowUpRightFromSquare, faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import type { ProjectRecord } from "@/lib/projects/types";
 import { formatBaht, formatThaiDate } from "@/lib/ui/date-format";
 import { budgetCategoryLabel } from "@/lib/projects/budget-category";
 
-export function ProjectTable({ projects }: { projects: ProjectRecord[] }) {
+type ProjectTableProps = {
+  projects: ProjectRecord[];
+  onDelete: (project: ProjectRecord) => void;
+};
+
+export function ProjectTable({ projects, onDelete }: ProjectTableProps) {
   if (projects.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
@@ -40,9 +49,15 @@ export function ProjectTable({ projects }: { projects: ProjectRecord[] }) {
                 </div>
               </div>
             </dl>
-            <Link className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-indigo-700 px-4 font-semibold text-white" href={`/projects/${project.id}`}>
-              เปิด Timeline
-            </Link>
+            <div className="mt-4 flex gap-2">
+              <Link className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-700 px-4 font-semibold text-white hover:bg-indigo-800" href={`/projects/${project.id}`}>
+                <FontAwesomeIcon icon={faArrowUpRightFromSquare} aria-hidden="true" />
+                เปิด Timeline
+              </Link>
+              <button type="button" onClick={() => onDelete(project)} aria-label={`ลบ Timeline ${project.name}`} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-rose-200 text-rose-700 hover:bg-rose-50">
+                <FontAwesomeIcon icon={faTrashCan} aria-hidden="true" />
+              </button>
+            </div>
           </article>
         ))}
       </div>
@@ -69,9 +84,15 @@ export function ProjectTable({ projects }: { projects: ProjectRecord[] }) {
                 <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-700">{formatThaiDate(project.startDate)}</td>
                 <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-700">{formatThaiDate(project.processEndDate)}</td>
                 <td className="px-5 py-4 text-right">
-                  <Link className="font-semibold text-indigo-700 hover:text-indigo-900" href={`/projects/${project.id}`}>
-                    เปิด Timeline
-                  </Link>
+                  <div className="inline-flex items-center gap-3">
+                    <Link className="inline-flex items-center gap-2 rounded-lg bg-indigo-700 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-800" href={`/projects/${project.id}`}>
+                      <FontAwesomeIcon icon={faArrowUpRightFromSquare} aria-hidden="true" />
+                      เปิด Timeline
+                    </Link>
+                    <button type="button" onClick={() => onDelete(project)} aria-label={`ลบ Timeline ${project.name}`} className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg border border-rose-200 text-rose-700 hover:bg-rose-50">
+                      <FontAwesomeIcon icon={faTrashCan} aria-hidden="true" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

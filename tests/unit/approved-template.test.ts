@@ -36,7 +36,7 @@ describe("approved procurement template", () => {
 
     expect(steps).toHaveLength(10);
     expect(steps.map((step) => step.workingDaysToNext)).toEqual([
-      4, 1, 5, 1, 1, 3, 4, 4, 1, 7,
+      2, 1, 5, 1, 1, 3, 4, 4, 1, 7,
     ]);
     expect(steps.map((step) => step.order)).toEqual([
       1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
@@ -58,12 +58,12 @@ describe("approved procurement template", () => {
   it("uses longer document pickup durations for higher budget ranges", () => {
     expect(
       approvedTemplateStepsForBudgetCategory("FIVE_TO_TEN_MILLION")[5].workingDaysToNext,
-    ).toBe(10);
+    ).toBe(8);
     expect(
       approvedTemplateStepsForBudgetCategory("TEN_TO_TWENTY_MILLION")[5].workingDaysToNext,
-    ).toBe(12);
+    ).toBe(10);
     expect(
       approvedTemplateStepsForBudgetCategory("ABOVE_TWENTY_MILLION")[5].workingDaysToNext,
-    ).toBe(20);
+    ).toBe(18);
   });
 });

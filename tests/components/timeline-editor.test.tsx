@@ -232,10 +232,10 @@ describe("TimelineDetail", () => {
 
     const rows = screen.getAllByTestId("timeline-step");
     expect(rows).toHaveLength(10);
-    expect(screen.getByText(/31 วันทำการ/)).toBeInTheDocument();
-    expect(within(rows[2]).getByText("วันจันทร์ 13 ก.ค. 2569 - วันศุกร์ 17 ก.ค. 2569")).toBeInTheDocument();
-    expect(within(rows[6]).getByText("วันจันทร์ 27 ก.ค. 2569 - วันพฤหัสบดี 30 ก.ค. 2569")).toBeInTheDocument();
-    expect(within(rows[9]).getByText("วันศุกร์ 7 ส.ค. 2569 - วันจันทร์ 17 ส.ค. 2569")).toBeInTheDocument();
+    expect(screen.getByText(/29 วันทำการ/)).toBeInTheDocument();
+    expect(within(rows[2]).getByText("วันพฤหัสบดี 9 ก.ค. 2569 - วันพุธ 15 ก.ค. 2569")).toBeInTheDocument();
+    expect(within(rows[6]).getByText("วันพฤหัสบดี 23 ก.ค. 2569 - วันอังคาร 28 ก.ค. 2569")).toBeInTheDocument();
+    expect(within(rows[9]).getByText("วันพุธ 5 ส.ค. 2569 - วันพฤหัสบดี 13 ส.ค. 2569")).toBeInTheDocument();
     expect(rows[1]).not.toHaveTextContent(" - ");
     expect(rows[7]).not.toHaveTextContent(" - ");
   });
@@ -249,7 +249,7 @@ describe("TimelineDetail", () => {
     );
 
     const rows = screen.getAllByTestId("timeline-step");
-    expect(within(rows[5]).getByText("วันพุธ 22 ก.ค. 2569 - วันศุกร์ 24 ก.ค. 2569")).toBeInTheDocument();
+    expect(within(rows[5]).getByText("วันจันทร์ 20 ก.ค. 2569 - วันพุธ 22 ก.ค. 2569")).toBeInTheDocument();
     expect(within(rows[5]).getByText("3 วันทำการจากขั้นตอนก่อนหน้า")).toBeInTheDocument();
   });
 
@@ -413,7 +413,7 @@ describe("TimelineDetail", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "คืนค่าตามแม่แบบ" }));
+    await user.click(screen.getByRole("button", { name: "คืนค่าเริ่มต้น" }));
 
     expect(confirmSpy).not.toHaveBeenCalled();
     expect(swalFire).toHaveBeenCalledWith(

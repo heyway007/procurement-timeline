@@ -47,12 +47,12 @@ describe("Dashboard", () => {
   it("renders shared projects and Thai formatted values", () => {
     render(<Dashboard initialProjects={projects} />);
 
-    expect(screen.getByText("จัดซื้อระบบสารสนเทศ")).toBeInTheDocument();
-    expect(screen.getByText("คุณสมชาย")).toBeInTheDocument();
-    expect(screen.getByText(/29,000,000/)).toBeInTheDocument();
-    expect(screen.getByText("10,000,001–50,000,000 บาท")).toBeInTheDocument();
+    expect(screen.getAllByText("จัดซื้อระบบสารสนเทศ")).not.toHaveLength(0);
+    expect(screen.getAllByText("คุณสมชาย")).not.toHaveLength(0);
+    expect(screen.getAllByText(/29,000,000/)).not.toHaveLength(0);
+    expect(screen.getAllByText("10,000,001–50,000,000 บาท")).not.toHaveLength(0);
     expect(screen.getByRole("columnheader", { name: "วันที่เริ่มทำสัญญา" })).toBeInTheDocument();
-    expect(screen.getAllByText(/2569/)).toHaveLength(4);
+    expect(screen.getAllByText(/2569/)).toHaveLength(8);
   });
 
   it("filters projects by project name or owner", async () => {
@@ -61,7 +61,7 @@ describe("Dashboard", () => {
 
     await user.type(screen.getByLabelText("ค้นหาโครงการ"), "สุดา");
 
-    expect(screen.getByText("จัดซื้อครุภัณฑ์")).toBeInTheDocument();
+    expect(screen.getAllByText("จัดซื้อครุภัณฑ์")).not.toHaveLength(0);
     expect(screen.queryByText("จัดซื้อระบบสารสนเทศ")).not.toBeInTheDocument();
   });
 });

@@ -8,6 +8,7 @@ import {
 
 describe("budget categories", () => {
   it.each([
+    [500_001, "ONE_TO_FIVE_MILLION"],
     [1_000_000, "ONE_TO_FIVE_MILLION"],
     [5_000_000, "ONE_TO_FIVE_MILLION"],
     [5_000_001, "FIVE_TO_TEN_MILLION"],
@@ -19,8 +20,8 @@ describe("budget categories", () => {
     expect(budgetCategoryFor(amount)).toBe(expected);
   });
 
-  it("rejects an amount below one million baht", () => {
-    expect(() => budgetCategoryFor(999_999.99)).toThrow("BUDGET_BELOW_SUPPORTED_RANGE");
+  it("rejects an amount below 500,001 baht", () => {
+    expect(() => budgetCategoryFor(500_000.99)).toThrow("BUDGET_BELOW_SUPPORTED_RANGE");
   });
 
   it("rejects a selected category that does not match the actual amount", () => {
@@ -29,7 +30,7 @@ describe("budget categories", () => {
 
   it("uses full numeric labels for every budget range", () => {
     expect(BUDGET_CATEGORY_OPTIONS.map((option) => option.label)).toEqual([
-      "1,000,000–5,000,000 บาท",
+      "500,001–5,000,000 บาท",
       "5,000,001–10,000,000 บาท",
       "10,000,001–50,000,000 บาท",
       "50,000,001 บาทขึ้นไป",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 import type { CreateProjectInput } from "@/lib/projects/types";
 import { ApiError } from "@/lib/ui/api-client";
@@ -39,6 +40,7 @@ const DEPARTMENT_OPTIONS = [
 ];
 
 export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
+  const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -70,15 +72,16 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
     };
     setPending(true);
     try {
-      await onCreate(input);
+      const created = await onCreate(input);
       await Swal.fire({
-        title: "บันทึก Timeline สำเร็จ",
+        title: "สร้าง Timeline สำเร็จ",
         text: "สร้าง Timeline โครงการเรียบร้อยแล้ว",
         icon: "success",
         confirmButtonText: "ตกลง",
         confirmButtonColor: "#4338ca",
       });
       onCancel();
+      router.push(`/projects/${created.id}`);
     } catch (caught: unknown) {
       setError(
         caught instanceof ApiError
@@ -132,7 +135,7 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
             </label>
             <label className="min-w-0 text-sm font-medium text-slate-700">
               วงเงินจัดจ้าง (บาท)
-              <input aria-label="วงเงินจัดจ้าง (บาท)" className={fieldClass} name="budget" type="number" min="1000000" step="0.01" required />
+              <input aria-label="วงเงินจัดจ้าง (บาท)" className={fieldClass} name="budget" type="number" min="500001" step="0.01" required />
             </label>
             <label className="min-w-0 text-sm font-medium text-slate-700">
               ผู้จัดทำ Timeline
@@ -170,7 +173,7 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
                 ยกเลิก
               </button>
               <button type="submit" disabled={pending} className="min-h-11 rounded-xl bg-indigo-700 px-5 font-semibold text-white disabled:opacity-60">
-                {pending ? "กำลังบันทึก..." : "บันทึก Timeline"}
+                {pending ? "กำลังสร้าง..." : "สร้าง Timeline"}
               </button>
             </div>
           </form>

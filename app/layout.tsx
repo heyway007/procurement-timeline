@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import { Noto_Sans_Thai } from "next/font/google";
+import { Kanit } from "next/font/google";
 import type { ReactNode } from "react";
 import "sweetalert2/dist/sweetalert2.min.css";
 import "./globals.css";
 
-const notoSansThai = Noto_Sans_Thai({
+const kanit = Kanit({
+  weight: ["400", "500", "600", "700"],
   subsets: ["thai", "latin"],
   display: "swap",
-  variable: "--font-noto-sans-thai",
+  variable: "--font-kanit",
 });
 
 export const metadata: Metadata = {
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="th">
-      <body className={notoSansThai.variable}>{children}</body>
+      <body className={kanit.variable}>{children}</body>
     </html>
   );
 }

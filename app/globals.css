@@ -4,7 +4,6 @@
   color-scheme: light;
   background: #f8fafc;
   color: #0f172a;
-  font-family: var(--font-noto-sans-thai), "Noto Sans Thai", "Leelawadee UI", Tahoma, sans-serif;
 }
 
 * {
@@ -14,6 +13,7 @@
 body {
   min-height: 100vh;
   margin: 0;
+  font-family: var(--font-kanit), "Kanit", Tahoma, sans-serif;
   background:
     radial-gradient(circle at top right, rgb(224 231 255 / 70%), transparent 32rem),
     #f8fafc;

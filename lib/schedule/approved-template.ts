@@ -84,12 +84,12 @@ export function approvedTemplateStepsForBudgetCategory(
     return smallBudgetTemplateSteps();
   }
   if (budgetCategory === "FIVE_TO_TEN_MILLION") {
-    return documentPickupDurationTemplate(10);
+    return documentPickupDurationTemplate(8);
   }
   if (budgetCategory === "TEN_TO_TWENTY_MILLION") {
-    return documentPickupDurationTemplate(12);
+    return documentPickupDurationTemplate(10);
   }
-  return documentPickupDurationTemplate(20);
+  return documentPickupDurationTemplate(18);
 }
 
 function documentPickupDurationTemplate(workingDaysToNext: number): TemplateStep[] {
@@ -119,7 +119,7 @@ function mergedSmallBudgetOpeningStep(): TemplateStep {
   return {
     ...reportStep,
     label: `${reportStep.label} + ${announcementStep.label}`,
-    workingDaysToNext: 4,
+    workingDaysToNext: 2,
   };
 }
 

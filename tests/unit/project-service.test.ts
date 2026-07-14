@@ -152,7 +152,7 @@ describe("ProjectService", () => {
     expect(updated.steps.map((step) => step.scheduledDate)).toEqual(dates);
   });
 
-  it("uses a 10-working-day step 6 duration for the 5,000,001-10,000,000 baht category", async () => {
+  it("uses an 8-working-day step 6 duration for the 5,000,001-10,000,000 baht category", async () => {
     const { service } = makeService();
 
     const result = await service.create({
@@ -165,7 +165,7 @@ describe("ProjectService", () => {
     });
 
     expect(result.project.steps.find((step) => step.order === 6)).toMatchObject({
-      workingDaysToNext: 10,
+      workingDaysToNext: 8,
     });
   });
 
@@ -183,7 +183,7 @@ describe("ProjectService", () => {
 
     expect(result.project.steps).toHaveLength(10);
     expect(result.project.steps.map((step) => step.workingDaysToNext)).toEqual([
-      4, 1, 5, 1, 1, 3, 4, 4, 1, 7,
+      2, 1, 5, 1, 1, 3, 4, 4, 1, 7,
     ]);
     expect(result.project.steps.some((step) => step.label.includes("ประกาศร่าง"))).toBe(false);
     expect(result.project.steps.some((step) => step.label.includes("เผยแพร่ร่าง"))).toBe(false);
@@ -283,7 +283,7 @@ describe("ProjectService", () => {
 
     expect(reset.steps).toHaveLength(10);
     expect(reset.steps.map((step) => step.workingDaysToNext)).toEqual([
-      4, 1, 5, 1, 1, 3, 4, 4, 1, 7,
+      2, 1, 5, 1, 1, 3, 4, 4, 1, 7,
     ]);
     expect(reset.steps.map((step) => step.order)).toEqual([
       1, 2, 3, 4, 5, 6, 7, 8, 9, 10,

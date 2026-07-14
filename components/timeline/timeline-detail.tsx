@@ -288,6 +288,8 @@ export function TimelineDetail({
         confirmOverwrite,
       );
       setProject(updatedProject);
+      setEditingOrder(null);
+      setEditError("");
       await Swal.fire({
         title: "แก้วันที่สำเร็จ",
         text: `ปรับขั้นตอนที่ ${editingOrder} เป็น ${formatThaiDateWithWeekday(newDate)} แล้ว`,
@@ -295,8 +297,6 @@ export function TimelineDetail({
         confirmButtonText: "ตกลง",
         confirmButtonColor: "#4338ca",
       });
-      setEditingOrder(null);
-      setEditError("");
     } catch (caught: unknown) {
       if (
         caught instanceof ApiError &&
@@ -489,7 +489,7 @@ export function TimelineDetail({
                 </>
               ) : null}
             </div>
-            <button className="print-hidden min-h-10 rounded-lg border border-slate-300 px-4 font-semibold text-slate-700 lg:h-9" type="button" aria-label={`แก้วันที่ ขั้นตอนที่ ${step.order}`} onClick={() => { setEditingOrder(step.order); setNewDate(step.scheduledDate); setEditError(""); }}>แก้วันที่</button>
+            <button className="print-hidden min-h-10 rounded-lg border border-indigo-200 bg-indigo-50 px-4 font-semibold text-indigo-700 hover:bg-indigo-100 lg:h-9" type="button" aria-label={`แก้วันที่ ขั้นตอนที่ ${step.order}`} onClick={() => { setEditingOrder(step.order); setNewDate(step.scheduledDate); setEditError(""); }}>แก้วันที่</button>
           </div>
           );
         })}
@@ -500,7 +500,7 @@ export function TimelineDetail({
 
       <div className="print-hidden mt-6 grid gap-3 sm:flex sm:flex-wrap sm:justify-end">
         <button type="button" onClick={() => window.print()} className="min-h-11 rounded-xl border border-slate-300 px-4 py-2 font-semibold">พิมพ์ Timeline</button>
-        <button type="button" onClick={resetSchedule} className="min-h-11 rounded-xl border border-slate-300 px-4 py-2 font-semibold">คืนค่าตามแม่แบบ</button>
+        <button type="button" onClick={resetSchedule} className="min-h-11 rounded-xl border border-slate-300 px-4 py-2 font-semibold">คืนค่าเริ่มต้น</button>
         <button type="button" onClick={removeProject} className="min-h-11 rounded-xl bg-rose-700 px-4 py-2 font-semibold text-white">ลบโครงการ</button>
       </div>
 
