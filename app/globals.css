@@ -139,8 +139,14 @@ textarea:disabled {
     min-height: auto;
     background: white !important;
     color: #0f172a;
+    font-family: "Kanit", Tahoma, sans-serif !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+
+  .print-page,
+  .print-page * {
+    font-family: "Kanit", Tahoma, sans-serif !important;
   }
 
   .print-hidden {
@@ -195,23 +201,42 @@ textarea:disabled {
   .print-table {
     margin-top: 0 !important;
     overflow: visible !important;
-    border: 1px solid #94a3b8 !important;
+    border: 1px solid #cbd5e1 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
   }
 
   .print-grid {
     display: grid !important;
-    grid-template-columns: 12mm minmax(0, 1fr) 72mm !important;
-    gap: 4mm !important;
-    align-items: start !important;
-    padding: 2.4mm 3mm !important;
-    border-color: #cbd5e1 !important;
+    grid-template-columns: 10mm minmax(0, 1fr) 100mm !important;
+    gap: 0 !important;
+    align-items: stretch !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-top: 1px solid #cbd5e1 !important;
     font-size: 16px !important;
     line-height: 1.35 !important;
   }
 
+  .print-grid > * {
+    padding: 2.4mm 3mm !important;
+  }
+
+  .print-grid > * + * {
+    border-left: 1px solid #cbd5e1 !important;
+  }
+
+  .print-grid .text-lg {
+    font-size: 16px !important;
+    line-height: 1.35 !important;
+  }
+
+  .print-date {
+    white-space: nowrap !important;
+  }
+
   .print-grid:first-child {
+    border-top: 0 !important;
     background: #e2e8f0 !important;
     color: #0f172a !important;
     font-weight: 700 !important;

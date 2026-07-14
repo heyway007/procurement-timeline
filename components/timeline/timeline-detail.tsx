@@ -469,7 +469,7 @@ export function TimelineDetail({
               ) : null}
               <p className="print-step-hint mt-1 text-sm text-slate-500">{formatWorkingDaysText(step)} {step.isDateManuallyAdjusted ? "· ปรับกำหนดการ" : ""}</p>
             </div>
-            <div className="font-medium text-slate-700">
+            <div className="print-date font-medium text-slate-700">
               <span className="print-hidden mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 lg:hidden">วันที่กำหนด</span>
               <span>{formatStepScheduledDate(index)}</span>
               {isBidSubmissionMilestone(step.label) ? (
@@ -494,7 +494,7 @@ export function TimelineDetail({
           );
         })}
         <div className="print-grid grid gap-3 border-t-2 border-indigo-100 bg-indigo-50 px-4 py-4 text-base lg:grid-cols-[4rem_1fr_20rem_7rem]">
-          <span className="font-semibold text-indigo-700">จบ</span><span className="text-lg font-semibold text-slate-900">วันที่เริ่มลงนามในสัญญาได้</span><span className="font-semibold text-indigo-800">{formatThaiDateWithWeekday(project.processEndDate)}</span><span />
+          <span className="font-semibold text-indigo-700">จบ</span><span className="text-lg font-semibold text-slate-900">วันที่เริ่มลงนามในสัญญาได้</span><span className="font-semibold text-indigo-800">{formatThaiDateWithWeekday(project.processEndDate)}</span><span className="print-hidden" />
         </div>
       </section>
 
