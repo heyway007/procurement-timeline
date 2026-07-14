@@ -476,7 +476,7 @@ export function TimelineDetail({
                 <>
                   <select
                     aria-label="เวลาเสนอราคา"
-                    className="print-hidden mt-2 min-h-10 w-full max-w-[10rem] rounded-lg border border-slate-300 bg-white px-3"
+                    className="print-hidden mt-2 block min-h-10 w-full max-w-[10rem] rounded-lg border border-slate-300 bg-white px-3"
                     value={effectiveBidSubmissionTimeSlot(step.bidSubmissionTimeSlot)}
                     disabled={savingBidTime}
                     onChange={(event) => void saveBidSubmissionTime(event.target.value as BidSubmissionTimeSlot)}
