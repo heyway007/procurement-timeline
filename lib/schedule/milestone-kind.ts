@@ -3,8 +3,8 @@ export const BID_SUBMISSION_TIME_SLOTS = ["MORNING", "AFTERNOON"] as const;
 export type BidSubmissionTimeSlot = (typeof BID_SUBMISSION_TIME_SLOTS)[number];
 
 export const BID_SUBMISSION_TIME_LABELS: Record<BidSubmissionTimeSlot, string> = {
-  MORNING: "8.30 น. - 12.00 น.",
-  AFTERNOON: "13.30 น. - 16.30 น.",
+  MORNING: "9.00 น. - 12.00 น.",
+  AFTERNOON: "13.00 น. - 16.30 น.",
 };
 
 export function isBidSubmissionMilestone(label: string): boolean {

@@ -93,8 +93,9 @@ describe("TimelineDetail", () => {
     expect(screen.getByTestId("print-owner")).toHaveTextContent("คุณสมชาย");
     expect(screen.getByTestId("print-department")).toHaveTextContent("ฝ่ายบริหาร");
     expect(screen.getByTestId("print-total-days")).toHaveTextContent("39 วันทำการ · เป็นไปตาม SLA");
-    expect(within(screen.getByTestId("print-header")).queryByText("วันที่เริ่มทำสัญญา")).not.toBeInTheDocument();
-    expect(screen.getAllByText("วันที่เริ่มทำสัญญา")).not.toHaveLength(0);
+    expect(within(screen.getByTestId("print-header")).queryByText("วันที่เริ่มลงนามในสัญญาได้")).not.toBeInTheDocument();
+    expect(screen.getAllByText("วันที่เริ่มลงนามในสัญญาได้")).not.toHaveLength(0);
+    expect(screen.queryByText("วันที่เริ่มทำสัญญา")).not.toBeInTheDocument();
     expect(screen.queryByText("วันสิ้นสุดกระบวนการ")).not.toBeInTheDocument();
     expect(screen.getByText("จัดซื้อระบบสารสนเทศ")).toBeInTheDocument();
   });
@@ -113,14 +114,42 @@ describe("TimelineDetail", () => {
     expect(detail).not.toHaveClass("print-hidden");
   });
 
-  it("does not replace the wording of later steps", () => {
+  it("renders every large-budget step with the document title and optional subtitle", () => {
     render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
 
-    const secondRow = screen.getAllByTestId("timeline-step")[1];
-    expect(secondRow).toHaveTextContent(
-      "ประกาศร่างประกาศและเอกสารประกวดราคาเพื่อรับฟังคำวิจารณ์",
-    );
-    expect(within(secondRow).queryByText("จัดทำเอกสาร")).not.toBeInTheDocument();
+    const expected = [
+      ["จัดทำเอกสาร", "รายงานขอซื้อขอจ้าง • แต่งตั้งคณะกรรมการ • ประกวดราคา"],
+      ["ประกาศร่างประกวดราคาเพื่อรับฟังคำวิจารณ์", "บนเว็บไซต์กรมบัญชีกลาง (e-GP)"],
+      ["เผยแพร่ร่างประกวดราคาเพื่อรับฟังคำวิจารณ์"],
+      ["จัดทำเอกสาร", "ผลการวิจารณ์ • ประกวดราคา"],
+      ["ประกาศประกวดราคา", "บนเว็บไซต์กรมบัญชีกลาง (e-GP)"],
+      ["กำหนดขอรับ/ซื้อเอกสาร", "ผู้สนใจสามารถดาวน์โหลดเอกสารจากเว็บไซต์กรมบัญชีกลาง (e-GP)"],
+      ["กำหนดวันเสนอราคา (เวลา 9.00 น. - 12.00 น.)", "ยื่นเสนอราคาผ่านเว็บไซต์กรมบัญชีกลาง (e-GP)"],
+      ["ตรวจสอบเอกสารเสนอราคา"],
+      ["กำหนดวันเวลาในการนำเสนอข้อเทคนิค (Present)", "เลือกวันใดวันหนึ่ง"],
+      ["คณะกรรมการฯ พิจารณาคัดเลือกผู้ชนะ • ต่อรองราคา"],
+      ["จัดทำเอกสาร", "รายงานผลพิจารณา • ประกาศผู้ชนะ"],
+      ["ประกาศผู้ชนะการเสนอราคา", "บนเว็บไซต์กรมบัญชีกลาง (e-GP)"],
+      ["ระยะเวลาอุทธรณ์", "ติดต่อให้ผู้รับจ้างนำส่งเอกสารเพื่อทำสัญญาและวางหลักประกันสัญญา"],
+    ] as const;
+
+    screen.getAllByTestId("timeline-step").forEach((row, index) => {
+      const [title, subtitle] = expected[index];
+      expect(within(row).getByText(title)).toHaveClass("text-lg", "font-semibold");
+      if (subtitle) {
+        expect(within(row).getByText(subtitle)).toHaveClass("text-sm", "text-slate-500");
+      }
+    });
+  });
+
+  it("uses the same document title and subtitle hierarchy for small-budget steps", () => {
+    render(<TimelineDetail projectId="project-1" initialProject={smallBudgetProjectFixture()} />);
+
+    const rows = screen.getAllByTestId("timeline-step");
+    expect(within(rows[1]).getByText("ประกาศประกวดราคา")).toHaveClass("text-lg", "font-semibold");
+    expect(within(rows[1]).getByText("บนเว็บไซต์กรมบัญชีกลาง (e-GP)")).toHaveClass("text-sm", "text-slate-500");
+    expect(within(rows[7]).getByText("จัดทำเอกสาร")).toHaveClass("text-lg", "font-semibold");
+    expect(within(rows[7]).getByText("รายงานผลพิจารณา • ประกาศผู้ชนะ")).toHaveClass("text-sm", "text-slate-500");
   });
 
   it("renders and immediately saves the bid submission time dropdown", async () => {
@@ -142,15 +171,15 @@ describe("TimelineDetail", () => {
 
     const selector = screen.getByRole("combobox", { name: "เวลาเสนอราคา" });
     expect(selector).toHaveValue("MORNING");
-    expect(screen.getByText("กำหนดวันเสนอราคา (ตั้งแต่เวลา 8.30 น. - 12.00 น.)")).toBeInTheDocument();
-    expect(screen.getByText("ผู้ยื่นใบเสนอราคาผ่านเว็บไซต์ของกรมบัญชีกลางเท่านั้น")).toBeInTheDocument();
+    expect(screen.getByText("กำหนดวันเสนอราคา (เวลา 9.00 น. - 12.00 น.)")).toBeInTheDocument();
+    expect(screen.getByText("ยื่นเสนอราคาผ่านเว็บไซต์กรมบัญชีกลาง (e-GP)")).toBeInTheDocument();
     expect(screen.getByText("ตรวจสอบเอกสารเสนอราคา")).toBeInTheDocument();
     expect(screen.queryByText("ตรวจสอบเอกสารเสนอราคา (8.30 น. - 12.00 น.)")).not.toBeInTheDocument();
 
     await user.selectOptions(selector, "AFTERNOON");
 
     expect(onUpdateBidSubmissionTime).toHaveBeenCalledWith("AFTERNOON", 1);
-    expect(await screen.findByText("กำหนดวันเสนอราคา (ตั้งแต่เวลา 13.30 น. - 16.30 น.)")).toBeInTheDocument();
+    expect(await screen.findByText("กำหนดวันเสนอราคา (เวลา 13.00 น. - 16.30 น.)")).toBeInTheDocument();
   });
 
   it("hides repeated mobile date labels and the selector when printing", () => {
@@ -273,7 +302,8 @@ describe("TimelineDetail", () => {
   it("shows the choose-one-day note for automatic Present milestone labels", () => {
     render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
 
-    expect(screen.getByText("กำหนดวันเวลาในการ Present (เลือกวันใดวันหนึ่ง)")).toBeInTheDocument();
+    expect(screen.getByText("กำหนดวันเวลาในการนำเสนอข้อเทคนิค (Present)")).toBeInTheDocument();
+    expect(screen.getByText("เลือกวันใดวันหนึ่ง")).toBeInTheDocument();
   });
 
   it("hides the choose-one-day note after the Present milestone is manually adjusted", () => {
@@ -291,11 +321,11 @@ describe("TimelineDetail", () => {
       />,
     );
 
-    expect(screen.getByText("กำหนดวันเวลาในการ Present")).toBeInTheDocument();
+    expect(screen.getByText("กำหนดวันเวลาในการนำเสนอข้อเทคนิค (Present)")).toBeInTheDocument();
     expect(screen.queryByText(/เลือกวันใดวันหนึ่ง/)).not.toBeInTheDocument();
   });
 
-  it("submits a manual date edit after confirmation, shows success, and then closes the editor", async () => {
+  it("submits a manual date edit immediately, shows success, and then closes the editor", async () => {
     const user = userEvent.setup();
     const onAdjustStep = vi.fn().mockResolvedValue(projectFixture());
     render(
@@ -313,11 +343,8 @@ describe("TimelineDetail", () => {
     await user.type(screen.getByLabelText("วันที่ใหม่"), "2026-07-14");
     await user.click(screen.getByRole("button", { name: "ตกลง" }));
 
-    expect(swalFire).toHaveBeenCalledWith(
-      expect.objectContaining({
-        icon: "question",
-        showCancelButton: true,
-      }),
+    expect(swalFire).not.toHaveBeenCalledWith(
+      expect.objectContaining({ icon: "question" }),
     );
     expect(onAdjustStep).toHaveBeenCalledWith(2, "2026-07-14", 1, false, false);
     expect(swalFire).toHaveBeenLastCalledWith(
@@ -329,10 +356,9 @@ describe("TimelineDetail", () => {
     expect(screen.queryByRole("heading", { name: "แก้วันที่ขั้นตอนที่ 2" })).not.toBeInTheDocument();
   });
 
-  it("does not submit a manual date edit when the SweetAlert confirmation is cancelled", async () => {
+  it("submits a manual date edit without a confirmation dialog", async () => {
     const user = userEvent.setup();
     const onAdjustStep = vi.fn().mockResolvedValue(projectFixture());
-    swalFire.mockResolvedValueOnce({ isConfirmed: false } as never);
     render(
       <TimelineDetail
         projectId="project-1"
@@ -346,8 +372,10 @@ describe("TimelineDetail", () => {
     await user.type(screen.getByLabelText("วันที่ใหม่"), "2026-07-14");
     await user.click(screen.getByRole("button", { name: "ตกลง" }));
 
-    expect(swalFire).toHaveBeenCalledOnce();
-    expect(onAdjustStep).not.toHaveBeenCalled();
+    expect(onAdjustStep).toHaveBeenCalledWith(2, "2026-07-14", 1, false, false);
+    expect(swalFire).toHaveBeenLastCalledWith(
+      expect.objectContaining({ icon: "success" }),
+    );
   });
 
   it("explains why a date before the previous milestone cannot be selected before submitting", async () => {

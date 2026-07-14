@@ -4,7 +4,7 @@
   color-scheme: light;
   background: #f8fafc;
   color: #0f172a;
-  font-family: "Noto Sans Thai", "Leelawadee UI", Tahoma, sans-serif;
+  font-family: var(--font-noto-sans-thai), "Noto Sans Thai", "Leelawadee UI", Tahoma, sans-serif;
 }
 
 * {

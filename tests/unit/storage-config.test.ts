@@ -41,7 +41,7 @@ describe("storage config", () => {
       privateKey: "-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----\n",
       fileId: "drive-file-id",
       folderId: null,
-      fileName: "procurement-timeline-data.json",
+      fileName: "procurement-timeline-data.local.json",
     });
   });
 
@@ -100,5 +100,16 @@ describe("storage config", () => {
     expect(config.fileId).toBeNull();
     expect(config.folderId).toBe("folder");
     expect(config.fileName).toBe("custom.json");
+  });
+
+  it("uses the production data file only when APP_ENV is production", () => {
+    const config = assertGoogleDriveEnv({
+      APP_ENV: "production",
+      GOOGLE_DRIVE_CLIENT_EMAIL: "timeline@example.iam.gserviceaccount.com",
+      GOOGLE_DRIVE_PRIVATE_KEY: "key",
+      GOOGLE_DRIVE_FILE_ID: "prod-file",
+    });
+
+    expect(config.fileName).toBe("procurement-timeline-data.json");
   });
 });

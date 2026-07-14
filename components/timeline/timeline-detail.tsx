@@ -91,18 +91,83 @@ function slaStatusText(project: ProjectRecord): string {
     : "เป็นไปตาม SLA";
 }
 
-function displayStepLabel(step: ProjectRecord["steps"][number]): string {
+type StepPresentation = {
+  title: string;
+  subtitle?: string;
+};
+
+function stepPresentation(step: ProjectRecord["steps"][number]): StepPresentation {
   const label = step.label.replaceAll("ส่วนงานพัสดุฯ ", "");
+  if (label.includes("จัดทำรายงานขอซื้อขอจ้าง")) {
+    return {
+      title: "จัดทำเอกสาร",
+      subtitle: "รายงานขอซื้อขอจ้าง • แต่งตั้งคณะกรรมการ • ประกวดราคา",
+    };
+  }
+  if (label.startsWith("ประกาศร่าง")) {
+    return {
+      title: "ประกาศร่างประกวดราคาเพื่อรับฟังคำวิจารณ์",
+      subtitle: "บนเว็บไซต์กรมบัญชีกลาง (e-GP)",
+    };
+  }
+  if (label.startsWith("เผยแพร่ร่าง")) {
+    return { title: "เผยแพร่ร่างประกวดราคาเพื่อรับฟังคำวิจารณ์" };
+  }
+  if (label.includes("จัดทำเอกสารประกาศ")) {
+    return {
+      title: "จัดทำเอกสาร",
+      subtitle: "ผลการวิจารณ์ • ประกวดราคา",
+    };
+  }
+  if (label.startsWith("ประกาศประกวดราคา")) {
+    return {
+      title: "ประกาศประกวดราคา",
+      subtitle: "บนเว็บไซต์กรมบัญชีกลาง (e-GP)",
+    };
+  }
+  if (label.startsWith("กำหนดขอรับ/ซื้อเอกสาร")) {
+    return {
+      title: "กำหนดขอรับ/ซื้อเอกสาร",
+      subtitle: "ผู้สนใจสามารถดาวน์โหลดเอกสารจากเว็บไซต์กรมบัญชีกลาง (e-GP)",
+    };
+  }
   if (isBidSubmissionMilestone(label)) {
-    return `กำหนดวันเสนอราคา (ตั้งแต่เวลา ${bidSubmissionTimeLabel(step.bidSubmissionTimeSlot)})`;
+    return {
+      title: `กำหนดวันเสนอราคา (เวลา ${bidSubmissionTimeLabel(step.bidSubmissionTimeSlot)})`,
+      subtitle: "ยื่นเสนอราคาผ่านเว็บไซต์กรมบัญชีกลาง (e-GP)",
+    };
   }
   if (label.includes("ตรวจสอบเอกสารเสนอราคา")) {
-    return "ตรวจสอบเอกสารเสนอราคา";
+    return { title: "ตรวจสอบเอกสารเสนอราคา" };
   }
-  if (isPresentMilestone(step.label) && step.isDateManuallyAdjusted) {
-    return label.replaceAll(" (เลือกวันใดวันหนึ่ง)", "");
+  if (isPresentMilestone(label)) {
+    return {
+      title: "กำหนดวันเวลาในการนำเสนอข้อเทคนิค (Present)",
+      subtitle: step.isDateManuallyAdjusted ? undefined : "เลือกวันใดวันหนึ่ง",
+    };
   }
-  return label;
+  if (label.startsWith("คณะกรรมการฯ")) {
+    return { title: "คณะกรรมการฯ พิจารณาคัดเลือกผู้ชนะ • ต่อรองราคา" };
+  }
+  if (label.startsWith("จัดทำเอกสารรายงานผล")) {
+    return {
+      title: "จัดทำเอกสาร",
+      subtitle: "รายงานผลพิจารณา • ประกาศผู้ชนะ",
+    };
+  }
+  if (label.startsWith("ประกาศผู้ชนะ")) {
+    return {
+      title: "ประกาศผู้ชนะการเสนอราคา",
+      subtitle: "บนเว็บไซต์กรมบัญชีกลาง (e-GP)",
+    };
+  }
+  if (label.startsWith("ระยะเวลาอุทธรณ์")) {
+    return {
+      title: "ระยะเวลาอุทธรณ์",
+      subtitle: "ติดต่อให้ผู้รับจ้างนำส่งเอกสารเพื่อทำสัญญาและวางหลักประกันสัญญา",
+    };
+  }
+  return { title: label };
 }
 
 export function TimelineDetail({
@@ -201,20 +266,6 @@ export function TimelineDetail({
         `เลือกไม่ได้ เพราะวันที่ใหม่ต้องอยู่หลังขั้นตอนที่ ${previousStep.order} (${formatThaiDateWithWeekday(previousStep.scheduledDate)})`,
       );
       return;
-    }
-    if (!confirmShortening && !confirmOverwrite) {
-      const confirmation = await Swal.fire({
-        title: "ยืนยันการแก้วันที่?",
-        text: `ต้องการเปลี่ยนขั้นตอนที่ ${editingOrder} เป็น ${formatThaiDateWithWeekday(newDate)} ใช่หรือไม่`,
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonText: "ยืนยัน",
-        cancelButtonText: "ยกเลิก",
-        confirmButtonColor: "#4338ca",
-        cancelButtonColor: "#64748b",
-        reverseButtons: true,
-      });
-      if (!confirmation.isConfirmed) return;
     }
     setError("");
     try {
@@ -406,22 +457,15 @@ export function TimelineDetail({
         <div data-testid="timeline-header-row" className="print-grid hidden grid-cols-[4rem_1fr_20rem_7rem] gap-3 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-600 lg:grid">
           <span>ลำดับ</span><span>ขั้นตอน</span><span>วันที่กำหนด</span><span className="print-hidden">จัดการ</span>
         </div>
-        {project.steps.map((step, index) => (
+        {project.steps.map((step, index) => {
+          const presentation = stepPresentation(step);
+          return (
           <div data-testid="timeline-step" key={step.order} className="print-grid grid gap-3 border-t border-slate-100 px-4 py-4 text-base lg:grid-cols-[4rem_1fr_20rem_7rem]">
             <span className="font-semibold text-indigo-700"><span className="print-hidden lg:hidden">ขั้นตอนที่ </span>{step.order}</span>
             <div className="min-w-0">
-              {step.order === 1 ? (
-                <>
-                  <p className="text-lg font-semibold text-slate-900">จัดทำเอกสาร</p>
-                  <p className="mt-1 text-sm text-slate-500">
-                    รายงานขอซื้อขอจ้าง • แต่งตั้งคณะกรรมการ • ประกวดราคา
-                  </p>
-                </>
-              ) : (
-                <p className="font-medium text-slate-900">{displayStepLabel(step)}</p>
-              )}
-              {isBidSubmissionMilestone(step.label) ? (
-                <p className="font-medium text-slate-900">ผู้ยื่นใบเสนอราคาผ่านเว็บไซต์ของกรมบัญชีกลางเท่านั้น</p>
+              <p className="text-lg font-semibold text-slate-900">{presentation.title}</p>
+              {presentation.subtitle ? (
+                <p className="mt-1 text-sm text-slate-500">{presentation.subtitle}</p>
               ) : null}
               <p className="print-step-hint mt-1 text-sm text-slate-500">{formatWorkingDaysText(step)} {step.isDateManuallyAdjusted ? "· ปรับกำหนดการ" : ""}</p>
             </div>
@@ -432,7 +476,7 @@ export function TimelineDetail({
                 <>
                   <select
                     aria-label="เวลาเสนอราคา"
-                    className="print-hidden mt-2 min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3"
+                    className="print-hidden mt-2 min-h-10 w-full max-w-[18rem] rounded-lg border border-slate-300 bg-white px-3"
                     value={effectiveBidSubmissionTimeSlot(step.bidSubmissionTimeSlot)}
                     disabled={savingBidTime}
                     onChange={(event) => void saveBidSubmissionTime(event.target.value as BidSubmissionTimeSlot)}
@@ -447,9 +491,10 @@ export function TimelineDetail({
             </div>
             <button className="print-hidden min-h-10 rounded-lg border border-slate-300 px-4 font-semibold text-slate-700 lg:h-9" type="button" aria-label={`แก้วันที่ ขั้นตอนที่ ${step.order}`} onClick={() => { setEditingOrder(step.order); setNewDate(step.scheduledDate); setEditError(""); }}>แก้วันที่</button>
           </div>
-        ))}
+          );
+        })}
         <div className="print-grid grid gap-3 border-t-2 border-indigo-100 bg-indigo-50 px-4 py-4 text-base lg:grid-cols-[4rem_1fr_20rem_7rem]">
-          <span className="font-semibold text-indigo-700">จบ</span><span className="font-semibold text-slate-900">วันที่เริ่มทำสัญญา</span><span className="font-semibold text-indigo-800">{formatThaiDateWithWeekday(project.processEndDate)}</span><span />
+          <span className="font-semibold text-indigo-700">จบ</span><span className="text-lg font-semibold text-slate-900">วันที่เริ่มลงนามในสัญญาได้</span><span className="font-semibold text-indigo-800">{formatThaiDateWithWeekday(project.processEndDate)}</span><span />
         </div>
       </section>
 

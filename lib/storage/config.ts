@@ -8,11 +8,21 @@ export type GoogleDriveStorageConfig = {
   fileName: string;
 };
 
-const DEFAULT_GOOGLE_DRIVE_FILE_NAME = "procurement-timeline-data.json";
+const LOCAL_GOOGLE_DRIVE_FILE_NAME = "procurement-timeline-data.local.json";
+const PRODUCTION_GOOGLE_DRIVE_FILE_NAME = "procurement-timeline-data.json";
 
 function required(value: string | undefined): string | null {
   const trimmed = value?.trim();
   return trimmed ? trimmed : null;
+}
+
+function defaultGoogleDriveFileName(env: Partial<NodeJS.ProcessEnv>): string {
+  const appEnvironment =
+    required(env.APP_ENV) ??
+    (required(env.NODE_ENV) === "production" ? "production" : "local");
+  return appEnvironment === "production"
+    ? PRODUCTION_GOOGLE_DRIVE_FILE_NAME
+    : LOCAL_GOOGLE_DRIVE_FILE_NAME;
 }
 
 export function storageModeFromEnv(env: Partial<NodeJS.ProcessEnv>): StorageMode {
@@ -44,7 +54,7 @@ export function assertGoogleDriveEnv(
     fileId,
     folderId,
     fileName:
-      required(env.GOOGLE_DRIVE_FILE_NAME) ?? DEFAULT_GOOGLE_DRIVE_FILE_NAME,
+      required(env.GOOGLE_DRIVE_FILE_NAME) ?? defaultGoogleDriveFileName(env),
   };
 }
 
