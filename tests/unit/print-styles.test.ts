@@ -20,5 +20,12 @@ describe("print stylesheet", () => {
     )?.[1] ?? "";
 
     expect(printTableBlock).toMatch(/border-top:\s*0\s*!important/);
+    expect(printTableBlock).toMatch(/border-right:\s*1px\s+solid\s+#cbd5e1\s*!important/);
+  });
+
+  it("removes the separator between the printed header and first row", () => {
+    expect(stylesheet).toMatch(
+      /\.print-table\s*>\s*\.print-grid:nth-child\(2\)\s*\{[\s\S]*?border-top:\s*0\s*!important/,
+    );
   });
 });
