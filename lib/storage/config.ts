@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
 export type StorageMode = "postgres" | "google_drive";
 
 export type GoogleDriveStorageConfig = {
@@ -31,14 +34,38 @@ export function storageModeFromEnv(env: Partial<NodeJS.ProcessEnv>): StorageMode
   throw new Error("STORAGE_MODE_UNSUPPORTED");
 }
 
+type ServiceAccountCredentials = {
+  client_email?: string;
+  private_key?: string;
+};
+
+function readServiceAccountCredentials(
+  filePath: string | null,
+): ServiceAccountCredentials | null {
+  if (!filePath) return null;
+  try {
+    return JSON.parse(
+      readFileSync(resolve(filePath), "utf8"),
+    ) as ServiceAccountCredentials;
+  } catch {
+    throw new Error("GOOGLE_APPLICATION_CREDENTIALS_INVALID");
+  }
+}
+
 export function assertGoogleDriveEnv(
   env: Partial<NodeJS.ProcessEnv>,
 ): GoogleDriveStorageConfig {
-  const clientEmail = required(env.GOOGLE_DRIVE_CLIENT_EMAIL);
+  const serviceAccount = readServiceAccountCredentials(
+    required(env.GOOGLE_APPLICATION_CREDENTIALS),
+  );
+  const clientEmail =
+    required(env.GOOGLE_DRIVE_CLIENT_EMAIL) ??
+    required(serviceAccount?.client_email);
   if (!clientEmail) throw new Error("GOOGLE_DRIVE_CLIENT_EMAIL_NOT_CONFIGURED");
 
   const rawPrivateKey =
     required(env.GOOGLE_DRIVE_PRIVATE_KEY) ??
+    serviceAccount?.private_key ??
     decodeBase64PrivateKey(required(env.GOOGLE_DRIVE_PRIVATE_KEY_BASE64));
   if (!rawPrivateKey) throw new Error("GOOGLE_DRIVE_PRIVATE_KEY_NOT_CONFIGURED");
 

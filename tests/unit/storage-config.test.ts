@@ -56,6 +56,16 @@ describe("storage config", () => {
     expect(config.privateKey).toBe(privateKey);
   });
 
+  it("loads Google Drive credentials from a service account JSON file", () => {
+    const config = assertGoogleDriveEnv({
+      GOOGLE_APPLICATION_CREDENTIALS: "tests/fixtures/google-service-account.json",
+      GOOGLE_DRIVE_FILE_ID: "drive-file-id",
+    });
+
+    expect(config.clientEmail).toBe("timeline@example.iam.gserviceaccount.com");
+    expect(config.privateKey).toBe("-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----\n");
+  });
+
   it("decodes base64 private keys without Node Buffer", () => {
     vi.stubGlobal("Buffer", undefined);
     const privateKey = "-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----\n";
