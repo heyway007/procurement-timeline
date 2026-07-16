@@ -1,0 +1,130 @@
+import type { BudgetCategory } from "@/lib/projects/budget-category";
+import type { TemplateStep } from "./types";
+
+export const APPROVED_TEMPLATE_KEY = "procurement-29m-v1";
+
+export const APPROVED_TEMPLATE_STEPS = [
+  {
+    order: 1,
+    workingDaysToNext: 4,
+    label:
+      "จัดทำรายงานขอซื้อขอจ้าง + คำสั่งแต่งตั้งกรรมการ",
+  },
+  {
+    order: 2,
+    workingDaysToNext: 1,
+    label: "ประกาศร่างประกาศและเอกสารประกวดราคาเพื่อรับฟังคำวิจารณ์",
+  },
+  {
+    order: 3,
+    workingDaysToNext: 3,
+    label: "เผยแพร่ร่างประกาศและเอกสารประกวดราคาเพื่อรับฟังคำวิจารณ์",
+  },
+  {
+    order: 4,
+    workingDaysToNext: 4,
+    label: "จัดทำเอกสารประกาศ + ประกวดราคา",
+  },
+  {
+    order: 5,
+    workingDaysToNext: 1,
+    label: "ประกาศประกวดราคาขึ้นบนเว็บไซต์กรมบัญชีกลาง",
+  },
+  {
+    order: 6,
+    workingDaysToNext: 5,
+    label:
+      "กำหนดขอรับ/ซื้อเอกสาร (ผู้สนใจสามารถดาวน์โหลดเอกสารจากเว็บไซต์กรมบัญชีกลาง)",
+  },
+  {
+    order: 7,
+    workingDaysToNext: 1,
+    bidSubmissionTimeSlot: "MORNING",
+    label:
+      "กำหนดวันเสนอราคา (ตั้งแต่เวลา 8.30 น. - 12.00 น.) ผู้ยื่นใบเสนอราคาผ่านเว็บไซต์ของกรมบัญชีกลางเท่านั้น",
+  },
+  {
+    order: 8,
+    workingDaysToNext: 1,
+    label: "ตรวจสอบเอกสารเสนอราคา (8.30 น. - 12.00 น.)",
+  },
+  {
+    order: 9,
+    workingDaysToNext: 3,
+    label: "กำหนดวันเวลาในการ Present (เลือกวันใดวันหนึ่ง)",
+  },
+  {
+    order: 10,
+    workingDaysToNext: 4,
+    label: "คณะกรรมการฯ พิจารณาคัดเลือกผู้ชนะ + ต่อรองราคา",
+  },
+  {
+    order: 11,
+    workingDaysToNext: 4,
+    label:
+      "จัดทำเอกสารรายงานผลการพิจารณา + ประกาศผู้ชนะ",
+  },
+  {
+    order: 12,
+    workingDaysToNext: 1,
+    label: "ประกาศผู้ชนะบนเว็บไซต์",
+  },
+  {
+    order: 13,
+    workingDaysToNext: 7,
+    label:
+      "ระยะเวลาอุทธรณ์และติดต่อให้ผู้รับจ้างนำส่งเอกสารเพื่อทำสัญญาและวางหลักประกันสัญญา",
+  },
+] satisfies TemplateStep[];
+
+export function approvedTemplateStepsForBudgetCategory(
+  budgetCategory: BudgetCategory,
+): TemplateStep[] {
+  if (budgetCategory === "ONE_TO_FIVE_MILLION") {
+    return smallBudgetTemplateSteps();
+  }
+  if (budgetCategory === "FIVE_TO_TEN_MILLION") {
+    return documentPickupDurationTemplate(8);
+  }
+  if (budgetCategory === "TEN_TO_TWENTY_MILLION") {
+    return documentPickupDurationTemplate(10);
+  }
+  return documentPickupDurationTemplate(18);
+}
+
+function documentPickupDurationTemplate(workingDaysToNext: number): TemplateStep[] {
+  return APPROVED_TEMPLATE_STEPS.map((step) =>
+    step.order === 6 ? { ...step, workingDaysToNext } : step,
+  );
+}
+
+function smallBudgetTemplateSteps(): TemplateStep[] {
+  return [
+    mergedSmallBudgetOpeningStep(),
+    stepFromApprovedTemplate(2, 5),
+    stepFromApprovedTemplate(3, 6),
+    stepFromApprovedTemplate(4, 7),
+    stepFromApprovedTemplate(5, 8),
+    stepFromApprovedTemplate(6, 9),
+    stepFromApprovedTemplate(7, 10),
+    stepFromApprovedTemplate(8, 11),
+    stepFromApprovedTemplate(9, 12),
+    stepFromApprovedTemplate(10, 13),
+  ];
+}
+
+function mergedSmallBudgetOpeningStep(): TemplateStep {
+  const reportStep = stepFromApprovedTemplate(1, 1);
+  const announcementStep = stepFromApprovedTemplate(1, 4);
+  return {
+    ...reportStep,
+    label: `${reportStep.label} + ${announcementStep.label}`,
+    workingDaysToNext: 2,
+  };
+}
+
+function stepFromApprovedTemplate(order: number, approvedOrder: number): TemplateStep {
+  const source = APPROVED_TEMPLATE_STEPS.find((step) => step.order === approvedOrder);
+  if (!source) throw new Error("APPROVED_TEMPLATE_STEP_NOT_FOUND");
+  return { ...source, order };
+}
