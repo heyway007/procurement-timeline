@@ -197,6 +197,7 @@ textarea:disabled {
     margin-top: 0 !important;
     overflow: visible !important;
     border: 1px solid #cbd5e1 !important;
+    border-top: 0 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
   }
