@@ -231,6 +231,11 @@ textarea:disabled {
     line-height: 1.35 !important;
   }
 
+  .print-grid p:not(.text-lg) {
+    font-size: 18px !important;
+    line-height: 1.35 !important;
+  }
+
   .print-date {
     white-space: nowrap !important;
   }
