@@ -437,7 +437,7 @@ export function TimelineDetail({
   return (
     <main className="print-page mx-auto min-h-screen max-w-6xl overflow-x-hidden px-4 py-6 text-base sm:px-6 sm:py-8">
       <nav className="print-hidden mb-6 flex justify-end">
-        <Link href="/" className="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 font-semibold text-indigo-700 hover:bg-indigo-100">
+        <Link href="/" className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50">
           <FontAwesomeIcon icon={faArrowLeft} aria-hidden="true" />
           <span>กลับหน้าโครงการ</span>
         </Link>
