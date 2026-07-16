@@ -198,7 +198,6 @@ textarea:disabled {
     overflow: visible !important;
     border: 1px solid #cbd5e1 !important;
     border-top: 0 !important;
-    border-right: 1px solid #cbd5e1 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
   }
@@ -242,10 +241,6 @@ textarea:disabled {
     background: #e2e8f0 !important;
     color: #0f172a !important;
     font-weight: 700 !important;
-  }
-
-  .print-table > .print-grid:nth-child(2) {
-    border-top: 0 !important;
   }
 
   .print-grid p {
