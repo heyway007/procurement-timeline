@@ -276,6 +276,20 @@ describe("TimelineDetail", () => {
     expect(screen.getAllByText("ขั้นตอนที่")[0]).toHaveClass("print-hidden");
   });
 
+  it("renders the project back link as a right-aligned button", () => {
+    render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
+
+    const backLink = screen.getByRole("link", { name: /กลับหน้าโครงการ/ });
+
+    expect(backLink).toHaveClass(
+      "inline-flex",
+      "items-center",
+      "rounded-xl",
+      "border",
+    );
+    expect(backLink.parentElement).toHaveClass("flex", "justify-end");
+  });
+
   it("marks a shortened manually adjusted timeline as not meeting SLA", () => {
     const shortened = {
       ...projectFixture(),

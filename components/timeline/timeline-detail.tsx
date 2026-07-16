@@ -434,8 +434,8 @@ export function TimelineDetail({
 
   return (
     <main className="print-page mx-auto min-h-screen max-w-6xl overflow-x-hidden px-4 py-6 text-base sm:px-6 sm:py-8">
-      <nav className="print-hidden mb-6">
-        <Link href="/" className="font-semibold text-indigo-700">← กลับหน้าโครงการ</Link>
+      <nav className="print-hidden mb-6 flex justify-end">
+        <Link href="/" className="inline-flex items-center rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 font-semibold text-indigo-700 hover:bg-indigo-100">← กลับหน้าโครงการ</Link>
       </nav>
       <header data-testid="print-header" className="print-header rounded-3xl bg-slate-950 p-5 text-white shadow-xl sm:p-8">
         <p className="text-sm font-semibold text-indigo-300">Timeline โครงการ</p>
