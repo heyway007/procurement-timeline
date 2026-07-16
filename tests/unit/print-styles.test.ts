@@ -35,4 +35,13 @@ describe("print stylesheet", () => {
       /font-family:\s*"Kanit",\s*Tahoma,\s*sans-serif\s*!important/,
     );
   });
+
+  it("keeps horizontal borders around the printed end row", () => {
+    const printEndRowBlock = stylesheet.match(
+      /\.print-grid:last-child\s*\{([\s\S]*?)\n\s*\}/,
+    )?.[1] ?? "";
+
+    expect(printEndRowBlock).toMatch(/border-top:\s*1px\s+solid\s+#cbd5e1\s*!important/);
+    expect(printEndRowBlock).toMatch(/border-bottom:\s*1px\s+solid\s+#cbd5e1\s*!important/);
+  });
 });

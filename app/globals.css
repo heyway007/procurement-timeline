@@ -244,6 +244,11 @@ textarea:disabled {
     font-weight: 700 !important;
   }
 
+  .print-table > .print-grid:last-child {
+    border-top: 1px solid #cbd5e1 !important;
+    border-bottom: 1px solid #cbd5e1 !important;
+  }
+
   .print-grid p {
     margin: 0 !important;
   }
