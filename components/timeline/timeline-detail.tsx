@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import type { ProjectRecord } from "@/lib/projects/types";
@@ -435,7 +437,10 @@ export function TimelineDetail({
   return (
     <main className="print-page mx-auto min-h-screen max-w-6xl overflow-x-hidden px-4 py-6 text-base sm:px-6 sm:py-8">
       <nav className="print-hidden mb-6 flex justify-end">
-        <Link href="/" className="inline-flex items-center rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 font-semibold text-indigo-700 hover:bg-indigo-100">← กลับหน้าโครงการ</Link>
+        <Link href="/" className="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 font-semibold text-indigo-700 hover:bg-indigo-100">
+          <FontAwesomeIcon icon={faArrowLeft} aria-hidden="true" />
+          <span>กลับหน้าโครงการ</span>
+        </Link>
       </nav>
       <header data-testid="print-header" className="print-header rounded-3xl bg-slate-950 p-5 text-white shadow-xl sm:p-8">
         <p className="text-sm font-semibold text-indigo-300">Timeline โครงการ</p>

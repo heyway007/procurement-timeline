@@ -287,6 +287,7 @@ describe("TimelineDetail", () => {
       "rounded-xl",
       "border",
     );
+    expect(backLink.querySelector('svg[data-icon="arrow-left"]')).toBeInTheDocument();
     expect(backLink.parentElement).toHaveClass("flex", "justify-end");
   });
 
