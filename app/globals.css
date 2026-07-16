@@ -126,11 +126,6 @@ textarea:disabled {
 }
 
 @media print {
-  @page {
-    size: A4 landscape;
-    margin: 8mm;
-  }
-
   html {
     font-size: 10px;
   }
