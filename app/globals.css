@@ -232,7 +232,7 @@ textarea:disabled {
   }
 
   .print-grid p:not(.text-lg) {
-    font-size: 18px !important;
+    font-size: 14px !important;
     line-height: 1.35 !important;
   }
 
