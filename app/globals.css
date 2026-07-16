@@ -204,7 +204,7 @@ textarea:disabled {
 
   .print-grid {
     display: grid !important;
-    grid-template-columns: 10mm minmax(0, 1fr) 100mm !important;
+    grid-template-columns: 16mm minmax(0, 1fr) 100mm !important;
     gap: 0 !important;
     align-items: stretch !important;
     padding: 0 !important;
@@ -240,6 +240,7 @@ textarea:disabled {
     border-top: 0 !important;
     background: #e2e8f0 !important;
     color: #0f172a !important;
+    font-family: "Kanit", Tahoma, sans-serif !important;
     font-weight: 700 !important;
   }
 

@@ -21,4 +21,18 @@ describe("print stylesheet", () => {
 
     expect(printTableBlock).toMatch(/border-top:\s*0\s*!important/);
   });
+
+  it("fits the sequence column and uses the shared table font in the header", () => {
+    expect(stylesheet).toMatch(
+      /grid-template-columns:\s*16mm\s+minmax\(0,\s*1fr\)\s+100mm\s*!important/,
+    );
+
+    const printHeaderBlock = stylesheet.match(
+      /\.print-grid:first-child\s*\{([\s\S]*?)\n\s*\}/,
+    )?.[1] ?? "";
+
+    expect(printHeaderBlock).toMatch(
+      /font-family:\s*"Kanit",\s*Tahoma,\s*sans-serif\s*!important/,
+    );
+  });
 });
