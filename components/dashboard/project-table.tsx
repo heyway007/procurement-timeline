@@ -62,7 +62,7 @@ export function ProjectTable({ projects, onDelete }: ProjectTableProps) {
         ))}
       </div>
       <div data-testid="desktop-project-table" className="hidden overflow-x-auto xl:block">
-        <table className="min-w-[1100px] table-fixed divide-y divide-slate-200">
+        <table className="w-full min-w-[1100px] table-fixed divide-y divide-slate-200">
           <colgroup>
             <col className="w-[41%]" />
             <col className="w-[16%]" />

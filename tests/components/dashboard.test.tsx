@@ -75,7 +75,7 @@ describe("Dashboard", () => {
     const projectHeader = screen.getByRole("columnheader", { name: "โครงการ" });
     const actionHeader = screen.getByRole("columnheader", { name: "เปิด" });
 
-    expect(table).toHaveClass("table-fixed", "min-w-[1100px]");
+    expect(table).toHaveClass("w-full", "table-fixed", "min-w-[1100px]");
     expect(projectHeader).toHaveClass("w-[41%]");
     expect(actionHeader).toHaveClass("w-[19%]");
     expect(screen.getAllByRole("link", { name: /เปิด Timeline/ })[0]).not.toHaveClass("whitespace-nowrap");
