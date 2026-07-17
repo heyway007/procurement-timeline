@@ -169,6 +169,24 @@ describe("ProjectService", () => {
     });
   });
 
+  it("creates a selective procurement method timeline independent of budget range", async () => {
+    const { service } = makeService();
+
+    const result = await service.create({
+      name: "โครงการวิธีคัดเลือก",
+      ownerName: "ผู้รับผิดชอบ",
+      budget: 29_000_000,
+      budgetCategory: "SELECTIVE_METHOD",
+      startDate: "2026-07-06",
+      note: "",
+    });
+
+    expect(result.project.steps).toHaveLength(13);
+    expect(result.project.steps.map((step) => step.workingDaysToNext)).toEqual([
+      2, 2, 2, 1, 5, 1, 2, 2, 3, 1, 2, 1, 7,
+    ]);
+  });
+
   it("creates the reduced 1,000,000-5,000,000 baht category timeline", async () => {
     const { service } = makeService();
 

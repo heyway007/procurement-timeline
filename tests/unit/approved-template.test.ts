@@ -66,4 +66,13 @@ describe("approved procurement template", () => {
       approvedTemplateStepsForBudgetCategory("ABOVE_TWENTY_MILLION")[5].workingDaysToNext,
     ).toBe(18);
   });
+
+  it("uses the selective procurement method durations from the approved schedule", () => {
+    const steps = approvedTemplateStepsForBudgetCategory("SELECTIVE_METHOD");
+
+    expect(steps).toHaveLength(13);
+    expect(steps.map((step) => step.workingDaysToNext)).toEqual([
+      2, 2, 2, 1, 5, 1, 2, 2, 3, 1, 2, 1, 7,
+    ]);
+  });
 });

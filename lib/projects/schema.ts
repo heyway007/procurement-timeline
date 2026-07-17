@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { BUDGET_CATEGORIES, budgetCategoryFor } from "./budget-category";
+import { BUDGET_CATEGORIES, budgetCategoryFor, isProcurementMethod } from "./budget-category";
 
 export const isoDateSchema = z
   .string()
@@ -15,7 +15,7 @@ export const createProjectSchema = z.object({
   note: z.string().trim().max(2000).optional().default(""),
 }).superRefine((value, context) => {
   try {
-    if (budgetCategoryFor(value.budget) !== value.budgetCategory) context.addIssue({ code: "custom", path: ["budgetCategory"], message: "ประเภทวงเงินไม่ตรงกับวงเงินจริง" });
+    if (!isProcurementMethod(value.budgetCategory) && budgetCategoryFor(value.budget) !== value.budgetCategory) context.addIssue({ code: "custom", path: ["budgetCategory"], message: "ประเภทวงเงินไม่ตรงกับวงเงินจริง" });
   } catch {
     context.addIssue({ code: "custom", path: ["budget"], message: "วงเงินจริงต้องไม่น้อยกว่า 1,000,000 บาท" });
   }

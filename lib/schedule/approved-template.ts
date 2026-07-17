@@ -77,9 +77,28 @@ export const APPROVED_TEMPLATE_STEPS = [
   },
 ] satisfies TemplateStep[];
 
+export const SELECTIVE_METHOD_TEMPLATE_STEPS = [
+  { order: 1, workingDaysToNext: 2, label: "จัดทำเอกสาร รายงานขอซื้อขอจ้าง แต่งตั้งคณะกรรมการ" },
+  { order: 2, workingDaysToNext: 2, label: "จัดทำเอกสาร รายงานการประชุมคัดเลือกรายชื่อผู้ยื่นเสนอราคา" },
+  { order: 3, workingDaysToNext: 2, label: "จัดทำเอกสาร หนังสือเชิญยื่นเสนอราคาจำนวนอย่างน้อย 3 ราย" },
+  { order: 4, workingDaysToNext: 1, label: "จัดส่งหนังสือเชิญยื่นเสนอราคา ทาง E-Mail" },
+  { order: 5, workingDaysToNext: 5, label: "เว้นระยะเวลาในการยื่นเสนอราคา" },
+  { order: 6, workingDaysToNext: 1, label: "กำหนดวันยื่นเสนอราคา เวลา 8.30-16.30 น." },
+  { order: 7, workingDaysToNext: 2, label: "ตรวจสอบเอกสารเสนอราคา เลือกวันใดวันหนึ่ง" },
+  { order: 8, workingDaysToNext: 2, label: "กำหนดวันนัดในการเสนอข้อมูลทางเทคนิค (Present) เลือกวันใดวันหนึ่ง" },
+  { order: 9, workingDaysToNext: 3, label: "คณะกรรมการฯ พิจารณาคัดเลือกผู้ชนะ ต่อรองราคา" },
+  { order: 10, workingDaysToNext: 1, label: "จัดทำเอกสาร รายงานการประชุมและรายงานผลการพิจารณา แบบแจ้งเหตุผลเพิ่มเติม" },
+  { order: 11, workingDaysToNext: 2, label: "จัดทำเอกสาร รายงานผลพิจารณา ประกาศผู้ชนะ" },
+  { order: 12, workingDaysToNext: 1, label: "ประกาศผู้ชนะการเสนอราคา บนเว็บไซต์กรมบัญชีกลาง (e-GP)" },
+  { order: 13, workingDaysToNext: 7, label: "ระยะเวลาอุทธรณ์ ติดต่อให้ผู้รับจ้างนำส่งเอกสารเพื่อทำสัญญาและวางหลักประกันสัญญา" },
+] satisfies TemplateStep[];
+
 export function approvedTemplateStepsForBudgetCategory(
   budgetCategory: BudgetCategory,
 ): TemplateStep[] {
+  if (budgetCategory === "SELECTIVE_METHOD") {
+    return SELECTIVE_METHOD_TEMPLATE_STEPS;
+  }
   if (budgetCategory === "ONE_TO_FIVE_MILLION") {
     return smallBudgetTemplateSteps();
   }

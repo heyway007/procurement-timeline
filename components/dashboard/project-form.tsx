@@ -127,9 +127,9 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
               </select>
             </label>
             <label className="min-w-0 text-sm font-medium text-slate-700">
-              ประเภทวงเงิน
-              <select aria-label="ประเภทวงเงิน" className={fieldClass} name="budgetCategory" required defaultValue="">
-                <option value="" disabled>เลือกประเภทวงเงิน</option>
+              ประเภทวงเงิน <span>/ วิธี</span>
+              <select aria-label="ประเภทวงเงิน / วิธี" className={fieldClass} name="budgetCategory" required defaultValue="">
+                <option value="" disabled>เลือกประเภทวงเงิน / วิธี</option>
                 {BUDGET_CATEGORY_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
               </select>
             </label>

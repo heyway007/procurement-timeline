@@ -22,7 +22,7 @@ async function fillBase(user: ReturnType<typeof userEvent.setup>, budget = "2900
   await user.type(screen.getByLabelText("ชื่อโครงการ"), "จัดซื้อระบบ");
   await user.type(screen.getByLabelText("ผู้จัดทำ Timeline"), "คุณสมชาย");
   await user.selectOptions(screen.getByLabelText("ฝ่าย"), "ฝ่ายส่งเสริมการจัดประชุมนานาชาติ");
-  await user.selectOptions(screen.getByLabelText("ประเภทวงเงิน"), "TEN_TO_TWENTY_MILLION");
+  await user.selectOptions(screen.getByLabelText("ประเภทวงเงิน / วิธี"), "TEN_TO_TWENTY_MILLION");
   await user.type(screen.getByLabelText("วงเงินจัดจ้าง (บาท)"), budget);
 }
 
@@ -31,6 +31,15 @@ describe("ProjectForm", () => {
     swalFire.mockReset();
     swalFire.mockResolvedValue({ isConfirmed: true } as never);
     routerPush.mockReset();
+  });
+
+  it("shows the budget category and method wording", () => {
+    render(<ProjectForm onCancel={() => undefined} onCreate={vi.fn()} />);
+
+    expect(screen.getByLabelText("ประเภทวงเงิน / วิธี")).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "เลือกประเภทวงเงิน / วิธี" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "วิธีคัดเลือก" })).toBeInTheDocument();
+    expect(screen.getByText("/ วิธี")).not.toHaveClass("text-rose-600");
   });
 
   it("places the owner field after the budget field and before the start date field", () => {

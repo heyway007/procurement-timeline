@@ -64,4 +64,20 @@ describe("Dashboard", () => {
     expect(screen.getAllByText("จัดซื้อครุภัณฑ์")).not.toHaveLength(0);
     expect(screen.queryByText("จัดซื้อระบบสารสนเทศ")).not.toBeInTheDocument();
   });
+
+  it("allocates less desktop table width to long project names", () => {
+    render(<Dashboard initialProjects={projects} />);
+
+    expect(screen.getByTestId("project-cards")).toHaveClass("xl:hidden");
+    expect(screen.getByTestId("desktop-project-table")).toHaveClass("xl:block");
+
+    const table = screen.getByRole("table");
+    const projectHeader = screen.getByRole("columnheader", { name: "โครงการ" });
+    const actionHeader = screen.getByRole("columnheader", { name: "เปิด" });
+
+    expect(table).toHaveClass("table-fixed", "min-w-[1100px]");
+    expect(projectHeader).toHaveClass("w-[41%]");
+    expect(actionHeader).toHaveClass("w-[19%]");
+    expect(screen.getAllByRole("link", { name: /เปิด Timeline/ })[0]).not.toHaveClass("whitespace-nowrap");
+  });
 });

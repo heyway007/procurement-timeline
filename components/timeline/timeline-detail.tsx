@@ -65,6 +65,9 @@ function isDateRangeMilestone(project: ProjectRecord, order: number): boolean {
   if (project.budgetCategory === "ONE_TO_FIVE_MILLION") {
     return order === 3 || order === 7;
   }
+  if (project.budgetCategory === "SELECTIVE_METHOD") {
+    return order === 5 || order === 7 || order === 8;
+  }
   return order === 3 || order === 6;
 }
 
@@ -98,7 +101,29 @@ type StepPresentation = {
   subtitle?: string;
 };
 
-function stepPresentation(step: ProjectRecord["steps"][number]): StepPresentation {
+const SELECTIVE_METHOD_STEP_PRESENTATIONS: Record<number, StepPresentation> = {
+  1: { title: "จัดทำเอกสาร", subtitle: "รายงานขอซื้อขอจ้าง • แต่งตั้งคณะกรรมการ" },
+  2: { title: "จัดทำเอกสาร", subtitle: "รายงานการประชุมคัดเลือกรายชื่อผู้ยื่นเสนอราคา" },
+  3: { title: "จัดทำเอกสาร", subtitle: "หนังสือเชิญยื่นเสนอราคาจำนวนอย่างน้อย 3 ราย" },
+  4: { title: "จัดส่งหนังสือเชิญยื่นเสนอราคา", subtitle: "ทาง E-Mail" },
+  5: { title: "เว้นระยะเวลาในการยื่นเสนอราคา" },
+  6: { title: "กำหนดวันยื่นเสนอราคา", subtitle: "เวลา 8.30-16.30 น." },
+  7: { title: "ตรวจสอบเอกสารเสนอราคา", subtitle: "เลือกวันใดวันหนึ่ง" },
+  8: { title: "กำหนดวันเวลาในการนำเสนอข้อเทคนิค (Present)", subtitle: "เลือกวันใดวันหนึ่ง" },
+  9: { title: "คณะกรรมการฯ พิจารณาคัดเลือกผู้ชนะ • ต่อรองราคา" },
+  10: { title: "จัดทำเอกสาร", subtitle: "รายงานการประชุมและรายงานผลการพิจารณา • แบบแจ้งเหตุผลเพิ่มเติม" },
+  11: { title: "จัดทำเอกสาร", subtitle: "รายงานผลพิจารณา • ประกาศผู้ชนะ" },
+  12: { title: "ประกาศผู้ชนะการเสนอราคา", subtitle: "บนเว็บไซต์กรมบัญชีกลาง (e-GP)" },
+  13: { title: "ระยะเวลาอุทธรณ์", subtitle: "ติดต่อให้ผู้รับจ้างนำส่งเอกสารเพื่อทำสัญญาและวางหลักประกันสัญญา" },
+};
+
+function stepPresentation(
+  step: ProjectRecord["steps"][number],
+  budgetCategory: ProjectRecord["budgetCategory"],
+): StepPresentation {
+  if (budgetCategory === "SELECTIVE_METHOD") {
+    return SELECTIVE_METHOD_STEP_PRESENTATIONS[step.order] ?? { title: step.label };
+  }
   const label = step.label.replaceAll("ส่วนงานพัสดุฯ ", "");
   if (label.includes("จัดทำรายงานขอซื้อขอจ้าง")) {
     return {
@@ -463,7 +488,7 @@ export function TimelineDetail({
           <span>ลำดับ</span><span>ขั้นตอน</span><span>วันที่กำหนด</span><span className="print-hidden">จัดการ</span>
         </div>
         {project.steps.map((step, index) => {
-          const presentation = stepPresentation(step);
+          const presentation = stepPresentation(step, project.budgetCategory);
           return (
           <div data-testid="timeline-step" key={step.order} className="print-grid grid gap-3 border-t border-slate-100 px-4 py-4 text-base lg:grid-cols-[4rem_1fr_20rem_7rem]">
             <span className="font-semibold text-indigo-700"><span className="print-hidden lg:hidden">ขั้นตอนที่ </span>{step.order}</span>

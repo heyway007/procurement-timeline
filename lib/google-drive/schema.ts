@@ -38,6 +38,7 @@ export const googleDriveProjectSchema = z.object({
     "FIVE_TO_TEN_MILLION",
     "TEN_TO_TWENTY_MILLION",
     "ABOVE_TWENTY_MILLION",
+    "SELECTIVE_METHOD",
   ]),
   startDate: isoDateSchema,
   note: z.string(),

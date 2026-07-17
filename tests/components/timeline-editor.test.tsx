@@ -60,6 +60,20 @@ function smallBudgetProjectFixture(): ProjectRecord {
   };
 }
 
+function selectiveMethodProjectFixture(): ProjectRecord {
+  const timeline = buildTimeline(
+    approvedTemplateStepsForBudgetCategory("SELECTIVE_METHOD"),
+    "2026-07-06",
+    new Set(),
+  );
+  return {
+    ...projectFixture(),
+    budgetCategory: "SELECTIVE_METHOD",
+    processEndDate: timeline.processEndDate,
+    steps: timeline.milestones,
+  };
+}
+
 function smallBudgetProjectWithPresentDate(
   isDateManuallyAdjusted: boolean,
 ): ProjectRecord {
@@ -238,6 +252,31 @@ describe("TimelineDetail", () => {
     expect(within(rows[9]).getByText("วันพุธ 5 ส.ค. 2569 - วันพฤหัสบดี 13 ส.ค. 2569")).toBeInTheDocument();
     expect(rows[1]).not.toHaveTextContent(" - ");
     expect(rows[7]).not.toHaveTextContent(" - ");
+  });
+
+  it("shows date ranges for selective method offer period, document review, and Present", () => {
+    render(<TimelineDetail projectId="project-1" initialProject={selectiveMethodProjectFixture()} />);
+
+    const rows = screen.getAllByTestId("timeline-step");
+    expect(rows).toHaveLength(13);
+    expect(rows[4]).toHaveTextContent(" - ");
+    expect(rows[6]).toHaveTextContent(" - ");
+    expect(rows[7]).toHaveTextContent(" - ");
+    expect(rows[5]).not.toHaveTextContent(" - ");
+  });
+
+  it("splits selective method steps into titles and subtitles without plus signs", () => {
+    render(<TimelineDetail projectId="project-1" initialProject={selectiveMethodProjectFixture()} />);
+
+    const rows = screen.getAllByTestId("timeline-step");
+    expect(within(rows[0]).getByText("จัดทำเอกสาร")).toBeInTheDocument();
+    expect(within(rows[0]).getByText("รายงานขอซื้อขอจ้าง • แต่งตั้งคณะกรรมการ")).toBeInTheDocument();
+    expect(within(rows[7]).getByText("กำหนดวันเวลาในการนำเสนอข้อเทคนิค (Present)")).toHaveClass("text-lg", "font-semibold");
+    expect(within(rows[7]).getByText("เลือกวันใดวันหนึ่ง")).toBeInTheDocument();
+    const negotiationTitle = within(rows[8]).getByText("คณะกรรมการฯ พิจารณาคัดเลือกผู้ชนะ • ต่อรองราคา");
+    expect(negotiationTitle).toHaveClass("text-lg", "font-semibold");
+    expect(within(rows[8]).queryByText("ต่อรองราคา", { exact: true })).not.toBeInTheDocument();
+    expect(screen.queryByText(/\+/)).not.toBeInTheDocument();
   });
 
   it("shows the automatic Present milestone as three working days after the previous milestone", () => {

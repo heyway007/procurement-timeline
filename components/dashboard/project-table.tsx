@@ -24,7 +24,7 @@ export function ProjectTable({ projects, onDelete }: ProjectTableProps) {
 
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="divide-y divide-slate-100 md:hidden">
+      <div data-testid="project-cards" className="divide-y divide-slate-100 xl:hidden">
         {projects.map((project) => (
           <article key={project.id} className="p-4">
             <div className="min-w-0">
@@ -61,15 +61,22 @@ export function ProjectTable({ projects, onDelete }: ProjectTableProps) {
           </article>
         ))}
       </div>
-      <div className="hidden overflow-x-auto md:block">
-        <table className="min-w-full divide-y divide-slate-200">
+      <div data-testid="desktop-project-table" className="hidden overflow-x-auto xl:block">
+        <table className="min-w-[1100px] table-fixed divide-y divide-slate-200">
+          <colgroup>
+            <col className="w-[41%]" />
+            <col className="w-[16%]" />
+            <col className="w-[12%]" />
+            <col className="w-[12%]" />
+            <col className="w-[19%]" />
+          </colgroup>
           <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
             <tr>
-              <th className="px-5 py-4">โครงการ</th>
+              <th className="w-[41%] px-5 py-4">โครงการ</th>
               <th className="px-5 py-4">วงเงิน</th>
               <th className="px-5 py-4">วันเริ่ม</th>
               <th className="px-5 py-4">วันที่เริ่มทำสัญญา</th>
-              <th className="px-5 py-4"><span className="sr-only">เปิด</span></th>
+              <th className="w-[19%] px-5 py-4"><span className="sr-only">เปิด</span></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">

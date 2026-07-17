@@ -22,6 +22,46 @@ describe("HolidayManager", () => {
     );
   });
 
+  it("renders the project back link with the shared timeline button style", () => {
+    render(<HolidayManager initialYear={2026} initialHolidays={[]} />);
+
+    const backLink = screen.getByRole("link", { name: /กลับหน้าโครงการ/ });
+    expect(backLink).toHaveClass(
+      "inline-flex",
+      "items-center",
+      "rounded-xl",
+      "border",
+      "border-slate-300",
+      "bg-white",
+      "text-slate-700",
+    );
+    const backIcon = backLink.querySelector('svg[data-icon="arrow-left"]');
+    expect(backIcon).toBeInTheDocument();
+    expect(backIcon).toHaveClass("h-4", "w-4", "shrink-0");
+  });
+
+  it("keeps the page heading and back action in one responsive header", () => {
+    render(<HolidayManager initialYear={2026} initialHolidays={[]} />);
+
+    const heading = screen.getByRole("heading", { name: "จัดการวันหยุดราชการ" });
+    const header = heading.closest("header");
+
+    expect(header).toHaveClass("sm:items-center", "sm:justify-between");
+    expect(screen.getByRole("link", { name: /กลับหน้าโครงการ/ }).parentElement).toBe(header);
+  });
+
+  it("aligns the year control and sync status from the same top edge", () => {
+    render(<HolidayManager initialYear={2026} initialHolidays={[]} />);
+
+    const yearInput = screen.getByRole("spinbutton", { name: "ปี ค.ศ." });
+    const controls = yearInput.closest("section");
+    const addButton = screen.getByRole("button", { name: "เพิ่มวันหยุด" });
+
+    expect(controls).toHaveClass("md:items-start", "md:grid-cols-[12rem_minmax(0,1fr)_auto]");
+    expect(addButton).toHaveClass("md:col-start-3");
+    expect(addButton.parentElement).toBe(controls);
+  });
+
   it("shows holidays and previews a new holiday before confirming", async () => {
     const user = userEvent.setup();
     const previewMutation = vi.fn().mockResolvedValue({

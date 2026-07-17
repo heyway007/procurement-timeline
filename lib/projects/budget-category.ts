@@ -3,6 +3,7 @@ export const BUDGET_CATEGORIES = [
   "FIVE_TO_TEN_MILLION",
   "TEN_TO_TWENTY_MILLION",
   "ABOVE_TWENTY_MILLION",
+  "SELECTIVE_METHOD",
 ] as const;
 
 export type BudgetCategory = (typeof BUDGET_CATEGORIES)[number];
@@ -12,7 +13,12 @@ export const BUDGET_CATEGORY_OPTIONS: ReadonlyArray<{ value: BudgetCategory; lab
   { value: "FIVE_TO_TEN_MILLION", label: "5,000,001–10,000,000 บาท" },
   { value: "TEN_TO_TWENTY_MILLION", label: "10,000,001–50,000,000 บาท" },
   { value: "ABOVE_TWENTY_MILLION", label: "50,000,001 บาทขึ้นไป" },
+  { value: "SELECTIVE_METHOD", label: "วิธีคัดเลือก" },
 ];
+
+export function isProcurementMethod(category: BudgetCategory): boolean {
+  return category === "SELECTIVE_METHOD";
+}
 
 export function budgetCategoryFor(amount: number): BudgetCategory {
   if (!Number.isFinite(amount) || amount < 500_001) throw new Error("BUDGET_BELOW_SUPPORTED_RANGE");
@@ -23,6 +29,7 @@ export function budgetCategoryFor(amount: number): BudgetCategory {
 }
 
 export function validateBudgetCategory(category: BudgetCategory, amount: number): void {
+  if (isProcurementMethod(category)) return;
   if (budgetCategoryFor(amount) !== category) throw new Error("BUDGET_CATEGORY_MISMATCH");
 }
 
