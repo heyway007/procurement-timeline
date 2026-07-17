@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Swal from "sweetalert2";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -9,6 +9,7 @@ import {
 } from "@/lib/schedule/approved-template";
 import { buildTimeline } from "@/lib/schedule/engine";
 import type { ProjectRecord } from "@/lib/projects/types";
+import { ApiError } from "@/lib/ui/api-client";
 
 vi.mock("sweetalert2", () => ({
   default: {
@@ -433,6 +434,53 @@ describe("TimelineDetail", () => {
     expect(swalFire).toHaveBeenLastCalledWith(
       expect.objectContaining({ icon: "success" }),
     );
+  });
+
+  it("closes the date editor before waiting for a confirmed overwrite save", async () => {
+    const user = userEvent.setup();
+    let resolveAdjust!: (project: ProjectRecord) => void;
+    const pendingAdjust = new Promise<ProjectRecord>((resolve) => {
+      resolveAdjust = resolve;
+    });
+    const onAdjustStep = vi
+      .fn()
+      .mockRejectedValueOnce(
+        new ApiError(
+          "DOWNSTREAM_ADJUSTMENTS_WILL_BE_REPLACED",
+          "วันที่ซึ่งเคยปรับในขั้นตอนหลังจะถูกคำนวณใหม่",
+          422,
+        ),
+      )
+      .mockReturnValueOnce(pendingAdjust);
+
+    render(
+      <TimelineDetail
+        projectId="project-1"
+        initialProject={projectFixture()}
+        onAdjustStep={onAdjustStep}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "แก้วันที่ ขั้นตอนที่ 2" }));
+    await user.clear(screen.getByLabelText("วันที่ใหม่"));
+    await user.type(screen.getByLabelText("วันที่ใหม่"), "2026-07-14");
+    await user.click(screen.getByRole("button", { name: "ตกลง" }));
+
+    await waitFor(() => {
+      expect(swalFire).toHaveBeenCalledWith(
+        expect.objectContaining({ title: "ยืนยันการเขียนทับวันที่ถัดไป?" }),
+      );
+      expect(onAdjustStep).toHaveBeenCalledTimes(2);
+    });
+    expect(screen.queryByRole("heading", { name: "แก้วันที่ขั้นตอนที่ 2" })).not.toBeInTheDocument();
+    expect(onAdjustStep).toHaveBeenLastCalledWith(2, "2026-07-14", 1, false, true);
+
+    resolveAdjust(projectFixture());
+    await waitFor(() => {
+      expect(swalFire).toHaveBeenLastCalledWith(
+        expect.objectContaining({ icon: "success", title: "แก้วันที่สำเร็จ" }),
+      );
+    });
   });
 
   it("explains why a date before the previous milestone cannot be selected before submitting", async () => {

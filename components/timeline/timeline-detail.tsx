@@ -40,6 +40,12 @@ type AdjustStep = (
   confirmOverwrite: boolean,
 ) => Promise<ProjectRecord>;
 
+type EditContext = {
+  order: number;
+  date: string;
+  version: number;
+};
+
 type TimelineDetailProps = {
   projectId: string;
   initialProject?: ProjectRecord;
@@ -277,18 +283,26 @@ export function TimelineDetail({
   async function saveEdit(
     confirmShortening = false,
     confirmOverwrite = false,
+    context?: EditContext,
   ) {
-    if (!project || editingOrder === null) return;
+    if (!project) return;
+    const editContext =
+      context ??
+      (editingOrder === null
+        ? null
+        : { order: editingOrder, date: newDate, version: project.version });
+    if (!editContext) return;
+
     setEditError("");
-    if (isWeekendIso(newDate)) {
+    if (isWeekendIso(editContext.date)) {
       setEditError("เลือกไม่ได้ เพราะวันที่ใหม่ต้องไม่เป็นวันเสาร์หรือวันอาทิตย์");
       return;
     }
     const editingIndex = project.steps.findIndex(
-      (step) => step.order === editingOrder,
+      (step) => step.order === editContext.order,
     );
     const previousStep = project.steps[editingIndex - 1];
-    if (previousStep && newDate <= previousStep.scheduledDate) {
+    if (previousStep && editContext.date <= previousStep.scheduledDate) {
       setEditError(
         `เลือกไม่ได้ เพราะวันที่ใหม่ต้องอยู่หลังขั้นตอนที่ ${previousStep.order} (${formatThaiDateWithWeekday(previousStep.scheduledDate)})`,
       );
@@ -308,9 +322,9 @@ export function TimelineDetail({
             overwrite,
           ));
       const updatedProject = await adjust(
-        editingOrder,
-        newDate,
-        project.version,
+        editContext.order,
+        editContext.date,
+        editContext.version,
         confirmShortening,
         confirmOverwrite,
       );
@@ -319,7 +333,7 @@ export function TimelineDetail({
       setEditError("");
       await Swal.fire({
         title: "แก้วันที่สำเร็จ",
-        text: `ปรับขั้นตอนที่ ${editingOrder} เป็น ${formatThaiDateWithWeekday(newDate)} แล้ว`,
+        text: `ปรับขั้นตอนที่ ${editContext.order} เป็น ${formatThaiDateWithWeekday(editContext.date)} แล้ว`,
         icon: "success",
         confirmButtonText: "ตกลง",
         confirmButtonColor: "#4338ca",
@@ -341,7 +355,9 @@ export function TimelineDetail({
           reverseButtons: true,
         });
         if (confirmation.isConfirmed) {
-          await saveEdit(true, confirmOverwrite);
+          setEditingOrder(null);
+          setEditError("");
+          await saveEdit(true, confirmOverwrite, editContext);
         }
         return;
       }
@@ -361,7 +377,9 @@ export function TimelineDetail({
           reverseButtons: true,
         });
         if (confirmation.isConfirmed) {
-          await saveEdit(confirmShortening, true);
+          setEditingOrder(null);
+          setEditError("");
+          await saveEdit(confirmShortening, true, editContext);
         }
         return;
       }
