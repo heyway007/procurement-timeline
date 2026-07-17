@@ -72,7 +72,7 @@ function isDateRangeMilestone(project: ProjectRecord, order: number): boolean {
     return order === 3 || order === 7;
   }
   if (project.budgetCategory === "SELECTIVE_METHOD") {
-    return order === 5 || order === 7 || order === 8;
+    return order === 5 || order === 7 || order === 8 || order === 9;
   }
   return order === 3 || order === 6;
 }

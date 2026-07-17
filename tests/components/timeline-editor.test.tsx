@@ -263,6 +263,7 @@ describe("TimelineDetail", () => {
     expect(rows[4]).toHaveTextContent(" - ");
     expect(rows[6]).toHaveTextContent(" - ");
     expect(rows[7]).toHaveTextContent(" - ");
+    expect(rows[8]).toHaveTextContent(" - ");
     expect(rows[5]).not.toHaveTextContent(" - ");
   });
 
