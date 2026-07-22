@@ -83,7 +83,7 @@ async function seed(): Promise<void> {
       create: { year: 2026, sourceNote: "สำนักเลขาธิการคณะรัฐมนตรี", lastSuccessfulSyncAt: confirmedAt, lastSyncAttemptAt: confirmedAt, lastSyncStatus: "CACHED" },
       update: { sourceNote: "สำนักเลขาธิการคณะรัฐมนตรี", lastSuccessfulSyncAt: confirmedAt, lastSyncStatus: "CACHED" },
     });
-  });
+  }, { timeout: 30_000 });
 }
 
 seed()

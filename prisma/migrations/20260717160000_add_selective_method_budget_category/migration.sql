@@ -1,1 +1,1 @@
-ALTER TYPE "BudgetCategory" ADD VALUE 'SELECTIVE_METHOD';
+-- Superseded by the initial schema migration for the fresh database setup.

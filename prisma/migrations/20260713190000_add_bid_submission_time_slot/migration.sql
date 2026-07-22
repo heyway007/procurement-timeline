@@ -1,7 +1,1 @@
-CREATE TYPE "BidSubmissionTimeSlot" AS ENUM ('MORNING', 'AFTERNOON');
-
-ALTER TABLE "TemplateStep"
-ADD COLUMN "bidSubmissionTimeSlot" "BidSubmissionTimeSlot";
-
-ALTER TABLE "ProjectStep"
-ADD COLUMN "bidSubmissionTimeSlot" "BidSubmissionTimeSlot";
+-- Superseded by the initial schema migration for the fresh database setup.
