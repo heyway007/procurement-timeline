@@ -5,6 +5,11 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
+export const PRISMA_TRANSACTION_OPTIONS = {
+  maxWait: 10_000,
+  timeout: 30_000,
+} as const;
+
 function createPrismaClient(): PrismaClient {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
@@ -13,6 +18,7 @@ function createPrismaClient(): PrismaClient {
 
   return new PrismaClient({
     adapter: new PrismaPg({ connectionString }),
+    transactionOptions: PRISMA_TRANSACTION_OPTIONS,
   });
 }
 
