@@ -64,7 +64,9 @@ const worker = {
       return handler.fetch(request, env, ctx);
     }
 
-    const prisma = createPrismaClient(env.DATABASE_URL);
+    const prisma = createPrismaClient(env.DATABASE_URL, {
+      useSupabaseTransactionPooler: true,
+    });
     return runWithPrisma(prisma, async () => {
       try {
         return await handler.fetch(request, env, ctx);
