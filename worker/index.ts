@@ -8,6 +8,7 @@ import {
   syncRuntimeEnv,
   type RuntimeEnvBindings,
 } from "./runtime-env";
+import { createPrismaClient, runWithPrisma } from "../lib/db/prisma";
 
 type AssetFetcher = {
   fetch(request: Request): Promise<Response>;
@@ -59,7 +60,18 @@ const worker = {
       );
     }
 
-    return handler.fetch(request, env, ctx);
+    if (env.STORAGE_MODE === "google_drive" || !url.pathname.startsWith("/api/")) {
+      return handler.fetch(request, env, ctx);
+    }
+
+    const prisma = createPrismaClient(env.DATABASE_URL);
+    return runWithPrisma(prisma, async () => {
+      try {
+        return await handler.fetch(request, env, ctx);
+      } finally {
+        ctx.waitUntil(prisma.$disconnect());
+      }
+    });
   },
 };
 
