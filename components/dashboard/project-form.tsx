@@ -6,7 +6,7 @@ import Swal from "sweetalert2";
 import type { CreateProjectInput } from "@/lib/projects/types";
 import { ApiError } from "@/lib/ui/api-client";
 import { formatThaiDate, isWeekendIso } from "@/lib/ui/date-format";
-import { BUDGET_CATEGORY_OPTIONS, validateBudgetCategory, type BudgetCategory } from "@/lib/projects/budget-category";
+import { BUDGET_CATEGORY_OPTIONS, type BudgetCategory } from "@/lib/projects/budget-category";
 
 type ProjectFormProps = {
   onCancel: () => void;
@@ -53,19 +53,11 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
       return;
     }
     const form = new FormData(event.currentTarget);
-    const budget = Number(form.get("budget"));
     const budgetCategory = String(form.get("budgetCategory")) as BudgetCategory;
-    try {
-      validateBudgetCategory(budgetCategory, budget);
-    } catch {
-      setError("ประเภทวงเงินไม่ตรงกับวงเงินจริง");
-      return;
-    }
     const input: CreateProjectInput = {
-      name: String(form.get("name") ?? ""),
-      ownerName: String(form.get("ownerName") ?? ""),
+      name: "",
+      ownerName: "",
       departmentName: String(form.get("departmentName") ?? ""),
-      budget,
       budgetCategory,
       startDate,
       note: String(form.get("note") ?? ""),
@@ -117,11 +109,11 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
           <form className="mt-6 grid gap-5 sm:grid-cols-2" onSubmit={handleSubmit}>
             <label className="min-w-0 text-sm font-medium text-slate-700 sm:col-span-2">
               ชื่อโครงการ
-              <input className={fieldClass} name="name" required maxLength={200} />
+              <input className={fieldClass} name="name" maxLength={200} />
             </label>
             <label className="min-w-0 text-sm font-medium text-slate-700">
               ฝ่าย
-              <select aria-label="ฝ่าย" className={fieldClass} name="departmentName" required defaultValue="">
+              <select aria-label="ฝ่าย" className={fieldClass} name="departmentName" defaultValue="">
                 <option value="" disabled>เลือกฝ่าย</option>
                 {DEPARTMENT_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
               </select>
@@ -134,12 +126,8 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
               </select>
             </label>
             <label className="min-w-0 text-sm font-medium text-slate-700">
-              วงเงินจัดจ้าง (บาท)
-              <input aria-label="วงเงินจัดจ้าง (บาท)" className={fieldClass} name="budget" type="number" min="500001" step="0.01" required />
-            </label>
-            <label className="min-w-0 text-sm font-medium text-slate-700">
               ผู้จัดทำ Timeline
-              <input className={fieldClass} name="ownerName" required maxLength={120} />
+              <input className={fieldClass} name="ownerName" maxLength={120} />
             </label>
             <label className="min-w-0 text-sm font-medium text-slate-700 sm:col-span-2">
               วันที่เริ่มต้น

@@ -13,6 +13,7 @@ import type { ScheduledTimeline } from "@/lib/schedule/types";
 import { isBidSubmissionMilestone, isPresentMilestone } from "@/lib/schedule/milestone-kind";
 import type { HolidayCalendarReader, ProjectRepository } from "./repository";
 import { createProjectSchema, listProjectsSchema, updateBidSubmissionTimeSchema, versionSchema } from "./schema";
+import { defaultBudgetForCategory, generatedProjectName } from "./auto-values";
 import type {
   AdjustStepInput,
   CreateProjectInput,
@@ -61,6 +62,10 @@ export class ProjectService {
     unverifiedCalendarYears: number[];
   }> {
     const parsed = createProjectSchema.parse(input);
+    const name = parsed.name || generatedProjectName(parsed.startDate);
+    const ownerName = parsed.ownerName || "-";
+    const departmentName = parsed.departmentName || "-";
+    const budget = parsed.budget ?? defaultBudgetForCategory(parsed.budgetCategory);
     const holidays = await this.calendar.listHolidayDates();
     const timeline = buildTimeline(
       approvedTemplateStepsForBudgetCategory(parsed.budgetCategory),
@@ -68,10 +73,10 @@ export class ProjectService {
       holidays,
     );
     const project = await this.projects.create({
-      name: parsed.name,
-      ownerName: parsed.ownerName,
-      departmentName: parsed.departmentName,
-      budget: parsed.budget,
+      name,
+      ownerName,
+      departmentName,
+      budget,
       budgetCategory: parsed.budgetCategory,
       startDate: parsed.startDate,
       note: parsed.note,
@@ -173,10 +178,10 @@ export class ProjectService {
         )
       : this.toTimeline(project);
     const replacement: ProjectReplacement = {
-      name: parsed.name,
-      ownerName: parsed.ownerName,
-      departmentName: parsed.departmentName,
-      budget: parsed.budget,
+      name: parsed.name || project.name,
+      ownerName: parsed.ownerName || project.ownerName,
+      departmentName: parsed.departmentName || project.departmentName || "-",
+      budget: parsed.budget ?? project.budget,
       budgetCategory: parsed.budgetCategory,
       startDate: timeline.milestones[0].scheduledDate,
       note: parsed.note,

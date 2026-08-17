@@ -41,10 +41,10 @@ export type ListProjectsFilter = {
 };
 
 export type CreateProjectInput = {
-  name: string;
-  ownerName: string;
+  name?: string;
+  ownerName?: string;
   departmentName?: string;
-  budget: number;
+  budget?: number;
   budgetCategory: BudgetCategory;
   startDate: string;
   note?: string;

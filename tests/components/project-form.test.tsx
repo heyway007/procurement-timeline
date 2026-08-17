@@ -18,12 +18,9 @@ vi.mock("next/navigation", () => ({
 
 const swalFire = vi.mocked(Swal.fire);
 
-async function fillBase(user: ReturnType<typeof userEvent.setup>, budget = "29000000") {
-  await user.type(screen.getByLabelText("ชื่อโครงการ"), "จัดซื้อระบบ");
-  await user.type(screen.getByLabelText("ผู้จัดทำ Timeline"), "คุณสมชาย");
+async function fillBase(user: ReturnType<typeof userEvent.setup>) {
   await user.selectOptions(screen.getByLabelText("ฝ่าย"), "ฝ่ายส่งเสริมการจัดประชุมนานาชาติ");
   await user.selectOptions(screen.getByLabelText("ประเภทวงเงิน / วิธี"), "TEN_TO_TWENTY_MILLION");
-  await user.type(screen.getByLabelText("วงเงินจัดจ้าง (บาท)"), budget);
 }
 
 describe("ProjectForm", () => {
@@ -33,29 +30,23 @@ describe("ProjectForm", () => {
     routerPush.mockReset();
   });
 
-  it("shows the budget category and method wording", () => {
+  it("keeps project name and owner fields optional while hiding budget", () => {
     render(<ProjectForm onCancel={() => undefined} onCreate={vi.fn()} />);
 
+    expect(screen.getByLabelText("ชื่อโครงการ")).toBeInTheDocument();
+    expect(screen.getByLabelText("ชื่อโครงการ")).not.toBeRequired();
+    expect(screen.getByLabelText("ผู้จัดทำ Timeline")).toBeInTheDocument();
+    expect(screen.getByLabelText("ผู้จัดทำ Timeline")).not.toBeRequired();
+    expect(screen.queryByLabelText("วงเงินจัดจ้าง (บาท)")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("ฝ่าย")).not.toBeRequired();
     expect(screen.getByLabelText("ประเภทวงเงิน / วิธี")).toBeInTheDocument();
+    expect(screen.getByLabelText("ประเภทวงเงิน / วิธี")).toBeRequired();
     expect(screen.getByRole("option", { name: "เลือกประเภทวงเงิน / วิธี" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "วิธีคัดเลือก" })).toBeInTheDocument();
     expect(screen.getByText("/ วิธี")).not.toHaveClass("text-rose-600");
   });
 
-  it("places the owner field after the budget field and before the start date field", () => {
-    render(<ProjectForm onCancel={() => undefined} onCreate={vi.fn()} />);
-
-    const form = screen.getByLabelText("ชื่อโครงการ").closest("form");
-    expect(form).not.toBeNull();
-    const controls = Array.from(
-      form?.querySelectorAll("input, select, textarea") ?? [],
-    ).map((element) => element.getAttribute("name"));
-
-    expect(controls.indexOf("ownerName")).toBeGreaterThan(controls.indexOf("budget"));
-    expect(controls.indexOf("ownerName")).toBeLessThan(controls.indexOf("startDate"));
-  });
-
-  it("submits category and actual budget", async () => {
+  it("submits without project name, owner, or budget inputs", async () => {
     const user = userEvent.setup();
     const onCreate = vi.fn().mockResolvedValue({ id: "project-1" });
     render(<ProjectForm onCancel={() => undefined} onCreate={onCreate} />);
@@ -63,7 +54,7 @@ describe("ProjectForm", () => {
     await user.type(screen.getByLabelText("วันที่เริ่มต้น"), "2026-07-06");
     await user.type(screen.getByLabelText("หมายเหตุ"), "โครงการทดสอบ");
     await user.click(screen.getByRole("button", { name: "สร้าง Timeline" }));
-    expect(onCreate).toHaveBeenCalledWith({ name: "จัดซื้อระบบ", ownerName: "คุณสมชาย", departmentName: "ฝ่ายส่งเสริมการจัดประชุมนานาชาติ", budget: 29_000_000, budgetCategory: "TEN_TO_TWENTY_MILLION", startDate: "2026-07-06", note: "โครงการทดสอบ" });
+    expect(onCreate).toHaveBeenCalledWith({ name: "", ownerName: "", departmentName: "ฝ่ายส่งเสริมการจัดประชุมนานาชาติ", budgetCategory: "TEN_TO_TWENTY_MILLION", startDate: "2026-07-06", note: "โครงการทดสอบ" });
     expect(swalFire).toHaveBeenCalledWith(
       expect.objectContaining({
         icon: "success",
@@ -71,17 +62,6 @@ describe("ProjectForm", () => {
       }),
     );
     expect(routerPush).toHaveBeenCalledWith("/projects/project-1");
-  });
-
-  it("blocks submission when category does not match the actual budget", async () => {
-    const user = userEvent.setup();
-    const onCreate = vi.fn();
-    render(<ProjectForm onCancel={() => undefined} onCreate={onCreate} />);
-    await fillBase(user, "5000000");
-    await user.type(screen.getByLabelText("วันที่เริ่มต้น"), "2026-07-06");
-    await user.click(screen.getByRole("button", { name: "สร้าง Timeline" }));
-    expect(screen.getByRole("alert")).toHaveTextContent("ประเภทวงเงินไม่ตรงกับวงเงินจริง");
-    expect(onCreate).not.toHaveBeenCalled();
   });
 
   it("shows a warning and does not submit a weekend start", async () => {

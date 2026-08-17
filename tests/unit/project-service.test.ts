@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type {
   HolidayCalendarReader,
   ProjectMutationResult,
@@ -109,6 +109,49 @@ function makeService(
 }
 
 describe("ProjectService", () => {
+  it("generates project metadata and a compatibility budget when values are omitted", async () => {
+    const { service } = makeService();
+    const randomUUID = vi
+      .spyOn(globalThis.crypto, "randomUUID")
+      .mockReturnValue("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+
+    try {
+      const result = await service.create({
+        name: "",
+        ownerName: "",
+        budgetCategory: "TEN_TO_TWENTY_MILLION",
+        startDate: "2026-07-06",
+        note: "",
+      } as never);
+
+      expect(result.project.name).toBe("Timeline-A1B2C3D4-06072026");
+      expect(result.project.ownerName).toBe("-");
+      expect(result.project.departmentName).toBe("-");
+      expect(result.project.budget).toBe(10_000_001);
+    } finally {
+      randomUUID.mockRestore();
+    }
+  });
+
+  it("preserves explicit project metadata and budget values", async () => {
+    const { service } = makeService();
+
+    const result = await service.create({
+      name: "โครงการทดสอบ",
+      ownerName: "คุณสมชาย",
+      budget: 29_000_000,
+      budgetCategory: "TEN_TO_TWENTY_MILLION",
+      startDate: "2026-07-06",
+      note: "",
+    });
+
+    expect(result.project).toMatchObject({
+      name: "โครงการทดสอบ",
+      ownerName: "คุณสมชาย",
+      budget: 29_000_000,
+    });
+  });
+
   it("rejects a budget category that does not match the actual amount", async () => {
     const { service } = makeService();
     await expect(service.create({ name: "โครงการทดสอบ", ownerName: "ผู้รับผิดชอบ", budget: 6_000_000, budgetCategory: "ONE_TO_FIVE_MILLION", startDate: "2026-07-06", note: "" })).rejects.toThrow();
