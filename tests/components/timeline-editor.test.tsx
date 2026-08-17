@@ -317,6 +317,16 @@ describe("TimelineDetail", () => {
     expect(screen.getAllByText("ขั้นตอนที่")[0]).toHaveClass("print-hidden");
   });
 
+  it("keeps the timeline table as four columns on small screens", () => {
+    render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
+
+    expect(screen.getByTestId("timeline-header-row")).toHaveClass("grid");
+    expect(screen.getByTestId("timeline-header-row")).not.toHaveClass("hidden");
+    expect(screen.getAllByTestId("timeline-step")[0]).toHaveClass(
+      "grid-cols-[1.75rem_minmax(0,1fr)_minmax(0,1.15fr)_3.5rem]",
+    );
+  });
+
   it("renders the project back link as a right-aligned button", () => {
     render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
 

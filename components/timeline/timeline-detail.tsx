@@ -502,29 +502,29 @@ export function TimelineDetail({
       {error ? <p role="alert" className="mt-5 rounded-xl bg-rose-50 px-4 py-3 text-rose-800">{error}</p> : null}
 
       <section data-testid="timeline-table" className="print-table mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div data-testid="timeline-header-row" className="print-grid hidden grid-cols-[4rem_1fr_20rem_7rem] gap-3 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-600 lg:grid">
+        <div data-testid="timeline-header-row" className="print-grid grid grid-cols-[1.75rem_minmax(0,1fr)_minmax(0,1.15fr)_3.5rem] gap-2 bg-slate-100 px-2 py-3 text-[11px] font-semibold text-slate-600 sm:grid-cols-[2.5rem_minmax(0,1.4fr)_minmax(0,1.2fr)_6rem] sm:gap-3 sm:px-4 sm:text-sm lg:grid-cols-[4rem_1fr_20rem_7rem]">
           <span>ลำดับ</span><span>ขั้นตอน</span><span>วันที่กำหนด</span><span className="print-hidden">จัดการ</span>
         </div>
         {project.steps.map((step, index) => {
           const presentation = stepPresentation(step, project.budgetCategory);
           return (
-          <div data-testid="timeline-step" key={step.order} className="print-grid grid gap-3 border-t border-slate-100 px-4 py-4 text-base lg:grid-cols-[4rem_1fr_20rem_7rem]">
-            <span className="font-semibold text-indigo-700"><span className="print-hidden lg:hidden">ขั้นตอนที่ </span>{step.order}</span>
+          <div data-testid="timeline-step" key={step.order} className="print-grid grid grid-cols-[1.75rem_minmax(0,1fr)_minmax(0,1.15fr)_3.5rem] gap-2 border-t border-slate-100 px-2 py-3 text-xs sm:grid-cols-[2.5rem_minmax(0,1.4fr)_minmax(0,1.2fr)_6rem] sm:gap-3 sm:px-4 sm:py-4 sm:text-base lg:grid-cols-[4rem_1fr_20rem_7rem]">
+            <span className="font-semibold text-indigo-700"><span className="print-hidden hidden">ขั้นตอนที่ </span>{step.order}</span>
             <div className="min-w-0">
-              <p className="text-lg font-semibold text-slate-900">{presentation.title}</p>
+              <p className="break-words text-lg font-semibold text-slate-900 max-[639px]:text-sm sm:text-lg">{presentation.title}</p>
               {presentation.subtitle ? (
-                <p className="mt-1 text-sm text-slate-500">{presentation.subtitle}</p>
+                <p className="mt-1 break-words text-sm text-slate-500 max-[639px]:text-[11px] sm:text-sm">{presentation.subtitle}</p>
               ) : null}
-              <p className="print-step-hint mt-1 text-sm text-slate-500">{formatWorkingDaysText(step)} {step.isDateManuallyAdjusted ? "· ปรับกำหนดการ" : ""}</p>
+              <p className="print-step-hint mt-1 text-[11px] text-slate-500 sm:text-sm">{formatWorkingDaysText(step)} {step.isDateManuallyAdjusted ? "· ปรับกำหนดการ" : ""}</p>
             </div>
-            <div className="print-date font-medium text-slate-700">
-              <span className="print-hidden mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 lg:hidden">วันที่กำหนด</span>
+            <div className="print-date min-w-0 break-words font-medium text-slate-700">
+              <span className="print-hidden hidden">วันที่กำหนด</span>
               <span>{formatStepScheduledDate(index)}</span>
               {isBidSubmissionMilestone(step.label) ? (
                 <>
                   <select
                     aria-label="เวลาเสนอราคา"
-                    className="print-hidden mt-2 block min-h-10 w-full max-w-[10rem] rounded-lg border border-slate-300 bg-white px-3"
+                    className="print-hidden mt-2 block min-h-9 w-full max-w-[10rem] rounded-lg border border-slate-300 bg-white px-1 text-[11px] sm:min-h-10 sm:px-3 sm:text-base"
                     value={effectiveBidSubmissionTimeSlot(step.bidSubmissionTimeSlot)}
                     disabled={savingBidTime}
                     onChange={(event) => void saveBidSubmissionTime(event.target.value as BidSubmissionTimeSlot)}
@@ -537,12 +537,12 @@ export function TimelineDetail({
                 </>
               ) : null}
             </div>
-            <button className="print-hidden min-h-10 rounded-lg border border-indigo-200 bg-indigo-50 px-4 font-semibold text-indigo-700 hover:bg-indigo-100 lg:h-9" type="button" aria-label={`แก้วันที่ ขั้นตอนที่ ${step.order}`} onClick={() => { setEditingOrder(step.order); setNewDate(step.scheduledDate); setEditError(""); }}>แก้วันที่</button>
+            <button className="print-hidden min-h-9 rounded-lg border border-indigo-200 bg-indigo-50 px-1 text-[11px] font-semibold leading-tight text-indigo-700 hover:bg-indigo-100 sm:min-h-10 sm:px-4 sm:text-base lg:h-9" type="button" aria-label={`แก้วันที่ ขั้นตอนที่ ${step.order}`} onClick={() => { setEditingOrder(step.order); setNewDate(step.scheduledDate); setEditError(""); }}>แก้วันที่</button>
           </div>
           );
         })}
-        <div className="print-grid grid gap-3 border-t-2 border-indigo-100 bg-indigo-50 px-4 py-4 text-base lg:grid-cols-[4rem_1fr_20rem_7rem]">
-          <span className="font-semibold text-indigo-700">จบ</span><span className="text-lg font-semibold text-slate-900">วันที่เริ่มลงนามในสัญญาได้</span><span className="font-semibold text-indigo-800">{formatThaiDateWithWeekday(project.processEndDate)}</span><span className="print-hidden" />
+        <div className="print-grid grid grid-cols-[1.75rem_minmax(0,1fr)_minmax(0,1.15fr)_3.5rem] gap-2 border-t-2 border-indigo-100 bg-indigo-50 px-2 py-3 text-xs sm:grid-cols-[2.5rem_minmax(0,1.4fr)_minmax(0,1.2fr)_6rem] sm:gap-3 sm:px-4 sm:py-4 sm:text-base lg:grid-cols-[4rem_1fr_20rem_7rem]">
+          <span className="font-semibold text-indigo-700">จบ</span><span className="break-words text-sm font-semibold text-slate-900 sm:text-lg">วันที่เริ่มลงนามในสัญญาได้</span><span className="break-words font-semibold text-indigo-800">{formatThaiDateWithWeekday(project.processEndDate)}</span><span className="print-hidden" />
         </div>
       </section>
 

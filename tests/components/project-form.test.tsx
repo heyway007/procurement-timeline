@@ -33,6 +33,10 @@ describe("ProjectForm", () => {
   it("keeps project name and owner fields optional while hiding budget", () => {
     render(<ProjectForm onCancel={() => undefined} onCreate={vi.fn()} />);
 
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.parentElement).toHaveClass("overflow-y-auto");
+    expect(dialog).toHaveClass("min-h-0");
+    expect(dialog.firstElementChild).toHaveClass("min-h-0", "flex-1", "overflow-y-auto");
     expect(screen.getByLabelText("ชื่อโครงการ")).toBeInTheDocument();
     expect(screen.getByLabelText("ชื่อโครงการ")).not.toBeRequired();
     expect(screen.getByLabelText("ผู้จัดทำ Timeline")).toBeInTheDocument();

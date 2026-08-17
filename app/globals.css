@@ -78,6 +78,11 @@
   color: #0f172a;
 }
 
+html {
+  min-height: 100%;
+  overflow-y: scroll;
+}
+
 * {
   box-sizing: border-box;
 }

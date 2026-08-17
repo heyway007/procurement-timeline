@@ -47,6 +47,10 @@ describe("Dashboard", () => {
   it("renders shared projects and Thai formatted values", () => {
     render(<Dashboard initialProjects={projects} />);
 
+    const logo = screen.getByRole("img", { name: "TCEB" });
+    expect(logo.getAttribute("src")).toContain("logo-tceb.webp");
+    expect(logo.parentElement).toHaveClass("flex", "items-center");
+    expect(logo.parentElement).toContainElement(screen.getByRole("heading", { name: "แผนงานจัดซื้อจัดจ้าง" }));
     expect(screen.getAllByText("จัดซื้อระบบสารสนเทศ")).not.toHaveLength(0);
     expect(screen.getAllByText("คุณสมชาย")).not.toHaveLength(0);
     expect(screen.getAllByText(/29,000,000/)).not.toHaveLength(0);
@@ -79,5 +83,12 @@ describe("Dashboard", () => {
     expect(projectHeader).toHaveClass("w-[41%]");
     expect(actionHeader).toHaveClass("w-[19%]");
     expect(screen.getAllByRole("link", { name: /เปิด Timeline/ })[0]).not.toHaveClass("whitespace-nowrap");
+  });
+
+  it("keeps the dashboard in normal document flow for vertical scrolling", () => {
+    render(<Dashboard initialProjects={projects} />);
+
+    expect(screen.getByRole("main")).toHaveClass("min-h-dvh", "overflow-x-clip", "pb-64");
+    expect(screen.getByRole("main")).not.toHaveClass("h-dvh", "overflow-y-auto");
   });
 });

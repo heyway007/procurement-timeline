@@ -86,14 +86,14 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-hidden bg-slate-950/40 p-2 sm:items-center sm:p-6">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/40 p-2 sm:items-center sm:p-6">
       <section
         aria-labelledby="create-project-title"
-        className="flex max-h-[95vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
+        className="flex min-h-0 max-h-[95vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
         role="dialog"
         aria-modal="true"
       >
-        <div className="min-w-0 overflow-y-auto px-4 py-5 [scrollbar-gutter:stable] sm:px-8 sm:py-8">
+        <div className="min-h-0 min-w-0 flex-1 overflow-y-auto px-4 py-5 [scrollbar-gutter:stable] sm:px-8 sm:py-8">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-sm font-semibold text-indigo-700">Timeline ใหม่</p>
