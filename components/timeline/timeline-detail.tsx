@@ -556,7 +556,7 @@ export function TimelineDetail({
         <div className="print-hidden fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4">
           <form className="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl sm:p-6" onSubmit={(event) => { event.preventDefault(); void saveEdit(); }}>
             <h2 className="text-xl font-semibold">แก้วันที่ขั้นตอนที่ {editingOrder}</h2>
-            <label className="mt-5 block text-sm font-medium">วันที่ใหม่<input aria-label="วันที่ใหม่" className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 px-3" type="date" value={newDate} onChange={(event) => { setNewDate(event.target.value); setEditError(""); }} required /></label>
+            <label className="mt-5 block min-w-0 text-sm font-medium">วันที่ใหม่<input aria-label="วันที่ใหม่" className="mt-2 min-h-11 w-full min-w-0 max-w-full rounded-xl border border-slate-300 px-3 text-base appearance-none" type="date" value={newDate} onChange={(event) => { setNewDate(event.target.value); setEditError(""); }} required /></label>
             {editError ? <p role="alert" className="mt-3 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-800">{editError}</p> : null}
             <div className="mt-6 grid gap-3 sm:flex sm:justify-end"><button type="button" onClick={() => { setEditingOrder(null); setEditError(""); }} className="min-h-11 rounded-xl border px-4 py-2">ยกเลิก</button><button type="submit" className="min-h-11 rounded-xl bg-indigo-700 px-4 py-2 font-semibold text-white">ตกลง</button></div>
           </form>

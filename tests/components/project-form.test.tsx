@@ -38,7 +38,7 @@ describe("ProjectForm", () => {
     expect(dialog).toHaveClass("min-h-0", "h-[calc(100dvh-1rem)]", "max-h-[calc(100dvh-1rem)]");
     expect(dialog.firstElementChild).toHaveClass("min-h-0", "flex-1", "overflow-y-auto");
     expect(screen.getByLabelText("ชื่อโครงการ")).toBeInTheDocument();
-    expect(screen.getByLabelText("วันที่เริ่มต้น")).toHaveClass("min-w-0", "max-w-full", "text-base");
+    expect(screen.getByLabelText("วันที่เริ่มต้น")).toHaveClass("min-w-0", "max-w-full", "text-base", "appearance-none");
     expect(screen.getByLabelText("ชื่อโครงการ")).not.toBeRequired();
     expect(screen.getByLabelText("ผู้จัดทำ Timeline")).toBeInTheDocument();
     expect(screen.getByLabelText("ผู้จัดทำ Timeline")).not.toBeRequired();

@@ -100,6 +100,17 @@ body {
   :where(button, input, textarea, select) {
     font: inherit;
   }
+
+  input[type="date"] {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    font-size: 1rem;
+    appearance: none;
+    -webkit-appearance: none;
+  }
 }
 
 button:not(:disabled),

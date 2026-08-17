@@ -132,7 +132,7 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
             <label className="min-w-0 text-sm font-medium text-slate-700 sm:col-span-2">
               วันที่เริ่มต้น
               <input
-                className={fieldClass}
+                className={`${fieldClass} appearance-none`}
                 name="startDate"
                 type="date"
                 required

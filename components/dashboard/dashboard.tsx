@@ -94,11 +94,11 @@ export function Dashboard({ initialProjects }: { initialProjects?: ProjectRecord
         </label>
         <label className="min-w-0 text-sm font-medium text-slate-700">
           ช่วงวันที่เริ่ม
-          <input className="mt-2 min-h-11 w-full min-w-0 max-w-full rounded-xl border border-slate-300 px-3 text-base" type="date" value={from} onChange={(event) => setFrom(event.target.value)} />
+          <input className="mt-2 min-h-11 w-full min-w-0 max-w-full rounded-xl border border-slate-300 px-3 text-base appearance-none" type="date" value={from} onChange={(event) => setFrom(event.target.value)} />
         </label>
         <label className="min-w-0 text-sm font-medium text-slate-700">
           ถึงวันที่
-          <input className="mt-2 min-h-11 w-full min-w-0 max-w-full rounded-xl border border-slate-300 px-3 text-base" type="date" value={to} onChange={(event) => setTo(event.target.value)} />
+          <input className="mt-2 min-h-11 w-full min-w-0 max-w-full rounded-xl border border-slate-300 px-3 text-base appearance-none" type="date" value={to} onChange={(event) => setTo(event.target.value)} />
         </label>
       </section>
 

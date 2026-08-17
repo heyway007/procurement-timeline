@@ -97,8 +97,8 @@ describe("Dashboard", () => {
 
     const fromDate = screen.getByLabelText("ช่วงวันที่เริ่ม");
     const toDate = screen.getByLabelText("ถึงวันที่");
-    expect(fromDate).toHaveClass("min-w-0", "max-w-full", "text-base");
-    expect(toDate).toHaveClass("min-w-0", "max-w-full", "text-base");
+    expect(fromDate).toHaveClass("min-w-0", "max-w-full", "text-base", "appearance-none");
+    expect(toDate).toHaveClass("min-w-0", "max-w-full", "text-base", "appearance-none");
     expect(fromDate.parentElement).toHaveClass("min-w-0");
     expect(toDate.parentElement).toHaveClass("min-w-0");
   });

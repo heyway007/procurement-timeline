@@ -423,6 +423,7 @@ describe("TimelineDetail", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "แก้วันที่ ขั้นตอนที่ 2" }));
+    expect(screen.getByLabelText("วันที่ใหม่")).toHaveClass("min-w-0", "max-w-full", "text-base", "appearance-none");
     expect(screen.getByRole("button", { name: "ตกลง" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "ยืนยันการแก้วันที่" })).not.toBeInTheDocument();
     await user.clear(screen.getByLabelText("วันที่ใหม่"));
