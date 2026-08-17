@@ -88,17 +88,17 @@ export function Dashboard({ initialProjects }: { initialProjects?: ProjectRecord
       </header>
 
       <section aria-label="ตัวกรองโครงการ" className="my-6 grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:my-7 sm:grid-cols-3">
-        <label className="text-sm font-medium text-slate-700">
+        <label className="min-w-0 text-sm font-medium text-slate-700">
           ค้นหาโครงการ
-          <input className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 px-3" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="ชื่อโครงการหรือผู้รับผิดชอบ" />
+          <input className="mt-2 min-h-11 w-full min-w-0 max-w-full rounded-xl border border-slate-300 px-3" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="ชื่อโครงการหรือผู้รับผิดชอบ" />
         </label>
-        <label className="text-sm font-medium text-slate-700">
+        <label className="min-w-0 text-sm font-medium text-slate-700">
           ช่วงวันที่เริ่ม
-          <input className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 px-3" type="date" value={from} onChange={(event) => setFrom(event.target.value)} />
+          <input className="mt-2 min-h-11 w-full min-w-0 max-w-full rounded-xl border border-slate-300 px-3" type="date" value={from} onChange={(event) => setFrom(event.target.value)} />
         </label>
-        <label className="text-sm font-medium text-slate-700">
+        <label className="min-w-0 text-sm font-medium text-slate-700">
           ถึงวันที่
-          <input className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 px-3" type="date" value={to} onChange={(event) => setTo(event.target.value)} />
+          <input className="mt-2 min-h-11 w-full min-w-0 max-w-full rounded-xl border border-slate-300 px-3" type="date" value={to} onChange={(event) => setTo(event.target.value)} />
         </label>
       </section>
 

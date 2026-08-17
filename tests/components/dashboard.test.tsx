@@ -91,4 +91,15 @@ describe("Dashboard", () => {
     expect(screen.getByRole("main")).toHaveClass("min-h-dvh", "overflow-x-clip", "pb-64");
     expect(screen.getByRole("main")).not.toHaveClass("h-dvh", "overflow-y-auto");
   });
+
+  it("keeps mobile filter fields within the filter card", () => {
+    render(<Dashboard initialProjects={projects} />);
+
+    const fromDate = screen.getByLabelText("ช่วงวันที่เริ่ม");
+    const toDate = screen.getByLabelText("ถึงวันที่");
+    expect(fromDate).toHaveClass("min-w-0", "max-w-full");
+    expect(toDate).toHaveClass("min-w-0", "max-w-full");
+    expect(fromDate.parentElement).toHaveClass("min-w-0");
+    expect(toDate.parentElement).toHaveClass("min-w-0");
+  });
 });
