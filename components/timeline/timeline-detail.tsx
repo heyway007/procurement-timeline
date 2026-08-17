@@ -485,10 +485,10 @@ export function TimelineDetail({
           <span>กลับหน้าโครงการ</span>
         </Link>
       </nav>
-      <header data-testid="print-header" className="print-header rounded-3xl bg-slate-950 p-5 text-white shadow-xl sm:p-8">
-        <p className="text-sm font-semibold text-indigo-300">Timeline โครงการ</p>
-        <h1 className="mt-2 break-words text-2xl font-semibold sm:text-3xl">{project.name}</h1>
-        <dl className="mt-6 grid gap-4 text-base sm:grid-cols-2 lg:grid-cols-4">
+      <header data-testid="print-header" className="print-header rounded-2xl bg-slate-950 p-4 text-white shadow-lg sm:rounded-3xl sm:p-8 sm:shadow-xl">
+        <p className="text-xs font-semibold text-indigo-300 sm:text-sm">Timeline โครงการ</p>
+        <h1 className="mt-1 break-words text-xl font-semibold sm:mt-2 sm:text-3xl">{project.name}</h1>
+        <dl className="mt-4 grid gap-3 text-sm sm:mt-6 sm:grid-cols-2 sm:gap-4 sm:text-base lg:grid-cols-4">
           <div data-testid="print-owner"><dt className="text-slate-400">ผู้จัดทำ Timeline</dt><dd className="mt-1 font-semibold">{project.ownerName}</dd></div>
           <div data-testid="print-department"><dt className="text-slate-400">ฝ่าย</dt><dd className="mt-1 font-semibold">{project.departmentName || "-"}</dd></div>
           <div><dt className="text-slate-400">วงเงิน</dt><dd className="mt-1 font-semibold">{formatBaht(project.budget)}</dd></div>

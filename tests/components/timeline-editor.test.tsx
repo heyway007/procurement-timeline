@@ -115,6 +115,16 @@ describe("TimelineDetail", () => {
     expect(screen.getByText("จัดซื้อระบบสารสนเทศ")).toBeInTheDocument();
   });
 
+  it("uses a compact project summary header on small screens", () => {
+    render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
+
+    const header = screen.getByTestId("print-header");
+    expect(header).toHaveClass("rounded-2xl", "p-4");
+    expect(within(header).getByRole("heading")).toHaveClass("text-xl");
+    expect(within(header).getByRole("heading")).not.toHaveClass("text-2xl");
+    expect(header.querySelector("dl")).toHaveClass("text-sm");
+  });
+
   it("renders step one with a heading and smaller bullet-separated detail", () => {
     render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
 
