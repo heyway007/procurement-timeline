@@ -89,7 +89,7 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/40 p-2 sm:items-center sm:p-6">
       <section
         aria-labelledby="create-project-title"
-        className="flex min-h-0 max-h-[95vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
+        className="flex h-[calc(100dvh-1rem)] min-h-0 max-h-[calc(100dvh-1rem)] w-full max-w-2xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl sm:h-auto sm:max-h-[95vh]"
         role="dialog"
         aria-modal="true"
       >

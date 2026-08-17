@@ -35,7 +35,7 @@ describe("ProjectForm", () => {
 
     const dialog = screen.getByRole("dialog");
     expect(dialog.parentElement).toHaveClass("overflow-y-auto");
-    expect(dialog).toHaveClass("min-h-0");
+    expect(dialog).toHaveClass("min-h-0", "h-[calc(100dvh-1rem)]", "max-h-[calc(100dvh-1rem)]");
     expect(dialog.firstElementChild).toHaveClass("min-h-0", "flex-1", "overflow-y-auto");
     expect(screen.getByLabelText("ชื่อโครงการ")).toBeInTheDocument();
     expect(screen.getByLabelText("ชื่อโครงการ")).not.toBeRequired();
