@@ -14,7 +14,7 @@ type ProjectFormProps = {
 };
 
 const fieldClass =
-  "mt-2 min-h-11 w-full min-w-0 max-w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none transition focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100";
+  "mt-2 min-h-11 w-full min-w-0 max-w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-base text-slate-950 outline-none transition focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100";
 
 const DEPARTMENT_OPTIONS = [
   "ฝ่ายส่งเสริมการจัดประชุมนานาชาติ",

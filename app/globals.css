@@ -96,11 +96,10 @@ body {
     #f8fafc;
 }
 
-button,
-input,
-textarea,
-select {
-  font: inherit;
+@layer base {
+  :where(button, input, textarea, select) {
+    font: inherit;
+  }
 }
 
 button:not(:disabled),
