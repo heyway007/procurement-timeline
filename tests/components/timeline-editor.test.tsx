@@ -340,7 +340,7 @@ describe("TimelineDetail", () => {
   it("keeps the document as the mobile scroll container", () => {
     render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
 
-    expect(screen.getByRole("main")).toHaveClass("overflow-x-clip");
+    expect(screen.getByRole("main")).toHaveClass("overflow-x-clip", "pb-32");
     expect(screen.getByRole("main")).not.toHaveClass("overflow-x-hidden");
   });
 

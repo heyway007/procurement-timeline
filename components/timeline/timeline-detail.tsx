@@ -478,7 +478,7 @@ export function TimelineDetail({
   }
 
   return (
-    <main className="print-page mx-auto min-h-screen max-w-6xl overflow-x-clip px-4 py-6 text-base sm:px-6 sm:py-8">
+    <main className="print-page mx-auto min-h-screen max-w-6xl overflow-x-clip px-4 py-6 pb-32 text-base sm:px-6 sm:py-8 sm:pb-8">
       <nav className="print-hidden mb-6 flex justify-end">
         <Link href="/" className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50">
           <FontAwesomeIcon icon={faArrowLeft} aria-hidden="true" />
