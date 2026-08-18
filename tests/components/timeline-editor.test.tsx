@@ -337,6 +337,14 @@ describe("TimelineDetail", () => {
     );
   });
 
+  it("keeps mobile edit-date buttons the same height and vertically centered", () => {
+    render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
+
+    const buttons = screen.getAllByRole("button", { name: /แก้วันที่ ขั้นตอนที่/ });
+    expect(buttons[0]).toHaveClass("h-20", "min-h-0", "self-center");
+    expect(buttons[1]).toHaveClass("h-20", "min-h-0", "self-center");
+  });
+
   it("keeps the document as the mobile scroll container", () => {
     render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
 

@@ -537,7 +537,7 @@ export function TimelineDetail({
                 </>
               ) : null}
             </div>
-            <button className="print-hidden min-h-9 rounded-lg border border-indigo-200 bg-indigo-50 px-1 text-[11px] font-semibold leading-tight text-indigo-700 hover:bg-indigo-100 sm:min-h-10 sm:px-4 sm:text-base lg:h-9" type="button" aria-label={`แก้วันที่ ขั้นตอนที่ ${step.order}`} onClick={() => { setEditingOrder(step.order); setNewDate(step.scheduledDate); setEditError(""); }}>แก้วันที่</button>
+            <button className="print-hidden h-20 min-h-0 self-center rounded-lg border border-indigo-200 bg-indigo-50 px-1 text-[11px] font-semibold leading-tight text-indigo-700 hover:bg-indigo-100 sm:px-4 sm:text-base lg:h-9" type="button" aria-label={`แก้วันที่ ขั้นตอนที่ ${step.order}`} onClick={() => { setEditingOrder(step.order); setNewDate(step.scheduledDate); setEditError(""); }}>แก้วันที่</button>
           </div>
           );
         })}
