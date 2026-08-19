@@ -69,6 +69,23 @@ describe("ProjectForm", () => {
     expect(routerPush).toHaveBeenCalledWith("/projects/project-1");
   });
 
+  it("passes the entered project name to the create handler", async () => {
+    const user = userEvent.setup();
+    const onCreate = vi.fn().mockResolvedValue({ id: "project-2" });
+    render(<ProjectForm onCancel={() => undefined} onCreate={onCreate} />);
+
+    const nameInput = document.querySelector<HTMLInputElement>('input[name="name"]');
+    expect(nameInput).not.toBeNull();
+    await user.type(nameInput!, "Named project");
+    await fillBase(user);
+    const startDateInput = document.querySelector<HTMLInputElement>('input[name="startDate"]');
+    expect(startDateInput).not.toBeNull();
+    await user.type(startDateInput!, "2026-07-06");
+    await user.click(screen.getByRole("button", { name: /Timeline/ }));
+
+    expect(onCreate).toHaveBeenCalledWith(expect.objectContaining({ name: "Named project" }));
+  });
+
   it("shows a warning and does not submit a weekend start", async () => {
     const user = userEvent.setup();
     const onCreate = vi.fn();

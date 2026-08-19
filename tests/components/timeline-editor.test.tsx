@@ -107,7 +107,33 @@ describe("TimelineDetail", () => {
     expect(screen.getByTestId("print-owner")).not.toHaveClass("print-hidden");
     expect(screen.getByTestId("print-owner")).toHaveTextContent("คุณสมชาย");
     expect(screen.getByTestId("print-department")).toHaveTextContent("ฝ่ายบริหาร");
-    expect(screen.getByTestId("print-budget")).toHaveTextContent("฿29,000,000.00");
+    const detailActions = screen.getByTestId("timeline-detail-actions");
+    const timelineLabel = within(detailActions).getByText("Timeline โครงการ");
+    expect(timelineLabel).toBeInTheDocument();
+    expect(timelineLabel).toHaveClass("text-lg", "font-bold");
+    expect(detailActions.querySelector("svg[data-icon='timeline']")).toBeInTheDocument();
+    expect(within(screen.getByTestId("print-header")).queryByText("Timeline โครงการ")).not.toBeInTheDocument();
+    expect(screen.getByTestId("print-header").querySelector(".timeline-summary-icon--project")).not.toBeInTheDocument();
+    const projectNote = within(screen.getByTestId("print-header")).getByTestId("timeline-project-note");
+    const timelineSummary = screen.getByTestId("timeline-summary");
+    expect(timelineSummary.compareDocumentPosition(projectNote) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const printSummary = screen.getByTestId("print-header").querySelector(".print-summary");
+    expect(printSummary).toBeInTheDocument();
+    expect(printSummary!.compareDocumentPosition(projectNote) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(projectNote).toHaveTextContent(/หมายเหตุ\s*ทดสอบ/);
+    expect(projectNote).not.toHaveClass("print-hidden");
+    expect(projectNote).not.toHaveClass("border", "bg-indigo-50/45");
+    expect(projectNote).toHaveClass("timeline-summary-stat", "timeline-summary-stat--note");
+    expect(projectNote.querySelector(".timeline-summary-stat-icon")).toHaveClass("timeline-project-note-icon", "print-hidden");
+    expect(projectNote.querySelector("svg[data-icon='circle-info']")).toBeInTheDocument();
+    expect(within(projectNote).getByText("หมายเหตุ")).toHaveClass("block");
+    expect(within(projectNote).queryByText("หมายเหตุ :")).not.toBeInTheDocument();
+    expect(within(projectNote).getByText("ทดสอบ")).toHaveClass("break-words", "whitespace-pre-wrap");
+    const departmentStat = screen.getByTestId("timeline-summary").querySelector(".timeline-summary-stat--department");
+    expect(departmentStat?.querySelector(":scope > div")).toHaveClass("min-w-0", "flex-1");
+    expect(departmentStat?.querySelector("strong")).toHaveClass("break-words", "whitespace-normal");
+    expect(screen.getByTestId("print-budget")).not.toHaveTextContent("29,000,000.00");
+    expect(screen.getByTestId("print-budget")).toHaveTextContent("10,000,001–50,000,000 บาท");
     expect(screen.getByTestId("print-total-days")).toHaveTextContent("39 วันทำการ · เป็นไปตาม SLA");
     expect(within(screen.getByTestId("print-header")).queryByText("วันที่เริ่มลงนามในสัญญาได้")).not.toBeInTheDocument();
     expect(screen.getAllByText("วันที่เริ่มลงนามในสัญญาได้")).not.toHaveLength(0);
@@ -116,12 +142,31 @@ describe("TimelineDetail", () => {
     expect(screen.getByText("จัดซื้อระบบสารสนเทศ")).toBeInTheDocument();
   });
 
+  it("wraps long project metadata in the print header", () => {
+    render(
+      <TimelineDetail
+        projectId="project-1"
+        initialProject={{
+          ...projectFixture(),
+          departmentName: "สำนักส่งเสริมการจัดประชุมและนิทรรศการ ภาคตะวันออกเฉียงเหนือ",
+        }}
+      />,
+    );
+
+    expect(screen.getByRole("heading")).toHaveClass("break-words");
+    expect(screen.getByTestId("print-department").querySelector("dd")).toHaveClass(
+      "min-w-0",
+      "break-words",
+      "whitespace-normal",
+    );
+  });
+
   it("uses a compact project summary header on small screens", () => {
     render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
 
     const header = screen.getByTestId("print-header");
     expect(header).toHaveClass("rounded-2xl", "p-4");
-    expect(within(header).getByRole("heading")).toHaveClass("text-xl");
+    expect(within(header).getByRole("heading")).toHaveClass("text-xl", "text-center", "sm:text-left");
     expect(within(header).getByRole("heading")).not.toHaveClass("text-2xl");
     expect(header.querySelector(".print-project-department")).not.toBeInTheDocument();
     expect(header.querySelector("dl")).toHaveClass("text-sm");
@@ -150,7 +195,9 @@ describe("TimelineDetail", () => {
     const firstStep = screen.getAllByTestId("timeline-step")[0];
     expect(firstStep).toHaveClass("timeline-step", "items-center");
     expect(within(firstStep).getByTestId("timeline-step-order")).toHaveClass("self-center", "text-center");
-    expect(within(firstStep).getByTestId("timeline-step-icon")).toHaveClass("h-12", "w-12", "self-center");
+    expect(within(firstStep).getByTestId("timeline-step-icon")).toHaveClass("h-12", "w-12", "max-[639px]:h-9", "max-[639px]:w-9", "self-center");
+    expect(within(firstStep).getByTestId("timeline-step-details")).toHaveClass("timeline-step-details--inline-mobile");
+    expect(within(firstStep).getByRole("button", { name: /ดูรายละเอียด/ })).toHaveClass("timeline-step-details-trigger--inline-mobile", "timeline-step-details-trigger--aligned-mobile");
   });
 
   it("opens step details in a floating dialog from the info icon", async () => {
@@ -384,12 +431,12 @@ describe("TimelineDetail", () => {
     );
   });
 
-  it("keeps mobile edit-date buttons the same height and vertically centered", () => {
+  it("keeps mobile edit-date buttons compact and vertically centered", () => {
     render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
 
     const buttons = screen.getAllByRole("button", { name: /แก้วันที่ ขั้นตอนที่/ });
-    expect(buttons[0]).toHaveClass("h-20", "min-h-0", "self-center");
-    expect(buttons[1]).toHaveClass("h-20", "min-h-0", "self-center");
+    expect(buttons[0]).toHaveClass("timeline-step-edit-button", "max-[639px]:h-14", "max-[639px]:min-h-14", "max-[639px]:w-max", "max-[639px]:justify-self-end", "self-center");
+    expect(buttons[1]).toHaveClass("timeline-step-edit-button", "max-[639px]:h-14", "max-[639px]:min-h-14", "max-[639px]:w-max", "max-[639px]:justify-self-end", "self-center");
   });
 
   it("keeps the document as the mobile scroll container", () => {
@@ -415,7 +462,7 @@ describe("TimelineDetail", () => {
       "text-slate-700",
     );
     expect(backLink.querySelector('svg[data-icon="arrow-left"]')).toBeInTheDocument();
-    expect(backLink.parentElement).toHaveClass("timeline-detail-actions", "justify-end");
+    expect(backLink.parentElement).toHaveClass("timeline-detail-actions", "justify-between");
   });
 
   it("marks a shortened manually adjusted timeline as not meeting SLA", () => {

@@ -57,8 +57,8 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
     const form = new FormData(event.currentTarget);
     const budgetCategory = String(form.get("budgetCategory")) as BudgetCategory;
     const input: CreateProjectInput = {
-      name: "",
-      ownerName: "",
+      name: String(form.get("name") ?? ""),
+      ownerName: String(form.get("ownerName") ?? ""),
       departmentName: String(form.get("departmentName") ?? ""),
       budgetCategory,
       startDate,

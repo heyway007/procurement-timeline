@@ -11,7 +11,6 @@ import {
   faCalendarDays,
   faCartShopping,
   faClock,
-  faClipboardCheck,
   faCircleInfo,
   faFileLines,
   faGlobe,
@@ -22,6 +21,7 @@ import {
   faRotateLeft,
   faSackDollar,
   faShieldHalved,
+  faTimeline,
   faTrashCan,
   faUsers,
   faXmark,
@@ -29,6 +29,7 @@ import {
 import { useEffect, useState, type CSSProperties } from "react";
 import Swal from "sweetalert2";
 import type { ProjectRecord } from "@/lib/projects/types";
+import { budgetCategoryLabel } from "@/lib/projects/budget-category";
 import {
   adjustProjectStep,
   ApiError,
@@ -48,7 +49,6 @@ import {
   type BidSubmissionTimeSlot,
 } from "@/lib/schedule/milestone-kind";
 import {
-  formatBaht,
   formatThaiDateRangeWithWeekday,
   formatThaiDateWithWeekday,
   isWeekendIso,
@@ -543,8 +543,12 @@ export function TimelineDetail({
 
   return (
     <main data-testid="timeline-detail-page" className="timeline-detail-page print-page mx-auto min-h-screen max-w-7xl overflow-x-clip px-4 py-5 pb-32 text-base sm:px-6 sm:py-8 sm:pb-8">
-      <nav data-testid="timeline-detail-actions" className="timeline-detail-actions print-hidden mb-6 flex w-full items-center justify-end">
-        <Link href="/" className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:border-indigo-200 hover:text-indigo-700">
+      <nav data-testid="timeline-detail-actions" className="timeline-detail-actions print-hidden mb-6 flex w-full items-center justify-between">
+        <span className="inline-flex min-w-0 items-center gap-2 break-words text-lg font-bold tracking-tight text-indigo-900 sm:text-xl">
+          <FontAwesomeIcon icon={faTimeline} className="shrink-0 text-indigo-600" aria-hidden="true" />
+          <span className="text-lg font-bold">Timeline โครงการ</span>
+        </span>
+        <Link href="/" className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:border-indigo-200 hover:text-indigo-700">
           <FontAwesomeIcon icon={faArrowLeft} aria-hidden="true" />
           <span>กลับหน้าโครงการ</span>
         </Link>
@@ -552,38 +556,43 @@ export function TimelineDetail({
 
       <header data-testid="print-header" className="timeline-summary-header print-header rounded-2xl border border-slate-200 p-4 text-slate-950 shadow-sm sm:rounded-3xl sm:p-7">
         <div className="flex min-w-0 items-center gap-4">
-          <span className="timeline-summary-icon timeline-summary-icon--project h-16 w-16 rounded-2xl">
-            <FontAwesomeIcon icon={faClipboardCheck} aria-hidden="true" />
-          </span>
           <div className="min-w-0">
-            <p className="text-xs font-semibold text-slate-500 sm:text-sm">Timeline โครงการ</p>
-            <h1 className="mt-1 break-words text-xl font-semibold sm:text-2xl">{project.name}</h1>
+            <h1 className="mt-1 min-w-0 break-words text-center text-xl font-semibold sm:text-left sm:text-2xl">{project.name}</h1>
           </div>
         </div>
         <div data-testid="timeline-summary" className="timeline-summary print-hidden mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-[auto_auto_auto_auto] lg:items-stretch lg:justify-between">
           <div className="timeline-summary-stat timeline-summary-stat--budget">
             <span className="timeline-summary-stat-icon"><FontAwesomeIcon icon={faSackDollar} aria-hidden="true" /></span>
-            <div><p>วงเงิน</p><strong>{formatBaht(project.budget)}</strong></div>
+            <div className="min-w-0 flex-1"><p>ประเภทวงเงิน / วิธี</p><strong className="break-words whitespace-normal">{budgetCategoryLabel(project.budgetCategory)}</strong></div>
           </div>
           <div className="timeline-summary-stat timeline-summary-stat--department">
             <span className="timeline-summary-stat-icon"><FontAwesomeIcon icon={faBuilding} aria-hidden="true" /></span>
-            <div><p>ฝ่าย</p><strong>{project.departmentName || "-"}</strong></div>
+            <div className="min-w-0 flex-1"><p>ฝ่าย</p><strong className="break-words whitespace-normal">{project.departmentName || "-"}</strong></div>
           </div>
           <div className="timeline-summary-stat timeline-summary-stat--duration">
             <span className="timeline-summary-stat-icon"><FontAwesomeIcon icon={faCalendarDays} aria-hidden="true" /></span>
-            <div><p>ระยะเวลาดำเนินการทั้งหมด</p><strong>{totalWorkingDays(project)} วันทำการ</strong></div>
+            <div className="min-w-0 flex-1"><p>ระยะเวลาดำเนินการทั้งหมด</p><strong className="break-words whitespace-normal">{totalWorkingDays(project)} วันทำการ</strong></div>
           </div>
           <div className="timeline-summary-stat timeline-summary-stat--status">
             <span className="timeline-summary-stat-icon"><FontAwesomeIcon icon={faShieldHalved} aria-hidden="true" /></span>
-            <div><p>สถานะโครงการ</p><strong>{slaStatusText(project)}</strong></div>
+            <div className="min-w-0 flex-1"><p>สถานะโครงการ</p><strong className="break-words whitespace-normal">{slaStatusText(project)}</strong></div>
           </div>
         </div>
         <dl className="print-summary sr-only text-sm">
-          <div data-testid="print-owner"><dt>ผู้จัดทำ Timeline</dt><dd>{project.ownerName}</dd></div>
-          <div data-testid="print-department"><dt>ฝ่าย</dt><dd>{project.departmentName || "-"}</dd></div>
-          <div data-testid="print-budget"><dt>วงเงิน</dt><dd>{formatBaht(project.budget)}</dd></div>
-          <div data-testid="print-total-days"><dt>จำนวนวันทำการทั้งหมด</dt><dd>{totalWorkingDays(project)} วันทำการ · {slaStatusText(project)}</dd></div>
+          <div data-testid="print-owner" className="min-w-0"><dt className="break-words whitespace-normal">ผู้จัดทำ Timeline</dt><dd className="min-w-0 break-words whitespace-normal">{project.ownerName}</dd></div>
+          <div data-testid="print-department" className="min-w-0"><dt className="break-words whitespace-normal">ฝ่าย</dt><dd className="min-w-0 break-words whitespace-normal">{project.departmentName || "-"}</dd></div>
+          <div data-testid="print-budget" className="min-w-0"><dt className="break-words whitespace-normal">ประเภทวงเงิน / วิธี</dt><dd className="min-w-0 break-words whitespace-normal">{budgetCategoryLabel(project.budgetCategory)}</dd></div>
+          <div data-testid="print-total-days" className="min-w-0"><dt className="break-words whitespace-normal">จำนวนวันทำการทั้งหมด</dt><dd className="min-w-0 break-words whitespace-normal">{totalWorkingDays(project)} วันทำการ · {slaStatusText(project)}</dd></div>
         </dl>
+        {project.note ? (
+          <section data-testid="timeline-project-note" className="timeline-project-note timeline-summary-stat timeline-summary-stat--note mt-5">
+            <span className="timeline-project-note-icon timeline-summary-stat-icon print-hidden"><FontAwesomeIcon icon={faCircleInfo} aria-hidden="true" /></span>
+            <div className="min-w-0 flex-1">
+              <p className="block">หมายเหตุ</p>
+              <strong className="break-words whitespace-pre-wrap">{project.note}</strong>
+            </div>
+          </section>
+        ) : null}
       </header>
 
       {project.scheduleStatus === "NEEDS_REVIEW" ? (
@@ -601,12 +610,12 @@ export function TimelineDetail({
           <div data-testid="timeline-step" data-order={step.order} key={step.order} className="timeline-step print-grid grid grid-cols-[1.75rem_3rem_minmax(0,1fr)_minmax(0,1.15fr)_3.5rem] items-center gap-2 border-t border-slate-100 px-2 py-3 text-xs sm:grid-cols-[2.5rem_3.25rem_minmax(0,1.4fr)_minmax(0,1.2fr)_6rem] sm:gap-3 sm:px-4 sm:py-4 sm:text-base lg:grid-cols-[4rem_4rem_1fr_20rem_7rem]">
             <span data-testid="timeline-step-order" className="self-center text-center font-semibold text-indigo-700"><span className="print-hidden hidden">ขั้นตอนที่ </span>{step.order}</span>
             <div className="timeline-step-main">
-              <span data-testid="timeline-step-icon" className="timeline-step-icon print-hidden h-12 w-12 self-center" aria-hidden="true"><FontAwesomeIcon icon={stepIcon(presentation)} /></span>
+              <span data-testid="timeline-step-icon" className="timeline-step-icon print-hidden h-12 w-12 max-[639px]:h-9 max-[639px]:w-9 self-center" aria-hidden="true"><FontAwesomeIcon icon={stepIcon(presentation)} /></span>
               <div className="timeline-step-content min-w-0">
                 <div className="timeline-step-title-row flex min-w-0 items-center gap-2">
-                  <p className="break-words text-lg font-semibold text-slate-900 max-[639px]:text-sm sm:text-lg">{presentation.title}</p>
-                  <div data-testid="timeline-step-details" className="timeline-step-details print-hidden">
-                    <button type="button" className="timeline-step-details-trigger" aria-label={`ดูรายละเอียด ${presentation.title} ขั้นตอนที่ ${step.order}`} aria-expanded={openStepDetails === step.order} aria-controls={`timeline-step-tooltip-${step.order}`} onClick={(event) => toggleStepDetails(step.order, event.currentTarget)}>
+                      <p className="min-w-0 flex-1 break-words text-lg font-semibold text-slate-900 max-[639px]:text-sm sm:text-lg">{presentation.title}</p>
+                  <div data-testid="timeline-step-details" className="timeline-step-details timeline-step-details--inline-mobile print-hidden">
+                    <button type="button" className="timeline-step-details-trigger timeline-step-details-trigger--inline-mobile timeline-step-details-trigger--aligned-mobile" aria-label={`ดูรายละเอียด ${presentation.title} ขั้นตอนที่ ${step.order}`} aria-expanded={openStepDetails === step.order} aria-controls={`timeline-step-tooltip-${step.order}`} onClick={(event) => toggleStepDetails(step.order, event.currentTarget)}>
                       <FontAwesomeIcon icon={faCircleInfo} aria-hidden="true" />
                     </button>
                     <div id={`timeline-step-tooltip-${step.order}`} data-testid="timeline-step-tooltip" role="dialog" aria-label={`รายละเอียด ${presentation.title}`} hidden={openStepDetails !== step.order} className={`timeline-step-tooltip ${stepTooltipPosition?.placement === "below" ? "timeline-step-tooltip--below" : "timeline-step-tooltip--above"}`} style={stepTooltipPosition && openStepDetails === step.order ? { left: `${stepTooltipPosition.left}px`, top: `${stepTooltipPosition.top}px`, width: `${stepTooltipPosition.width}px`, "--timeline-tooltip-arrow-left": `${stepTooltipPosition.arrowLeft}px` } as CSSProperties : undefined}>
@@ -651,7 +660,7 @@ export function TimelineDetail({
               ) : null}
               </div>
             </div>
-            <button className="print-hidden h-20 min-h-0 self-center rounded-lg border border-indigo-200 bg-white px-1 text-[11px] font-semibold leading-tight text-indigo-700 hover:bg-indigo-50 sm:px-4 sm:text-base lg:h-9" type="button" aria-label={`แก้วันที่ ขั้นตอนที่ ${step.order}`} onClick={() => { setEditingOrder(step.order); setNewDate(step.scheduledDate); setEditError(""); }}>แก้วันที่</button>
+            <button className="timeline-step-edit-button print-hidden h-20 min-h-0 max-[639px]:h-14 max-[639px]:min-h-14 max-[639px]:w-max max-[639px]:justify-self-end self-center rounded-lg border border-indigo-200 bg-white px-1 text-[11px] font-semibold leading-tight text-indigo-700 hover:bg-indigo-50 max-[639px]:px-2 max-[639px]:text-[10px] sm:px-4 sm:text-base lg:h-9" type="button" aria-label={`แก้วันที่ ขั้นตอนที่ ${step.order}`} onClick={() => { setEditingOrder(step.order); setNewDate(step.scheduledDate); setEditError(""); }}>แก้วันที่</button>
           </div>
           );
         })}

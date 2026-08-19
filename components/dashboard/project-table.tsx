@@ -14,7 +14,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import type { ProjectRecord } from "@/lib/projects/types";
-import { formatBaht, formatThaiDate } from "@/lib/ui/date-format";
+import { formatThaiDate } from "@/lib/ui/date-format";
 import { budgetCategoryLabel } from "@/lib/projects/budget-category";
 
 type ProjectTableProps = {
@@ -51,10 +51,9 @@ export function ProjectTable({ projects, onDelete }: ProjectTableProps) {
               <div>
                 <dt className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-700">
                   <FontAwesomeIcon icon={faSackDollar} aria-hidden="true" />
-                  วงเงิน
+                  ประเภทวงเงิน / วิธี
                 </dt>
-                <dd className="mt-1 font-medium text-emerald-600">{formatBaht(project.budget)}</dd>
-                <dd className="mt-1 text-xs text-slate-500">{budgetCategoryLabel(project.budgetCategory)}</dd>
+                <dd className="mt-1 font-medium text-slate-700">{budgetCategoryLabel(project.budgetCategory)}</dd>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -97,7 +96,7 @@ export function ProjectTable({ projects, onDelete }: ProjectTableProps) {
           <thead className="border-b border-indigo-100 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
             <tr>
               <th className="w-[41%] whitespace-nowrap px-5 py-4 align-middle"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faFolderOpen} className="text-indigo-600" aria-hidden="true" />โครงการ</span></th>
-              <th className="whitespace-nowrap px-5 py-4 align-middle"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faSackDollar} className="text-emerald-600" aria-hidden="true" />วงเงิน</span></th>
+              <th className="whitespace-nowrap px-5 py-4 align-middle"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faSackDollar} className="text-emerald-600" aria-hidden="true" />ประเภทวงเงิน / วิธี</span></th>
               <th className="whitespace-nowrap px-5 py-4 align-middle"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faCalendarDays} className="text-blue-600" aria-hidden="true" />วันเริ่ม</span></th>
               <th className="whitespace-nowrap px-5 py-4 align-middle"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faFlagCheckered} className="text-amber-500" aria-hidden="true" />วันที่เริ่มทำสัญญา</span></th>
               <th className="w-[19%] whitespace-nowrap px-5 py-4 text-center align-middle"><span className="inline-flex items-center justify-center gap-2"><FontAwesomeIcon icon={faGear} className="text-slate-500" aria-hidden="true" />จัดการ</span></th>
@@ -118,7 +117,7 @@ export function ProjectTable({ projects, onDelete }: ProjectTableProps) {
                     </div>
                   </div>
                 </td>
-                <td className="whitespace-nowrap px-5 py-4 text-sm text-emerald-600"><p className="font-medium">{formatBaht(project.budget)}</p><p className="mt-1 text-xs text-slate-500">{budgetCategoryLabel(project.budgetCategory)}</p></td>
+                <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-700"><p className="font-medium">{budgetCategoryLabel(project.budgetCategory)}</p></td>
                 <td className="whitespace-nowrap px-5 py-4 text-sm text-blue-800"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faCalendarDays} className="text-blue-500" aria-hidden="true" />{formatThaiDate(project.startDate)}</span></td>
                 <td className="whitespace-nowrap px-5 py-4 text-sm text-amber-700"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faCalendarCheck} className="text-amber-500" aria-hidden="true" />{formatThaiDate(project.processEndDate)}</span></td>
                 <td className="px-5 py-4 text-right">
