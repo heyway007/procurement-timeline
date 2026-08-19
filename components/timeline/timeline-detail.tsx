@@ -259,6 +259,7 @@ export function TimelineDetail({
   const [project, setProject] = useState(initialProject);
   const [loading, setLoading] = useState(!initialProject);
   const [error, setError] = useState("");
+  const [notFound, setNotFound] = useState(false);
   const [editError, setEditError] = useState("");
   const [editingOrder, setEditingOrder] = useState<number | null>(null);
   const [newDate, setNewDate] = useState("");
@@ -271,7 +272,14 @@ export function TimelineDetail({
     if (initialProject) return;
     getProject(projectId)
       .then(setProject)
-      .catch(() => setError("ไม่สามารถโหลด Timeline ได้"))
+      .catch((caught: unknown) => {
+        if (caught instanceof ApiError && caught.code === "PROJECT_NOT_FOUND") {
+          setNotFound(true);
+          setError("");
+          return;
+        }
+        setError("ไม่สามารถโหลด Timeline ได้");
+      })
       .finally(() => setLoading(false));
   }, [initialProject, projectId]);
 
@@ -514,6 +522,20 @@ export function TimelineDetail({
   }
 
   if (loading) return <p className="p-10 text-center text-slate-600">กำลังโหลด Timeline...</p>;
+  if (notFound) {
+    return (
+      <main data-testid="timeline-not-found" className="timeline-detail-page mx-auto flex min-h-screen max-w-2xl items-center justify-center px-4 py-8">
+        <section className="w-full rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm sm:p-10">
+          <FontAwesomeIcon icon={faCircleInfo} className="text-4xl text-indigo-500" aria-hidden="true" />
+          <h1 className="mt-4 text-2xl font-semibold text-slate-900">ไม่พบโครงการ</h1>
+          <p className="mt-2 text-slate-600">โครงการนี้อาจถูกลบหรือไม่มีสิทธิ์เข้าถึงแล้ว</p>
+          <button type="button" onClick={onNavigateHome} className="mt-6 inline-flex min-h-11 items-center justify-center rounded-xl bg-indigo-700 px-5 py-2 font-semibold text-white hover:bg-indigo-800">
+            กลับหน้ารวม Timeline
+          </button>
+        </section>
+      </main>
+    );
+  }
   if (!project) return <p className="p-10 text-center text-rose-700">{error || "ไม่พบโครงการ"}</p>;
 
   function formatWorkingDaysText(step: ProjectRecord["steps"][number]): string {

@@ -99,6 +99,30 @@ describe("TimelineDetail", () => {
     swalFire.mockResolvedValue({ isConfirmed: true } as never);
   });
 
+  it("shows a deleted-project state with a way back to the project list", async () => {
+    const user = userEvent.setup();
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ code: "PROJECT_NOT_FOUND", message: "ไม่พบโครงการที่ต้องการ" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    const onNavigateHome = vi.fn();
+
+    try {
+      render(<TimelineDetail projectId="deleted-project" onNavigateHome={onNavigateHome} />);
+
+      const emptyState = await screen.findByTestId("timeline-not-found");
+      expect(within(emptyState).getByRole("heading", { name: "ไม่พบโครงการ" })).toBeInTheDocument();
+      expect(within(emptyState).getByText("โครงการนี้อาจถูกลบหรือไม่มีสิทธิ์เข้าถึงแล้ว")).toBeInTheDocument();
+
+      await user.click(within(emptyState).getByRole("button", { name: "กลับหน้ารวม Timeline" }));
+      expect(onNavigateHome).toHaveBeenCalledOnce();
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
+
   it("renders all 13 procurement milestones and process end", () => {
     render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
 

@@ -29,9 +29,10 @@ describe("HolidayManager", () => {
     expect(backLink).toHaveClass(
       "inline-flex",
       "items-center",
-      "rounded-xl",
+      "gap-2",
+      "rounded-lg",
       "border",
-      "border-slate-300",
+      "border-slate-200",
       "bg-white",
       "text-slate-700",
     );
@@ -59,6 +60,8 @@ describe("HolidayManager", () => {
 
     expect(controls).toHaveClass("md:items-start", "md:grid-cols-[12rem_minmax(0,1fr)_auto]");
     expect(addButton).toHaveClass("md:col-start-3");
+    expect(addButton).toHaveClass("inline-flex", "items-center", "justify-center", "gap-2");
+    expect(addButton.querySelector('svg[data-icon="calendar-plus"]')).toBeInTheDocument();
     expect(addButton.parentElement).toBe(controls);
   });
 

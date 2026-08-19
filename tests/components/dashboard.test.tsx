@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { Dashboard } from "@/components/dashboard/dashboard";
@@ -44,6 +44,28 @@ const projects: ProjectRecord[] = [
 ];
 
 describe("Dashboard", () => {
+  it("shows ten projects per page and navigates to the next page", async () => {
+    const user = userEvent.setup();
+    const pagedProjects = Array.from({ length: 12 }, (_, index) => ({
+      ...projects[0],
+      id: `project-${index + 1}`,
+      name: `โครงการ ${index + 1}`,
+    }));
+
+    render(<Dashboard initialProjects={pagedProjects} />);
+
+    const projectCards = screen.getByTestId("project-cards");
+    expect(within(projectCards).getAllByRole("article")).toHaveLength(10);
+    expect(screen.getByTestId("project-pagination")).toHaveTextContent("หน้า 1 จาก 2");
+    expect(screen.getByRole("button", { name: "หน้าถัดไป" })).toBeEnabled();
+
+    await user.click(screen.getByRole("button", { name: "หน้าถัดไป" }));
+
+    expect(within(screen.getByTestId("project-cards")).getAllByRole("article")).toHaveLength(2);
+    expect(within(screen.getByTestId("project-cards")).getByText("โครงการ 11")).toBeInTheDocument();
+    expect(screen.getByTestId("project-pagination")).toHaveTextContent("หน้า 2 จาก 2");
+  });
+
   it("renders shared projects and Thai formatted values", () => {
     render(<Dashboard initialProjects={projects} />);
 
@@ -112,6 +134,7 @@ describe("Dashboard", () => {
     expect(screen.getByRole("main")).toHaveClass("tceb-page-shell");
     expect(screen.getByTestId("dashboard-header")).toHaveClass("tceb-hero");
     expect(screen.getByTestId("dashboard-header")).toHaveClass("tceb-hero--flat");
+    expect(screen.getByTestId("dashboard-header")).toHaveClass("px-0", "sm:px-0");
     expect(screen.getByRole("region", { name: "ตัวกรองโครงการ" })).toHaveClass("tceb-filter-panel");
 
     const icons = document.querySelectorAll("svg[data-icon]");

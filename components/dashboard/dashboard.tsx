@@ -5,6 +5,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCalendarDays,
   faCalendarCheck,
+  faChevronLeft,
+  faChevronRight,
   faMagnifyingGlass,
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
@@ -16,6 +18,8 @@ import { createProject, deleteProject, getProjects } from "@/lib/ui/api-client";
 import { ProjectForm } from "./project-form";
 import { ProjectTable } from "./project-table";
 
+const PROJECTS_PER_PAGE = 10;
+
 export function Dashboard({ initialProjects }: { initialProjects?: ProjectRecord[] }) {
   const [projects, setProjects] = useState(initialProjects ?? []);
   const [loading, setLoading] = useState(initialProjects === undefined);
@@ -24,6 +28,7 @@ export function Dashboard({ initialProjects }: { initialProjects?: ProjectRecord
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [creating, setCreating] = useState(false);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     if (initialProjects !== undefined) return;
@@ -47,9 +52,25 @@ export function Dashboard({ initialProjects }: { initialProjects?: ProjectRecord
     });
   }, [from, projects, query, to]);
 
+  const pageCount = Math.max(1, Math.ceil(visibleProjects.length / PROJECTS_PER_PAGE));
+  const currentPage = Math.min(page, pageCount);
+  const pagedProjects = visibleProjects.slice(
+    (currentPage - 1) * PROJECTS_PER_PAGE,
+    currentPage * PROJECTS_PER_PAGE,
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [from, query, to]);
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, pageCount));
+  }, [pageCount]);
+
   async function handleCreate(input: CreateProjectInput): Promise<{ id: string }> {
     const result = await createProject(input);
     setProjects((current) => [result.project, ...current]);
+    setPage(1);
     return { id: result.project.id };
   }
 
@@ -82,7 +103,7 @@ export function Dashboard({ initialProjects }: { initialProjects?: ProjectRecord
 
   return (
     <main className="tceb-page-shell mx-auto min-h-dvh max-w-7xl overflow-x-clip px-4 py-6 pb-64 sm:px-6 sm:py-8 sm:pb-8 lg:px-8">
-      <header data-testid="dashboard-header" className="tceb-hero tceb-hero--flat flex flex-col justify-between gap-5 px-4 py-5 sm:flex-row sm:items-center sm:px-7 sm:py-6">
+      <header data-testid="dashboard-header" className="tceb-hero tceb-hero--flat flex flex-col justify-between gap-5 px-0 py-5 sm:flex-row sm:items-center sm:px-0 sm:py-6">
         <div className="relative z-10 flex min-w-0 items-center gap-4">
           <Image src="/logo-tceb.webp" alt="TCEB" width={88} height={88} priority className="h-20 w-20 shrink-0 object-contain" />
           <div className="min-w-0">
@@ -137,7 +158,23 @@ export function Dashboard({ initialProjects }: { initialProjects?: ProjectRecord
 
       {loading ? <p className="py-12 text-center text-slate-600">กำลังโหลด Timeline...</p> : null}
       {error ? <p className="rounded-xl bg-rose-50 px-4 py-3 text-rose-800" role="alert">{error}</p> : null}
-      {!loading ? <ProjectTable projects={visibleProjects} onDelete={handleDelete} /> : null}
+      {!loading ? <ProjectTable projects={pagedProjects} onDelete={handleDelete} /> : null}
+      {!loading && visibleProjects.length > PROJECTS_PER_PAGE ? (
+        <nav data-testid="project-pagination" aria-label="การแบ่งหน้าโครงการ" className="mt-4 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+          <p>แสดง {(currentPage - 1) * PROJECTS_PER_PAGE + 1}–{Math.min(currentPage * PROJECTS_PER_PAGE, visibleProjects.length)} จาก {visibleProjects.length} โครงการ</p>
+          <div className="flex items-center justify-between gap-2 sm:justify-end">
+            <button type="button" aria-label="หน้าก่อนหน้า" disabled={currentPage === 1} onClick={() => setPage((current) => Math.max(1, Math.min(current, pageCount) - 1))} className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-slate-200 px-3 font-semibold text-slate-700 hover:border-indigo-200 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-40">
+              <FontAwesomeIcon icon={faChevronLeft} aria-hidden="true" />
+              ก่อนหน้า
+            </button>
+            <span aria-live="polite" className="whitespace-nowrap font-semibold text-indigo-700">หน้า {currentPage} จาก {pageCount}</span>
+            <button type="button" aria-label="หน้าถัดไป" disabled={currentPage === pageCount} onClick={() => setPage((current) => Math.min(pageCount, Math.max(current, currentPage) + 1))} className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-slate-200 px-3 font-semibold text-slate-700 hover:border-indigo-200 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-40">
+              ถัดไป
+              <FontAwesomeIcon icon={faChevronRight} aria-hidden="true" />
+            </button>
+          </div>
+        </nav>
+      ) : null}
       {creating ? <ProjectForm onCancel={() => setCreating(false)} onCreate={handleCreate} /> : null}
     </main>
   );
