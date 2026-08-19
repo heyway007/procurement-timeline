@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import "@fortawesome/fontawesome-svg-core/styles.css";
 import "sweetalert2/dist/sweetalert2.min.css";
 import "./globals.css";
 
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="th">
-      <body>{children}</body>
+      <body className="tceb-full-container tceb-full-container--soft">{children}</body>
     </html>
   );
 }

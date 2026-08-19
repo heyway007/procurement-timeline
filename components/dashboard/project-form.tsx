@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faFileCirclePlus, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 import type { CreateProjectInput } from "@/lib/projects/types";
@@ -93,16 +95,21 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
         role="dialog"
         aria-modal="true"
       >
-        <div className="min-h-0 min-w-0 flex-1 overflow-y-auto px-4 py-5 [scrollbar-gutter:stable] sm:px-8 sm:py-8">
+        <div className="min-h-0 min-w-0 flex-1 overflow-y-auto bg-[linear-gradient(145deg,#ffffff_0%,#f8faff_100%)] px-4 py-5 [scrollbar-gutter:stable] sm:px-8 sm:py-8">
           <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-indigo-700">Timeline ใหม่</p>
+            <div className="flex min-w-0 items-start gap-3">
+              <span className="tceb-icon-badge" aria-hidden="true">
+                <FontAwesomeIcon icon={faFileCirclePlus} />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-indigo-700">Timeline ใหม่</p>
               <h2 id="create-project-title" className="mt-1 text-xl font-semibold text-slate-950 sm:text-2xl">
                 ข้อมูลโครงการ
               </h2>
+              </div>
             </div>
-            <button type="button" onClick={onCancel} className="rounded-lg px-3 py-2 text-slate-600 hover:bg-slate-100">
-              ปิด
+            <button type="button" onClick={onCancel} aria-label="ปิด" className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-xl text-slate-600 hover:bg-indigo-50 hover:text-indigo-700">
+              <FontAwesomeIcon icon={faXmark} aria-hidden="true" />
             </button>
           </div>
 

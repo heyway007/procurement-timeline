@@ -1,0 +1,11 @@
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://192.168.1.181:3001
+- Environments: .env
+✓ Ready in 379ms
+Creating turbopack project {
+  dir: 'C:\\Users\\ASUS\\OneDrive\\Documents\\timeline',
+  testMode: true
+}
+
+ GET /api/projects 200 in 1533ms (next.js: 577ms, application-code: 956ms)

@@ -77,11 +77,14 @@ describe("Dashboard", () => {
 
     const table = screen.getByRole("table");
     const projectHeader = screen.getByRole("columnheader", { name: "โครงการ" });
-    const actionHeader = screen.getByRole("columnheader", { name: "เปิด" });
+    const actionHeader = screen.getByRole("columnheader", { name: "จัดการ" });
+    const contractHeader = screen.getByRole("columnheader", { name: "วันที่เริ่มทำสัญญา" });
 
     expect(table).toHaveClass("w-full", "table-fixed", "min-w-[1100px]");
     expect(projectHeader).toHaveClass("w-[41%]");
     expect(actionHeader).toHaveClass("w-[19%]");
+    expect(actionHeader).toHaveClass("text-center");
+    expect(contractHeader).toHaveClass("whitespace-nowrap");
     expect(screen.getAllByRole("link", { name: /เปิด Timeline/ })[0]).not.toHaveClass("whitespace-nowrap");
   });
 
@@ -101,5 +104,21 @@ describe("Dashboard", () => {
     expect(toDate).toHaveClass("min-w-0", "max-w-full", "text-base", "appearance-none");
     expect(fromDate.parentElement).toHaveClass("min-w-0");
     expect(toDate.parentElement).toHaveClass("min-w-0");
+  });
+
+  it("uses the TCEB visual language and icon-led dashboard controls", () => {
+    render(<Dashboard initialProjects={projects} />);
+
+    expect(screen.getByRole("main")).toHaveClass("tceb-page-shell");
+    expect(screen.getByTestId("dashboard-header")).toHaveClass("tceb-hero");
+    expect(screen.getByTestId("dashboard-header")).toHaveClass("tceb-hero--flat");
+    expect(screen.getByRole("region", { name: "ตัวกรองโครงการ" })).toHaveClass("tceb-filter-panel");
+
+    const icons = document.querySelectorAll("svg[data-icon]");
+    expect(icons.length).toBeGreaterThanOrEqual(12);
+    expect(document.querySelector('svg[data-icon="magnifying-glass"]')).toBeInTheDocument();
+    expect(document.querySelector('svg[data-icon="calendar-days"]')).toBeInTheDocument();
+    expect(document.querySelector('svg[data-icon="folder-open"]')).toBeInTheDocument();
+    expect(document.querySelector('svg[data-icon="sack-dollar"]')).toBeInTheDocument();
   });
 });

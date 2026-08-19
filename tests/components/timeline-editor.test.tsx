@@ -103,10 +103,11 @@ describe("TimelineDetail", () => {
     render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
 
     expect(screen.getAllByTestId("timeline-step")).toHaveLength(13);
-    expect(screen.getByText(/39 วันทำการ/)).toBeInTheDocument();
+    expect(screen.getAllByText(/39 วันทำการ/)).not.toHaveLength(0);
     expect(screen.getByTestId("print-owner")).not.toHaveClass("print-hidden");
     expect(screen.getByTestId("print-owner")).toHaveTextContent("คุณสมชาย");
     expect(screen.getByTestId("print-department")).toHaveTextContent("ฝ่ายบริหาร");
+    expect(screen.getByTestId("print-budget")).toHaveTextContent("฿29,000,000.00");
     expect(screen.getByTestId("print-total-days")).toHaveTextContent("39 วันทำการ · เป็นไปตาม SLA");
     expect(within(screen.getByTestId("print-header")).queryByText("วันที่เริ่มลงนามในสัญญาได้")).not.toBeInTheDocument();
     expect(screen.getAllByText("วันที่เริ่มลงนามในสัญญาได้")).not.toHaveLength(0);
@@ -122,7 +123,53 @@ describe("TimelineDetail", () => {
     expect(header).toHaveClass("rounded-2xl", "p-4");
     expect(within(header).getByRole("heading")).toHaveClass("text-xl");
     expect(within(header).getByRole("heading")).not.toHaveClass("text-2xl");
+    expect(header.querySelector(".print-project-department")).not.toBeInTheDocument();
     expect(header.querySelector("dl")).toHaveClass("text-sm");
+  });
+
+  it("uses the reference-style detail header and monochrome step icons", () => {
+    render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
+
+    expect(screen.getByTestId("timeline-detail-page")).toHaveClass("timeline-detail-page");
+    expect(screen.getByTestId("timeline-detail-actions")).toHaveClass("timeline-detail-actions");
+    expect(screen.queryByRole("button", { name: "ค้นหาวันถัดไป" })).not.toBeInTheDocument();
+    expect(screen.getByTestId("timeline-bottom-actions")).toHaveClass("timeline-bottom-actions");
+    expect(within(screen.getByTestId("timeline-bottom-actions")).getByRole("button", { name: "ลบโครงการ" })).toHaveClass("bg-rose-700");
+    expect(screen.getByTestId("print-header")).toHaveClass("timeline-summary-header");
+    expect(screen.getByTestId("timeline-summary")).toHaveClass("timeline-summary", "print-hidden");
+    expect(screen.getByTestId("print-header").querySelector(".print-summary")).toBeInTheDocument();
+    expect(screen.getAllByTestId("timeline-step-icon")).toHaveLength(13);
+    expect(screen.getAllByTestId("timeline-step-details")).toHaveLength(13);
+    expect(screen.getAllByTestId("timeline-step-tooltip")).toHaveLength(13);
+    expect(screen.getAllByTestId("timeline-step-tooltip").every((tooltip) => tooltip.hasAttribute("hidden"))).toBe(true);
+    expect(screen.getByTestId("timeline-summary").querySelectorAll("svg[data-icon]")).toHaveLength(4);
+    expect(screen.getByTestId("timeline-summary")).toHaveClass("lg:grid-cols-[auto_auto_auto_auto]", "lg:justify-between");
+    expect(screen.getByTestId("timeline-summary").querySelector(".timeline-summary-stat--department")).toBeInTheDocument();
+    expect(screen.getByTestId("timeline-summary")).not.toHaveTextContent("วันที่เริ่มต้น");
+    expect(screen.getByTestId("timeline-summary").querySelector(".timeline-summary-stat--status")).toBeInTheDocument();
+    const firstStep = screen.getAllByTestId("timeline-step")[0];
+    expect(firstStep).toHaveClass("timeline-step", "items-center");
+    expect(within(firstStep).getByTestId("timeline-step-order")).toHaveClass("self-center", "text-center");
+    expect(within(firstStep).getByTestId("timeline-step-icon")).toHaveClass("h-12", "w-12", "self-center");
+  });
+
+  it("opens step details in a floating dialog from the info icon", async () => {
+    const user = userEvent.setup();
+    render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
+
+    const firstStep = screen.getAllByTestId("timeline-step")[0];
+    const trigger = within(firstStep).getByRole("button", { name: /ดูรายละเอียด/ });
+    const tooltip = within(firstStep).getByTestId("timeline-step-tooltip");
+
+    await user.click(trigger);
+
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    expect(tooltip).not.toHaveAttribute("hidden");
+    expect(within(tooltip).getByText("รายละเอียดขั้นตอน")).toBeInTheDocument();
+
+    await user.click(within(tooltip).getByRole("button", { name: "ปิดรายละเอียด" }));
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    expect(tooltip).toHaveAttribute("hidden");
   });
 
   it("renders step one with a heading and smaller bullet-separated detail", () => {
@@ -130,9 +177,9 @@ describe("TimelineDetail", () => {
 
     const firstRow = screen.getAllByTestId("timeline-step")[0];
     const heading = within(firstRow).getByText("จัดทำเอกสาร");
-    const detail = within(firstRow).getByText(
+    const detail = within(firstRow).getAllByText(
       "รายงานขอซื้อขอจ้าง • แต่งตั้งคณะกรรมการ • ประกวดราคา",
-    );
+    )[0];
 
     expect(heading).toHaveClass("text-lg", "font-semibold");
     expect(detail).toHaveClass("text-sm", "text-slate-500");
@@ -162,7 +209,7 @@ describe("TimelineDetail", () => {
       const [title, subtitle] = expected[index];
       expect(within(row).getByText(title)).toHaveClass("text-lg", "font-semibold");
       if (subtitle) {
-        expect(within(row).getByText(subtitle)).toHaveClass("text-sm", "text-slate-500");
+        expect(within(row).getAllByText(subtitle)[0]).toHaveClass("text-sm", "text-slate-500");
       }
     });
   });
@@ -172,9 +219,9 @@ describe("TimelineDetail", () => {
 
     const rows = screen.getAllByTestId("timeline-step");
     expect(within(rows[1]).getByText("ประกาศประกวดราคา")).toHaveClass("text-lg", "font-semibold");
-    expect(within(rows[1]).getByText("บนเว็บไซต์กรมบัญชีกลาง (e-GP)")).toHaveClass("text-sm", "text-slate-500");
+    expect(within(rows[1]).getAllByText("บนเว็บไซต์กรมบัญชีกลาง (e-GP)")[0]).toHaveClass("text-sm", "text-slate-500");
     expect(within(rows[7]).getByText("จัดทำเอกสาร")).toHaveClass("text-lg", "font-semibold");
-    expect(within(rows[7]).getByText("รายงานผลพิจารณา • ประกาศผู้ชนะ")).toHaveClass("text-sm", "text-slate-500");
+    expect(within(rows[7]).getAllByText("รายงานผลพิจารณา • ประกาศผู้ชนะ")[0]).toHaveClass("text-sm", "text-slate-500");
   });
 
   it("renders and immediately saves the bid submission time dropdown", async () => {
@@ -197,7 +244,7 @@ describe("TimelineDetail", () => {
     const selector = screen.getByRole("combobox", { name: "เวลาเสนอราคา" });
     expect(selector).toHaveValue("MORNING");
     expect(screen.getByText("กำหนดวันเสนอราคา (เวลา 9.00 น. - 12.00 น.)")).toBeInTheDocument();
-    expect(screen.getByText("ยื่นเสนอราคาผ่านเว็บไซต์กรมบัญชีกลาง (e-GP)")).toBeInTheDocument();
+    expect(screen.getAllByText("ยื่นเสนอราคาผ่านเว็บไซต์กรมบัญชีกลาง (e-GP)")[0]).toBeInTheDocument();
     expect(screen.getByText("ตรวจสอบเอกสารเสนอราคา")).toBeInTheDocument();
     expect(screen.queryByText("ตรวจสอบเอกสารเสนอราคา (8.30 น. - 12.00 น.)")).not.toBeInTheDocument();
 
@@ -218,7 +265,7 @@ describe("TimelineDetail", () => {
     render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
 
     expect(screen.queryByText("ปฏิทิน")).not.toBeInTheDocument();
-    expect(screen.getByText("วันจันทร์ 6 ก.ค. 2569")).toBeInTheDocument();
+    expect(screen.getAllByText("วันจันทร์ 6 ก.ค. 2569")).not.toHaveLength(0);
     expect(screen.queryByRole("button", { name: /ดูปฏิทิน/ })).not.toBeInTheDocument();
     expect(screen.queryByTestId("calendar-popover")).not.toBeInTheDocument();
   });
@@ -257,7 +304,7 @@ describe("TimelineDetail", () => {
 
     const rows = screen.getAllByTestId("timeline-step");
     expect(rows).toHaveLength(10);
-    expect(screen.getByText(/29 วันทำการ/)).toBeInTheDocument();
+    expect(screen.getAllByText(/29 วันทำการ/)).not.toHaveLength(0);
     expect(within(rows[2]).getByText("วันพฤหัสบดี 9 ก.ค. 2569 - วันพุธ 15 ก.ค. 2569")).toBeInTheDocument();
     expect(within(rows[6]).getByText("วันพฤหัสบดี 23 ก.ค. 2569 - วันอังคาร 28 ก.ค. 2569")).toBeInTheDocument();
     expect(within(rows[9]).getByText("วันพุธ 5 ส.ค. 2569 - วันพฤหัสบดี 13 ส.ค. 2569")).toBeInTheDocument();
@@ -282,9 +329,9 @@ describe("TimelineDetail", () => {
 
     const rows = screen.getAllByTestId("timeline-step");
     expect(within(rows[0]).getByText("จัดทำเอกสาร")).toBeInTheDocument();
-    expect(within(rows[0]).getByText("รายงานขอซื้อขอจ้าง • แต่งตั้งคณะกรรมการ")).toBeInTheDocument();
+    expect(within(rows[0]).getAllByText("รายงานขอซื้อขอจ้าง • แต่งตั้งคณะกรรมการ")[0]).toBeInTheDocument();
     expect(within(rows[7]).getByText("กำหนดวันเวลาในการนำเสนอข้อเทคนิค (Present)")).toHaveClass("text-lg", "font-semibold");
-    expect(within(rows[7]).getByText("เลือกวันใดวันหนึ่ง")).toBeInTheDocument();
+    expect(within(rows[7]).getAllByText("เลือกวันใดวันหนึ่ง")[0]).toBeInTheDocument();
     const negotiationTitle = within(rows[8]).getByText("คณะกรรมการฯ พิจารณาคัดเลือกผู้ชนะ • ต่อรองราคา");
     expect(negotiationTitle).toHaveClass("text-lg", "font-semibold");
     expect(within(rows[8]).queryByText("ต่อรองราคา", { exact: true })).not.toBeInTheDocument();
@@ -301,7 +348,7 @@ describe("TimelineDetail", () => {
 
     const rows = screen.getAllByTestId("timeline-step");
     expect(within(rows[5]).getByText("วันจันทร์ 20 ก.ค. 2569 - วันพุธ 22 ก.ค. 2569")).toBeInTheDocument();
-    expect(within(rows[5]).getByText("3 วันทำการจากขั้นตอนก่อนหน้า")).toBeInTheDocument();
+    expect(within(rows[5]).getAllByText("3 วันทำการจากขั้นตอนก่อนหน้า")[0]).toBeInTheDocument();
   });
 
   it("shows a manually adjusted Present milestone as a single working day", () => {
@@ -315,7 +362,7 @@ describe("TimelineDetail", () => {
     const rows = screen.getAllByTestId("timeline-step");
     expect(within(rows[5]).getByText("วันจันทร์ 27 ก.ค. 2569")).toBeInTheDocument();
     expect(rows[5]).not.toHaveTextContent(" - ");
-    expect(within(rows[5]).getByText(/1 วันทำการถึงขั้นตอนถัดไป/)).toBeInTheDocument();
+    expect(within(rows[5]).getAllByText(/1 วันทำการถึงขั้นตอนถัดไป/)[0]).toBeInTheDocument();
   });
 
   it("marks timeline rows for print table layout", () => {
@@ -327,13 +374,13 @@ describe("TimelineDetail", () => {
     expect(screen.getAllByText("ขั้นตอนที่")[0]).toHaveClass("print-hidden");
   });
 
-  it("keeps the timeline table as four columns on small screens", () => {
+  it("keeps the timeline table as five columns on small screens", () => {
     render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
 
     expect(screen.getByTestId("timeline-header-row")).toHaveClass("grid");
     expect(screen.getByTestId("timeline-header-row")).not.toHaveClass("hidden");
     expect(screen.getAllByTestId("timeline-step")[0]).toHaveClass(
-      "grid-cols-[1.75rem_minmax(0,1fr)_minmax(0,1.15fr)_3.5rem]",
+      "grid-cols-[1.75rem_3rem_minmax(0,1fr)_minmax(0,1.15fr)_3.5rem]",
     );
   });
 
@@ -352,7 +399,7 @@ describe("TimelineDetail", () => {
     expect(screen.getByRole("main")).not.toHaveClass("overflow-x-hidden");
   });
 
-  it("renders the project back link as a right-aligned button", () => {
+  it("renders the project back link in the detail action bar", () => {
     render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
 
     const backLink = screen.getByRole("link", { name: /กลับหน้าโครงการ/ });
@@ -360,14 +407,15 @@ describe("TimelineDetail", () => {
     expect(backLink).toHaveClass(
       "inline-flex",
       "items-center",
-      "rounded-xl",
+      "gap-2",
+      "rounded-lg",
       "border",
-      "border-slate-300",
+      "border-slate-200",
       "bg-white",
       "text-slate-700",
     );
     expect(backLink.querySelector('svg[data-icon="arrow-left"]')).toBeInTheDocument();
-    expect(backLink.parentElement).toHaveClass("flex", "justify-end");
+    expect(backLink.parentElement).toHaveClass("timeline-detail-actions", "justify-end");
   });
 
   it("marks a shortened manually adjusted timeline as not meeting SLA", () => {
@@ -397,7 +445,7 @@ describe("TimelineDetail", () => {
     render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
 
     expect(screen.getByText("กำหนดวันเวลาในการนำเสนอข้อเทคนิค (Present)")).toBeInTheDocument();
-    expect(screen.getByText("เลือกวันใดวันหนึ่ง")).toBeInTheDocument();
+    expect(screen.getAllByText("เลือกวันใดวันหนึ่ง")[0]).toBeInTheDocument();
   });
 
   it("hides the choose-one-day note after the Present milestone is manually adjusted", () => {
