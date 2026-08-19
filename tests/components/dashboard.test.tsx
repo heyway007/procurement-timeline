@@ -103,21 +103,33 @@ describe("Dashboard", () => {
     const contractHeader = screen.getByRole("columnheader", { name: "วันที่เริ่มทำสัญญา" });
 
     expect(table).toHaveClass("w-full", "table-fixed", "min-w-[1200px]");
-    expect(projectHeader).toHaveClass("w-[31%]");
+    expect(projectHeader).toHaveClass("w-[39%]");
     expect(actionHeader).toHaveClass("w-[16%]");
     expect(actionHeader).toHaveClass("text-center");
     expect(contractHeader).toHaveClass("whitespace-nowrap");
     expect(within(table).getAllByRole("link", { name: /เปิด Timeline/ })[0]).toHaveClass("whitespace-nowrap");
   });
 
-  it("keeps long budget labels on one line without overlapping the date column", () => {
+  it("keeps long budget labels within their column without overlapping the date column", () => {
     render(<Dashboard initialProjects={projects} />);
 
     const table = screen.getByRole("table");
     const budgetCell = table.querySelector("tbody tr td:nth-child(2)");
 
-    expect(budgetCell).toHaveClass("whitespace-nowrap", "px-3", "py-3");
+    expect(budgetCell).toHaveClass("whitespace-normal", "px-3", "py-3");
     expect(table.querySelector("tbody tr td:first-child")).toHaveClass("px-3", "py-3");
+  });
+
+  it("shows the budget method and amount on separate lines", () => {
+    render(<Dashboard initialProjects={projects} />);
+
+    const budgetCell = screen.getByRole("table").querySelector("tbody tr td:nth-child(2)");
+    const lines = budgetCell?.querySelectorAll("p");
+
+    expect(budgetCell).toHaveClass("whitespace-normal");
+    expect(lines).toHaveLength(2);
+    expect(lines?.[0]).toHaveTextContent("e-Bidding");
+    expect(lines?.[1]).toHaveClass("text-sm");
   });
 
   it("keeps the dashboard in normal document flow for vertical scrolling", () => {

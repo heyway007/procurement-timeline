@@ -49,3 +49,27 @@ export function validateBudgetCategory(category: BudgetCategory, amount: number)
 export function budgetCategoryLabel(category: BudgetCategory): string {
   return BUDGET_CATEGORY_OPTIONS.find((option) => option.value === category)?.label ?? category;
 }
+
+export function budgetCategoryDisplayParts(category: BudgetCategory): {
+  method: string;
+  amount: string;
+} {
+  const label = budgetCategoryLabel(category);
+  const separatorIndex = label.indexOf(" / ");
+  if (separatorIndex >= 0) {
+    return {
+      method: label.slice(0, separatorIndex),
+      amount: label.slice(separatorIndex + 3),
+    };
+  }
+
+  const selectiveSuffix = " (ทุกวงเงิน)";
+  if (label.endsWith(selectiveSuffix)) {
+    return {
+      method: label.slice(0, -selectiveSuffix.length),
+      amount: "(ทุกวงเงิน)",
+    };
+  }
+
+  return { method: label, amount: "" };
+}

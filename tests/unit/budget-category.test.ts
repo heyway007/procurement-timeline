@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   BUDGET_CATEGORY_OPTIONS,
   budgetCategoryFor,
+  budgetCategoryDisplayParts,
   budgetCategoryLabel,
   validateBudgetCategory,
 } from "@/lib/projects/budget-category";
@@ -50,5 +51,16 @@ describe("budget categories", () => {
     expect(budgetCategoryLabel("FIVE_TO_TEN_MILLION")).toBe(
       "e-Bidding / 5,000,001–10,000,000 บาท",
     );
+  });
+
+  it("splits the method and budget for the dashboard display", () => {
+    expect(budgetCategoryDisplayParts("FIVE_TO_TEN_MILLION")).toEqual({
+      method: "e-Bidding",
+      amount: budgetCategoryLabel("FIVE_TO_TEN_MILLION").replace("e-Bidding / ", ""),
+    });
+    expect(budgetCategoryDisplayParts("SELECTIVE_METHOD")).toEqual({
+      method: "วิธีคัดเลือก",
+      amount: "(ทุกวงเงิน)",
+    });
   });
 });
