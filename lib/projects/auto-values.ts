@@ -6,6 +6,8 @@ const DEFAULT_BUDGETS: Record<BudgetCategory, number> = {
   TEN_TO_TWENTY_MILLION: 10_000_001,
   ABOVE_TWENTY_MILLION: 50_000_001,
   SELECTIVE_METHOD: 1_000_000,
+  SPECIFIC_METHOD_UNDER_500K: 500_000,
+  SPECIFIC_METHOD_OVER_500K: 500_001,
 };
 
 export function defaultBudgetForCategory(category: BudgetCategory): number {

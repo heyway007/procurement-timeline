@@ -39,6 +39,8 @@ export const googleDriveProjectSchema = z.object({
     "TEN_TO_TWENTY_MILLION",
     "ABOVE_TWENTY_MILLION",
     "SELECTIVE_METHOD",
+    "SPECIFIC_METHOD_UNDER_500K",
+    "SPECIFIC_METHOD_OVER_500K",
   ]),
   startDate: isoDateSchema,
   note: z.string(),

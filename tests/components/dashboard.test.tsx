@@ -76,7 +76,7 @@ describe("Dashboard", () => {
     expect(screen.getAllByText("จัดซื้อระบบสารสนเทศ")).not.toHaveLength(0);
     expect(screen.getAllByText("คุณสมชาย")).not.toHaveLength(0);
     expect(screen.queryByText(/29,000,000/)).not.toBeInTheDocument();
-    expect(screen.getAllByText("10,000,001–50,000,000 บาท")).not.toHaveLength(0);
+    expect(screen.getAllByText("e-Bidding / 10,000,001–50,000,000 บาท")).not.toHaveLength(0);
     expect(screen.getByRole("columnheader", { name: "วันที่เริ่มทำสัญญา" })).toBeInTheDocument();
     expect(screen.getAllByText(/2569/)).toHaveLength(8);
   });

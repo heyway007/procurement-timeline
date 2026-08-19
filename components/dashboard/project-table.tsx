@@ -51,7 +51,7 @@ export function ProjectTable({ projects, onDelete }: ProjectTableProps) {
               <div>
                 <dt className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-700">
                   <FontAwesomeIcon icon={faSackDollar} aria-hidden="true" />
-                  ประเภทวงเงิน / วิธี
+                  วิธี / วงเงิน
                 </dt>
                 <dd className="mt-1 font-medium text-slate-700">{budgetCategoryLabel(project.budgetCategory)}</dd>
               </div>
@@ -96,7 +96,7 @@ export function ProjectTable({ projects, onDelete }: ProjectTableProps) {
           <thead className="border-b border-indigo-100 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
             <tr>
               <th className="w-[41%] whitespace-nowrap px-5 py-4 align-middle"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faFolderOpen} className="text-indigo-600" aria-hidden="true" />โครงการ</span></th>
-              <th className="whitespace-nowrap px-5 py-4 align-middle"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faSackDollar} className="text-emerald-600" aria-hidden="true" />ประเภทวงเงิน / วิธี</span></th>
+              <th className="whitespace-nowrap px-5 py-4 align-middle"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faSackDollar} className="text-emerald-600" aria-hidden="true" />วิธี / วงเงิน</span></th>
               <th className="whitespace-nowrap px-5 py-4 align-middle"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faCalendarDays} className="text-blue-600" aria-hidden="true" />วันเริ่ม</span></th>
               <th className="whitespace-nowrap px-5 py-4 align-middle"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faFlagCheckered} className="text-amber-500" aria-hidden="true" />วันที่เริ่มทำสัญญา</span></th>
               <th className="w-[19%] whitespace-nowrap px-5 py-4 text-center align-middle"><span className="inline-flex items-center justify-center gap-2"><FontAwesomeIcon icon={faGear} className="text-slate-500" aria-hidden="true" />จัดการ</span></th>

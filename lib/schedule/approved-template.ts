@@ -93,11 +93,18 @@ export const SELECTIVE_METHOD_TEMPLATE_STEPS = [
   { order: 13, workingDaysToNext: 7, label: "ระยะเวลาอุทธรณ์ ติดต่อให้ผู้รับจ้างนำส่งเอกสารเพื่อทำสัญญาและวางหลักประกันสัญญา" },
 ] satisfies TemplateStep[];
 
+export const SPECIFIC_METHOD_TEMPLATE_STEPS = SELECTIVE_METHOD_TEMPLATE_STEPS.map(
+  (step) => ({ ...step }),
+) satisfies TemplateStep[];
+
 export function approvedTemplateStepsForBudgetCategory(
   budgetCategory: BudgetCategory,
 ): TemplateStep[] {
   if (budgetCategory === "SELECTIVE_METHOD") {
     return SELECTIVE_METHOD_TEMPLATE_STEPS;
+  }
+  if (budgetCategory === "SPECIFIC_METHOD_UNDER_500K" || budgetCategory === "SPECIFIC_METHOD_OVER_500K") {
+    return SPECIFIC_METHOD_TEMPLATE_STEPS;
   }
   if (budgetCategory === "ONE_TO_FIVE_MILLION") {
     return smallBudgetTemplateSteps();

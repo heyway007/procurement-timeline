@@ -20,7 +20,7 @@ const swalFire = vi.mocked(Swal.fire);
 
 async function fillBase(user: ReturnType<typeof userEvent.setup>) {
   await user.selectOptions(screen.getByLabelText("ฝ่าย"), "ฝ่ายส่งเสริมการจัดประชุมนานาชาติ");
-  await user.selectOptions(screen.getByLabelText("ประเภทวงเงิน / วิธี"), "TEN_TO_TWENTY_MILLION");
+  await user.selectOptions(screen.getByLabelText("วิธี / วงเงิน"), "TEN_TO_TWENTY_MILLION");
 }
 
 describe("ProjectForm", () => {
@@ -44,11 +44,13 @@ describe("ProjectForm", () => {
     expect(screen.getByLabelText("ผู้จัดทำ Timeline")).not.toBeRequired();
     expect(screen.queryByLabelText("วงเงินจัดจ้าง (บาท)")).not.toBeInTheDocument();
     expect(screen.getByLabelText("ฝ่าย")).not.toBeRequired();
-    expect(screen.getByLabelText("ประเภทวงเงิน / วิธี")).toBeInTheDocument();
-    expect(screen.getByLabelText("ประเภทวงเงิน / วิธี")).toBeRequired();
-    expect(screen.getByRole("option", { name: "เลือกประเภทวงเงิน / วิธี" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "วิธีคัดเลือก" })).toBeInTheDocument();
-    expect(screen.getByText("/ วิธี")).not.toHaveClass("text-rose-600");
+    expect(screen.getByLabelText("วิธี / วงเงิน")).toBeInTheDocument();
+    expect(screen.getByLabelText("วิธี / วงเงิน")).toBeRequired();
+    expect(screen.getByRole("option", { name: "เลือกวิธี / วงเงิน" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "e-Bidding / 500,001–5,000,000 บาท" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "วิธีคัดเลือก (ทุกวงเงิน)" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "วิธีเฉพาะเจาะจง / ไม่เกิน 500,000 บาท" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "วิธีเฉพาะเจาะจง / 500,001 บาทขึ้นไป" })).toBeInTheDocument();
   });
 
   it("submits without project name, owner, or budget inputs", async () => {

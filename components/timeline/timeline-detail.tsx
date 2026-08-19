@@ -94,7 +94,7 @@ function isDateRangeMilestone(project: ProjectRecord, order: number): boolean {
   if (project.budgetCategory === "ONE_TO_FIVE_MILLION") {
     return order === 3 || order === 7;
   }
-  if (project.budgetCategory === "SELECTIVE_METHOD") {
+  if (project.budgetCategory === "SELECTIVE_METHOD" || project.budgetCategory === "SPECIFIC_METHOD_UNDER_500K" || project.budgetCategory === "SPECIFIC_METHOD_OVER_500K") {
     return order === 5 || order === 7 || order === 8 || order === 9;
   }
   return order === 3 || order === 6;
@@ -158,7 +158,7 @@ function stepPresentation(
   step: ProjectRecord["steps"][number],
   budgetCategory: ProjectRecord["budgetCategory"],
 ): StepPresentation {
-  if (budgetCategory === "SELECTIVE_METHOD") {
+  if (budgetCategory === "SELECTIVE_METHOD" || budgetCategory === "SPECIFIC_METHOD_UNDER_500K" || budgetCategory === "SPECIFIC_METHOD_OVER_500K") {
     return SELECTIVE_METHOD_STEP_PRESENTATIONS[step.order] ?? { title: step.label };
   }
   const label = step.label.replaceAll("ส่วนงานพัสดุฯ ", "");
@@ -585,7 +585,7 @@ export function TimelineDetail({
         <div data-testid="timeline-summary" className="timeline-summary print-hidden mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-[auto_auto_auto_auto] lg:items-stretch lg:justify-between">
           <div className="timeline-summary-stat timeline-summary-stat--budget">
             <span className="timeline-summary-stat-icon"><FontAwesomeIcon icon={faSackDollar} aria-hidden="true" /></span>
-            <div className="min-w-0 flex-1"><p>ประเภทวงเงิน / วิธี</p><strong className="break-words whitespace-normal">{budgetCategoryLabel(project.budgetCategory)}</strong></div>
+            <div className="min-w-0 flex-1"><p>วิธี / วงเงิน</p><strong className="break-words whitespace-normal">{budgetCategoryLabel(project.budgetCategory)}</strong></div>
           </div>
           <div className="timeline-summary-stat timeline-summary-stat--department">
             <span className="timeline-summary-stat-icon"><FontAwesomeIcon icon={faBuilding} aria-hidden="true" /></span>
@@ -603,7 +603,7 @@ export function TimelineDetail({
         <dl className="print-summary sr-only text-sm">
           <div data-testid="print-owner" className="min-w-0"><dt className="break-words whitespace-normal">ผู้จัดทำ Timeline</dt><dd className="min-w-0 break-words whitespace-normal">{project.ownerName}</dd></div>
           <div data-testid="print-department" className="min-w-0"><dt className="break-words whitespace-normal">ฝ่าย</dt><dd className="min-w-0 break-words whitespace-normal">{project.departmentName || "-"}</dd></div>
-          <div data-testid="print-budget" className="min-w-0"><dt className="break-words whitespace-normal">ประเภทวงเงิน / วิธี</dt><dd className="min-w-0 break-words whitespace-normal">{budgetCategoryLabel(project.budgetCategory)}</dd></div>
+          <div data-testid="print-budget" className="min-w-0"><dt className="break-words whitespace-normal">วิธี / วงเงิน</dt><dd className="min-w-0 break-words whitespace-normal">{budgetCategoryLabel(project.budgetCategory)}</dd></div>
           <div data-testid="print-total-days" className="min-w-0"><dt className="break-words whitespace-normal">จำนวนวันทำการทั้งหมด</dt><dd className="min-w-0 break-words whitespace-normal">{totalWorkingDays(project)} วันทำการ · {slaStatusText(project)}</dd></div>
         </dl>
         {project.note ? (

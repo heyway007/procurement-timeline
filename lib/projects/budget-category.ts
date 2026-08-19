@@ -4,20 +4,24 @@ export const BUDGET_CATEGORIES = [
   "TEN_TO_TWENTY_MILLION",
   "ABOVE_TWENTY_MILLION",
   "SELECTIVE_METHOD",
+  "SPECIFIC_METHOD_UNDER_500K",
+  "SPECIFIC_METHOD_OVER_500K",
 ] as const;
 
 export type BudgetCategory = (typeof BUDGET_CATEGORIES)[number];
 
 export const BUDGET_CATEGORY_OPTIONS: ReadonlyArray<{ value: BudgetCategory; label: string }> = [
-  { value: "ONE_TO_FIVE_MILLION", label: "500,001–5,000,000 บาท" },
-  { value: "FIVE_TO_TEN_MILLION", label: "5,000,001–10,000,000 บาท" },
-  { value: "TEN_TO_TWENTY_MILLION", label: "10,000,001–50,000,000 บาท" },
-  { value: "ABOVE_TWENTY_MILLION", label: "50,000,001 บาทขึ้นไป" },
-  { value: "SELECTIVE_METHOD", label: "วิธีคัดเลือก" },
+  { value: "ONE_TO_FIVE_MILLION", label: "e-Bidding / 500,001–5,000,000 บาท" },
+  { value: "FIVE_TO_TEN_MILLION", label: "e-Bidding / 5,000,001–10,000,000 บาท" },
+  { value: "TEN_TO_TWENTY_MILLION", label: "e-Bidding / 10,000,001–50,000,000 บาท" },
+  { value: "ABOVE_TWENTY_MILLION", label: "e-Bidding / 50,000,001 บาทขึ้นไป" },
+  { value: "SELECTIVE_METHOD", label: "วิธีคัดเลือก (ทุกวงเงิน)" },
+  { value: "SPECIFIC_METHOD_UNDER_500K", label: "วิธีเฉพาะเจาะจง / ไม่เกิน 500,000 บาท" },
+  { value: "SPECIFIC_METHOD_OVER_500K", label: "วิธีเฉพาะเจาะจง / 500,001 บาทขึ้นไป" },
 ];
 
 export function isProcurementMethod(category: BudgetCategory): boolean {
-  return category === "SELECTIVE_METHOD";
+  return category === "SELECTIVE_METHOD" || category === "SPECIFIC_METHOD_UNDER_500K" || category === "SPECIFIC_METHOD_OVER_500K";
 }
 
 export function budgetCategoryFor(amount: number): BudgetCategory {

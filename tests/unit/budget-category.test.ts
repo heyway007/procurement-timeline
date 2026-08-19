@@ -30,19 +30,25 @@ describe("budget categories", () => {
 
   it("allows the selective procurement method for any supported budget", () => {
     expect(() => validateBudgetCategory("SELECTIVE_METHOD", 29_000_000)).not.toThrow();
-    expect(budgetCategoryLabel("SELECTIVE_METHOD")).toBe("วิธีคัดเลือก");
+    expect(() => validateBudgetCategory("SPECIFIC_METHOD_UNDER_500K", 500_000)).not.toThrow();
+    expect(() => validateBudgetCategory("SPECIFIC_METHOD_OVER_500K", 29_000_000)).not.toThrow();
+    expect(budgetCategoryLabel("SELECTIVE_METHOD")).toBe("วิธีคัดเลือก (ทุกวงเงิน)");
+    expect(budgetCategoryLabel("SPECIFIC_METHOD_UNDER_500K")).toBe("วิธีเฉพาะเจาะจง / ไม่เกิน 500,000 บาท");
+    expect(budgetCategoryLabel("SPECIFIC_METHOD_OVER_500K")).toBe("วิธีเฉพาะเจาะจง / 500,001 บาทขึ้นไป");
   });
 
   it("uses full numeric labels for every budget range", () => {
     expect(BUDGET_CATEGORY_OPTIONS.map((option) => option.label)).toEqual([
-      "500,001–5,000,000 บาท",
-      "5,000,001–10,000,000 บาท",
-      "10,000,001–50,000,000 บาท",
-      "50,000,001 บาทขึ้นไป",
-      "วิธีคัดเลือก",
+      "e-Bidding / 500,001–5,000,000 บาท",
+      "e-Bidding / 5,000,001–10,000,000 บาท",
+      "e-Bidding / 10,000,001–50,000,000 บาท",
+      "e-Bidding / 50,000,001 บาทขึ้นไป",
+      "วิธีคัดเลือก (ทุกวงเงิน)",
+      "วิธีเฉพาะเจาะจง / ไม่เกิน 500,000 บาท",
+      "วิธีเฉพาะเจาะจง / 500,001 บาทขึ้นไป",
     ]);
     expect(budgetCategoryLabel("FIVE_TO_TEN_MILLION")).toBe(
-      "5,000,001–10,000,000 บาท",
+      "e-Bidding / 5,000,001–10,000,000 บาท",
     );
   });
 });
