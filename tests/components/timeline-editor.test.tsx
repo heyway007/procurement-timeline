@@ -166,7 +166,7 @@ describe("TimelineDetail", () => {
 
     const header = screen.getByTestId("print-header");
     expect(header).toHaveClass("rounded-2xl", "p-4");
-    expect(within(header).getByRole("heading")).toHaveClass("text-xl", "text-center", "sm:text-left");
+    expect(within(header).getByRole("heading")).toHaveClass("text-xl", "max-[639px]:text-lg", "text-center", "sm:text-left");
     expect(within(header).getByRole("heading")).not.toHaveClass("text-2xl");
     expect(header.querySelector(".print-project-department")).not.toBeInTheDocument();
     expect(header.querySelector("dl")).toHaveClass("text-sm");
@@ -435,8 +435,8 @@ describe("TimelineDetail", () => {
     render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
 
     const buttons = screen.getAllByRole("button", { name: /แก้วันที่ ขั้นตอนที่/ });
-    expect(buttons[0]).toHaveClass("timeline-step-edit-button", "max-[639px]:h-14", "max-[639px]:min-h-14", "max-[639px]:w-max", "max-[639px]:justify-self-end", "self-center");
-    expect(buttons[1]).toHaveClass("timeline-step-edit-button", "max-[639px]:h-14", "max-[639px]:min-h-14", "max-[639px]:w-max", "max-[639px]:justify-self-end", "self-center");
+    expect(buttons[0]).toHaveClass("timeline-step-edit-button", "max-[639px]:h-14", "max-[639px]:min-h-14", "max-[639px]:w-max", "max-[639px]:justify-self-end", "sm:h-12", "self-center");
+    expect(buttons[1]).toHaveClass("timeline-step-edit-button", "max-[639px]:h-14", "max-[639px]:min-h-14", "max-[639px]:w-max", "max-[639px]:justify-self-end", "sm:h-12", "self-center");
   });
 
   it("keeps the document as the mobile scroll container", () => {

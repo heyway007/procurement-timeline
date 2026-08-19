@@ -435,6 +435,20 @@ body {
     font-size: 1.1rem;
   }
 
+  .print-header h1 {
+    font-size: 1.125rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .print-header .timeline-summary-stat p {
+    font-size: 0.6875rem;
+  }
+
+  .print-header .timeline-summary-stat strong {
+    font-size: 0.85rem;
+    line-height: 1.35;
+  }
+
   .timeline-step-icon {
     width: 2.25rem !important;
     height: 2.25rem !important;
@@ -580,6 +594,46 @@ body {
 
   .timeline-step-end .timeline-step-end-action {
     display: none;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .timeline-detail-actions > span,
+  .timeline-detail-actions > span > span {
+    font-size: 1.125rem !important;
+  }
+
+  .timeline-detail-actions > a {
+    font-size: 0.875rem !important;
+  }
+
+  .print-header h1 {
+    font-size: 1.375rem !important;
+  }
+
+  .timeline-header-row {
+    font-size: 0.8125rem !important;
+  }
+
+  .timeline-step,
+  .timeline-step-end {
+    font-size: 0.875rem !important;
+  }
+
+  .timeline-step-title-row > p {
+    font-size: 1rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .timeline-step-inline-details p,
+  .timeline-step-date {
+    font-size: 0.8125rem !important;
+    line-height: 1.4 !important;
+  }
+
+  .timeline-step-edit-button {
+    padding-inline: 0.75rem !important;
+    font-size: 0.8125rem !important;
   }
 }
 

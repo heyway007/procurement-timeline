@@ -557,7 +557,7 @@ export function TimelineDetail({
       <header data-testid="print-header" className="timeline-summary-header print-header rounded-2xl border border-slate-200 p-4 text-slate-950 shadow-sm sm:rounded-3xl sm:p-7">
         <div className="flex min-w-0 items-center gap-4">
           <div className="min-w-0">
-            <h1 className="mt-1 min-w-0 break-words text-center text-xl font-semibold sm:text-left sm:text-2xl">{project.name}</h1>
+            <h1 className="mt-1 min-w-0 break-words text-center text-xl font-semibold max-[639px]:text-lg sm:text-left sm:text-2xl">{project.name}</h1>
           </div>
         </div>
         <div data-testid="timeline-summary" className="timeline-summary print-hidden mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-[auto_auto_auto_auto] lg:items-stretch lg:justify-between">
@@ -660,7 +660,7 @@ export function TimelineDetail({
               ) : null}
               </div>
             </div>
-            <button className="timeline-step-edit-button print-hidden h-20 min-h-0 max-[639px]:h-14 max-[639px]:min-h-14 max-[639px]:w-max max-[639px]:justify-self-end self-center rounded-lg border border-indigo-200 bg-white px-1 text-[11px] font-semibold leading-tight text-indigo-700 hover:bg-indigo-50 max-[639px]:px-2 max-[639px]:text-[10px] sm:px-4 sm:text-base lg:h-9" type="button" aria-label={`แก้วันที่ ขั้นตอนที่ ${step.order}`} onClick={() => { setEditingOrder(step.order); setNewDate(step.scheduledDate); setEditError(""); }}>แก้วันที่</button>
+            <button className="timeline-step-edit-button print-hidden h-20 min-h-0 max-[639px]:h-14 max-[639px]:min-h-14 max-[639px]:w-max max-[639px]:justify-self-end sm:h-12 self-center rounded-lg border border-indigo-200 bg-white px-1 text-[11px] font-semibold leading-tight text-indigo-700 hover:bg-indigo-50 max-[639px]:px-2 max-[639px]:text-[10px] sm:px-3 sm:text-sm lg:h-9 lg:px-4 lg:text-base" type="button" aria-label={`แก้วันที่ ขั้นตอนที่ ${step.order}`} onClick={() => { setEditingOrder(step.order); setNewDate(step.scheduledDate); setEditError(""); }}>แก้วันที่</button>
           </div>
           );
         })}
