@@ -85,27 +85,27 @@ export function ProjectTable({ projects, onDelete }: ProjectTableProps) {
         ))}
       </div>
       <div data-testid="desktop-project-table" className="hidden overflow-x-auto xl:block">
-        <table className="w-full min-w-[1100px] table-fixed divide-y divide-slate-200">
+        <table className="w-full min-w-[1200px] table-fixed divide-y divide-slate-200">
           <colgroup>
-            <col className="w-[41%]" />
+            <col className="w-[31%]" />
+            <col className="w-[28%]" />
+            <col className="w-[12%]" />
+            <col className="w-[13%]" />
             <col className="w-[16%]" />
-            <col className="w-[12%]" />
-            <col className="w-[12%]" />
-            <col className="w-[19%]" />
           </colgroup>
           <thead className="border-b border-indigo-100 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
             <tr>
-              <th className="w-[41%] whitespace-nowrap px-5 py-4 align-middle"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faFolderOpen} className="text-indigo-600" aria-hidden="true" />โครงการ</span></th>
-              <th className="whitespace-nowrap px-5 py-4 align-middle"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faSackDollar} className="text-emerald-600" aria-hidden="true" />วิธี / วงเงิน</span></th>
-              <th className="whitespace-nowrap px-5 py-4 align-middle"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faCalendarDays} className="text-blue-600" aria-hidden="true" />วันเริ่ม</span></th>
-              <th className="whitespace-nowrap px-5 py-4 align-middle"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faFlagCheckered} className="text-amber-500" aria-hidden="true" />วันที่เริ่มทำสัญญา</span></th>
-              <th className="w-[19%] whitespace-nowrap px-5 py-4 text-center align-middle"><span className="inline-flex items-center justify-center gap-2"><FontAwesomeIcon icon={faGear} className="text-slate-500" aria-hidden="true" />จัดการ</span></th>
+              <th className="w-[31%] whitespace-nowrap px-3 py-3 align-middle"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faFolderOpen} className="text-indigo-600" aria-hidden="true" />โครงการ</span></th>
+              <th className="w-[28%] whitespace-nowrap px-3 py-3 align-middle"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faSackDollar} className="text-emerald-600" aria-hidden="true" />วิธี / วงเงิน</span></th>
+              <th className="whitespace-nowrap px-3 py-3 align-middle"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faCalendarDays} className="text-blue-600" aria-hidden="true" />วันเริ่ม</span></th>
+              <th className="whitespace-nowrap px-3 py-3 align-middle"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faFlagCheckered} className="text-amber-500" aria-hidden="true" />วันที่เริ่มทำสัญญา</span></th>
+              <th className="w-[16%] whitespace-nowrap px-3 py-3 text-center align-middle"><span className="inline-flex items-center justify-center gap-2"><FontAwesomeIcon icon={faGear} className="text-slate-500" aria-hidden="true" />จัดการ</span></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {projects.map((project) => (
               <tr key={project.id} className="hover:bg-indigo-50/40">
-                <td className="px-5 py-4">
+                <td className="px-3 py-3">
                   <div className="flex items-start gap-3">
                     <span className="tceb-icon-badge mt-0.5" aria-hidden="true">
                       <FontAwesomeIcon icon={faFileLines} />
@@ -117,12 +117,12 @@ export function ProjectTable({ projects, onDelete }: ProjectTableProps) {
                     </div>
                   </div>
                 </td>
-                <td className="whitespace-normal break-words px-5 py-4 text-sm text-slate-700"><p className="font-medium">{budgetCategoryLabel(project.budgetCategory)}</p></td>
-                <td className="whitespace-nowrap px-5 py-4 text-sm text-blue-800"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faCalendarDays} className="text-blue-500" aria-hidden="true" />{formatThaiDate(project.startDate)}</span></td>
-                <td className="whitespace-nowrap px-5 py-4 text-sm text-amber-700"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faCalendarCheck} className="text-amber-500" aria-hidden="true" />{formatThaiDate(project.processEndDate)}</span></td>
-                <td className="px-5 py-4 text-right">
+                <td className="whitespace-nowrap px-3 py-3 text-sm text-slate-700"><p className="font-medium">{budgetCategoryLabel(project.budgetCategory)}</p></td>
+                <td className="whitespace-nowrap px-3 py-3 text-sm text-blue-800"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faCalendarDays} className="text-blue-500" aria-hidden="true" />{formatThaiDate(project.startDate)}</span></td>
+                <td className="whitespace-nowrap px-3 py-3 text-sm text-amber-700"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faCalendarCheck} className="text-amber-500" aria-hidden="true" />{formatThaiDate(project.processEndDate)}</span></td>
+                <td className="px-3 py-3 text-right">
                   <div className="inline-flex items-center gap-3">
-                    <Link className="tceb-action-button inline-flex items-center gap-2 rounded-lg bg-indigo-700 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-800" href={`/projects/${project.id}`}>
+                    <Link className="tceb-action-button inline-flex whitespace-nowrap items-center gap-2 rounded-lg bg-indigo-700 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-800" href={`/projects/${project.id}`}>
                       <FontAwesomeIcon icon={faArrowUpRightFromSquare} aria-hidden="true" />
                       เปิด Timeline
                     </Link>
