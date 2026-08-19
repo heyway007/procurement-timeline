@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Swal from "sweetalert2";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -19,6 +19,7 @@ vi.mock("next/navigation", () => ({
 const swalFire = vi.mocked(Swal.fire);
 
 async function fillBase(user: ReturnType<typeof userEvent.setup>) {
+  await user.selectOptions(screen.getByLabelText("สถานะโครงการ"), "SLA_COMPLIANT");
   await user.selectOptions(screen.getByLabelText("ฝ่าย"), "ฝ่ายส่งเสริมการจัดประชุมนานาชาติ");
   await user.selectOptions(screen.getByLabelText("วิธี / วงเงิน"), "TEN_TO_TWENTY_MILLION");
 }
@@ -44,6 +45,9 @@ describe("ProjectForm", () => {
     expect(screen.getByLabelText("ผู้จัดทำ Timeline")).not.toBeRequired();
     expect(screen.queryByLabelText("วงเงินจัดจ้าง (บาท)")).not.toBeInTheDocument();
     expect(screen.getByLabelText("ฝ่าย")).not.toBeRequired();
+    expect(screen.getByLabelText("สถานะโครงการ")).toBeRequired();
+    expect(screen.getByRole("option", { name: "เป็นไปตาม SLA" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "ไม่เป็นไปตาม SLA" })).toBeInTheDocument();
     expect(screen.getByLabelText("วิธี / วงเงิน")).toBeInTheDocument();
     expect(screen.getByLabelText("วิธี / วงเงิน")).toBeRequired();
     expect(screen.getByRole("option", { name: "เลือกวิธี / วงเงิน" })).toBeInTheDocument();
@@ -61,7 +65,7 @@ describe("ProjectForm", () => {
     await user.type(screen.getByLabelText("วันที่เริ่มต้น"), "2026-07-06");
     await user.type(screen.getByLabelText("หมายเหตุ"), "โครงการทดสอบ");
     await user.click(screen.getByRole("button", { name: "สร้าง Timeline" }));
-    expect(onCreate).toHaveBeenCalledWith({ name: "", ownerName: "", departmentName: "ฝ่ายส่งเสริมการจัดประชุมนานาชาติ", budgetCategory: "TEN_TO_TWENTY_MILLION", startDate: "2026-07-06", note: "โครงการทดสอบ" });
+    expect(onCreate).toHaveBeenCalledWith({ name: "", ownerName: "", departmentName: "ฝ่ายส่งเสริมการจัดประชุมนานาชาติ", projectStatusType: "SLA_COMPLIANT", budgetCategory: "TEN_TO_TWENTY_MILLION", startDate: "2026-07-06", note: "โครงการทดสอบ" });
     expect(swalFire).toHaveBeenCalledWith(
       expect.objectContaining({
         icon: "success",
@@ -97,5 +101,39 @@ describe("ProjectForm", () => {
     await user.click(screen.getByRole("button", { name: "สร้าง Timeline" }));
     expect(screen.getByRole("alert")).toHaveTextContent("วันที่เริ่มต้นต้องไม่เป็นวันเสาร์หรือวันอาทิตย์");
     expect(onCreate).not.toHaveBeenCalled();
+  });
+
+  it("uses a Thai validation message for each required field", () => {
+    render(<ProjectForm onCancel={() => undefined} onCreate={vi.fn()} />);
+
+    const department = screen.getByLabelText("ฝ่าย");
+    const status = screen.getByLabelText("สถานะโครงการ");
+    const budgetCategory = screen.getByLabelText("วิธี / วงเงิน");
+    const startDate = screen.getByLabelText("วันที่เริ่มต้น");
+
+    fireEvent.invalid(department);
+    fireEvent.invalid(status);
+    fireEvent.invalid(budgetCategory);
+    fireEvent.invalid(startDate);
+
+    expect(department).toHaveProperty("validationMessage", "กรุณาเลือกฝ่าย");
+    expect(status).toHaveProperty("validationMessage", "กรุณาเลือกสถานะโครงการ");
+    expect(budgetCategory).toHaveProperty("validationMessage", "กรุณาเลือกวิธี / วงเงิน");
+    expect(startDate).toHaveProperty("validationMessage", "กรุณาเลือกวันที่เริ่มต้น");
+  });
+
+  it("warns when selecting a non-SLA project status", async () => {
+    const user = userEvent.setup();
+    render(<ProjectForm onCancel={() => undefined} onCreate={vi.fn()} />);
+
+    await user.selectOptions(screen.getByLabelText("สถานะโครงการ"), "SLA_NON_COMPLIANT");
+
+    expect(swalFire).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "แจ้งเตือน",
+        text: "ผอ.ฝ่ายฯ จะต้องส่งอีเมลหาผอ.ฝ่ายบริหาร เพื่อขอดำเนินการไม่เป็นไปตาม SLA",
+        icon: "warning",
+      }),
+    );
   });
 });

@@ -42,6 +42,7 @@ export const googleDriveProjectSchema = z.object({
     "SPECIFIC_METHOD_UNDER_500K",
     "SPECIFIC_METHOD_OVER_500K",
   ]),
+  projectStatusType: z.enum(["SLA_COMPLIANT", "SLA_NON_COMPLIANT"]).optional(),
   startDate: isoDateSchema,
   note: z.string(),
   templateKey: z.string(),

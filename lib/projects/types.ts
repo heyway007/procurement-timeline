@@ -1,6 +1,7 @@
 import type { ScheduledMilestone } from "@/lib/schedule/types";
 import type { BidSubmissionTimeSlot } from "@/lib/schedule/milestone-kind";
 import type { BudgetCategory } from "./budget-category";
+import type { ProjectStatusType } from "./project-status";
 
 export type ScheduleStatus = "NORMAL" | "NEEDS_REVIEW";
 
@@ -11,6 +12,7 @@ export type ProjectRecord = {
   departmentName?: string;
   budget: number;
   budgetCategory: BudgetCategory;
+  projectStatusType?: ProjectStatusType;
   startDate: string;
   note: string;
   templateKey: string;
@@ -46,6 +48,7 @@ export type CreateProjectInput = {
   departmentName?: string;
   budget?: number;
   budgetCategory: BudgetCategory;
+  projectStatusType?: ProjectStatusType;
   startDate: string;
   note?: string;
 };

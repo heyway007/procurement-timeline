@@ -7,7 +7,7 @@ import {
 import { countWorkingDayAdditions } from "@/lib/schedule/date";
 import {
   APPROVED_TEMPLATE_KEY,
-  approvedTemplateStepsForBudgetCategory,
+  approvedTemplateStepsForProjectStatus,
 } from "@/lib/schedule/approved-template";
 import type { ScheduledTimeline } from "@/lib/schedule/types";
 import { isBidSubmissionMilestone, isPresentMilestone } from "@/lib/schedule/milestone-kind";
@@ -68,7 +68,7 @@ export class ProjectService {
     const budget = parsed.budget ?? defaultBudgetForCategory(parsed.budgetCategory);
     const holidays = await this.calendar.listHolidayDates();
     const timeline = buildTimeline(
-      approvedTemplateStepsForBudgetCategory(parsed.budgetCategory),
+      approvedTemplateStepsForProjectStatus(parsed.projectStatusType, parsed.budgetCategory),
       parsed.startDate,
       holidays,
     );
@@ -78,6 +78,7 @@ export class ProjectService {
       departmentName,
       budget,
       budgetCategory: parsed.budgetCategory,
+      projectStatusType: parsed.projectStatusType,
       startDate: parsed.startDate,
       note: parsed.note,
       templateKey: APPROVED_TEMPLATE_KEY,
@@ -163,16 +164,18 @@ export class ProjectService {
     const parsed = createProjectSchema.parse(input);
     const project = await this.getRaw(id);
     this.assertVersion(project, input.version);
+    const projectStatusType = input.projectStatusType ?? project.projectStatusType ?? "SLA_COMPLIANT";
     const templateChanged = parsed.budgetCategory !== project.budgetCategory;
     const startChanged = parsed.startDate !== project.startDate;
-    if ((startChanged || templateChanged) && !input.confirmReset) {
+    const statusTypeChanged = projectStatusType !== (project.projectStatusType ?? "SLA_COMPLIANT");
+    if ((startChanged || templateChanged || statusTypeChanged) && !input.confirmReset) {
       throw new Error("SCHEDULE_RESET_CONFIRMATION_REQUIRED");
     }
 
     const holidays = await this.calendar.listHolidayDates();
-    const timeline = startChanged || templateChanged
+    const timeline = startChanged || templateChanged || statusTypeChanged
       ? buildTimeline(
-          approvedTemplateStepsForBudgetCategory(parsed.budgetCategory),
+          approvedTemplateStepsForProjectStatus(projectStatusType, parsed.budgetCategory),
           parsed.startDate,
           holidays,
         )
@@ -183,6 +186,7 @@ export class ProjectService {
       departmentName: parsed.departmentName || project.departmentName || "-",
       budget: parsed.budget ?? project.budget,
       budgetCategory: parsed.budgetCategory,
+      projectStatusType,
       startDate: timeline.milestones[0].scheduledDate,
       note: parsed.note,
       templateKey: project.templateKey,
@@ -232,7 +236,7 @@ export class ProjectService {
     this.assertVersion(project, version);
     const holidays = await this.calendar.listHolidayDates();
     const timeline = buildTimeline(
-      approvedTemplateStepsForBudgetCategory(project.budgetCategory),
+      approvedTemplateStepsForProjectStatus(project.projectStatusType, project.budgetCategory),
       project.startDate,
       holidays,
     );
@@ -283,6 +287,7 @@ export class ProjectService {
       departmentName: project.departmentName ?? "",
       budget: project.budget,
       budgetCategory: project.budgetCategory,
+      projectStatusType: project.projectStatusType,
       startDate: timeline.milestones[0].scheduledDate,
       note: project.note,
       templateKey: project.templateKey,

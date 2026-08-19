@@ -230,6 +230,23 @@ describe("ProjectService", () => {
     ]);
   });
 
+  it("stores the selected non-SLA project status while using copied steps for now", async () => {
+    const { service } = makeService();
+
+    const result = await service.create({
+      name: "โครงการไม่เป็นไปตาม SLA",
+      ownerName: "ผู้รับผิดชอบ",
+      budget: 29_000_000,
+      budgetCategory: "TEN_TO_TWENTY_MILLION",
+      projectStatusType: "SLA_NON_COMPLIANT",
+      startDate: "2026-07-06",
+      note: "",
+    });
+
+    expect(result.project.projectStatusType).toBe("SLA_NON_COMPLIANT");
+    expect(result.project.steps).toHaveLength(13);
+  });
+
   it("creates the reduced 1,000,000-5,000,000 baht category timeline", async () => {
     const { service } = makeService();
 

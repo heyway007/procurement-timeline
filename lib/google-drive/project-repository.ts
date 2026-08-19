@@ -37,6 +37,7 @@ export class GoogleDriveProjectRepository
       const now = new Date().toISOString();
       const project: ProjectRecord = {
         ...input,
+        projectStatusType: input.projectStatusType ?? "SLA_COMPLIANT",
         id: globalThis.crypto.randomUUID(),
         version: 1,
         createdAt: now,
@@ -59,6 +60,7 @@ export class GoogleDriveProjectRepository
       if (existing.version !== expectedVersion) return { kind: "conflict" };
       const project: ProjectRecord = {
         ...input,
+        projectStatusType: input.projectStatusType ?? existing.projectStatusType ?? "SLA_COMPLIANT",
         id,
         version: expectedVersion + 1,
         createdAt: existing.createdAt,

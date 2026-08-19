@@ -38,8 +38,8 @@ import {
   resetProjectSchedule,
   updateBidSubmissionTime,
 } from "@/lib/ui/api-client";
-import { approvedTemplateStepsForBudgetCategory } from "@/lib/schedule/approved-template";
 import { addWorkingDays } from "@/lib/schedule/date";
+import { projectStatusTypeLabel } from "@/lib/projects/project-status";
 import {
   BID_SUBMISSION_TIME_LABELS,
   bidSubmissionTimeLabel,
@@ -104,13 +104,6 @@ function totalWorkingDays(project: ProjectRecord): number {
   return project.steps.reduce((sum, step) => sum + step.workingDaysToNext, 0);
 }
 
-function templateWorkingDays(project: ProjectRecord): number {
-  return approvedTemplateStepsForBudgetCategory(project.budgetCategory).reduce(
-    (sum, step) => sum + step.workingDaysToNext,
-    0,
-  );
-}
-
 type StepTooltipPosition = {
   left: number;
   top: number;
@@ -119,18 +112,8 @@ type StepTooltipPosition = {
   placement: "above" | "below";
 };
 
-function hasManualScheduleAdjustment(project: ProjectRecord): boolean {
-  return (
-    project.isProcessEndManuallyAdjusted ||
-    project.steps.some((step) => step.isDateManuallyAdjusted)
-  );
-}
-
 function slaStatusText(project: ProjectRecord): string {
-  return hasManualScheduleAdjustment(project) &&
-    totalWorkingDays(project) < templateWorkingDays(project)
-    ? "ไม่เป็นไปตาม SLA"
-    : "เป็นไปตาม SLA";
+  return projectStatusTypeLabel(project.projectStatusType);
 }
 
 type StepPresentation = {

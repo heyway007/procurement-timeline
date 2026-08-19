@@ -117,7 +117,7 @@ export function ProjectTable({ projects, onDelete }: ProjectTableProps) {
                     </div>
                   </div>
                 </td>
-                <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-700"><p className="font-medium">{budgetCategoryLabel(project.budgetCategory)}</p></td>
+                <td className="whitespace-normal break-words px-5 py-4 text-sm text-slate-700"><p className="font-medium">{budgetCategoryLabel(project.budgetCategory)}</p></td>
                 <td className="whitespace-nowrap px-5 py-4 text-sm text-blue-800"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faCalendarDays} className="text-blue-500" aria-hidden="true" />{formatThaiDate(project.startDate)}</span></td>
                 <td className="whitespace-nowrap px-5 py-4 text-sm text-amber-700"><span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faCalendarCheck} className="text-amber-500" aria-hidden="true" />{formatThaiDate(project.processEndDate)}</span></td>
                 <td className="px-5 py-4 text-right">

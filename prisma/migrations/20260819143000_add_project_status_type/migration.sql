@@ -1,0 +1,4 @@
+CREATE TYPE "ProjectStatusType" AS ENUM ('SLA_COMPLIANT', 'SLA_NON_COMPLIANT');
+
+ALTER TABLE "Project"
+ADD COLUMN "projectStatusType" "ProjectStatusType" NOT NULL DEFAULT 'SLA_COMPLIANT';

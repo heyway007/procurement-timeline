@@ -1,4 +1,5 @@
 import type { BudgetCategory } from "@/lib/projects/budget-category";
+import type { ProjectStatusType } from "@/lib/projects/project-status";
 import type { TemplateStep } from "./types";
 
 export const APPROVED_TEMPLATE_KEY = "procurement-29m-v1";
@@ -116,6 +117,16 @@ export function approvedTemplateStepsForBudgetCategory(
     return documentPickupDurationTemplate(10);
   }
   return documentPickupDurationTemplate(18);
+}
+
+export function approvedTemplateStepsForProjectStatus(
+  projectStatusType: ProjectStatusType | undefined,
+  budgetCategory: BudgetCategory,
+): TemplateStep[] {
+  const steps = approvedTemplateStepsForBudgetCategory(budgetCategory);
+  return projectStatusType === "SLA_NON_COMPLIANT"
+    ? steps.map((step) => ({ ...step }))
+    : steps;
 }
 
 function documentPickupDurationTemplate(workingDaysToNext: number): TemplateStep[] {

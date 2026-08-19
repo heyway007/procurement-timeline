@@ -110,6 +110,15 @@ describe("Dashboard", () => {
     expect(screen.getAllByRole("link", { name: /เปิด Timeline/ })[0]).not.toHaveClass("whitespace-nowrap");
   });
 
+  it("wraps long budget labels without overlapping the date column", () => {
+    render(<Dashboard initialProjects={projects} />);
+
+    const table = screen.getByRole("table");
+    const budgetCell = table.querySelector("tbody tr td:nth-child(2)");
+
+    expect(budgetCell).toHaveClass("whitespace-normal", "break-words");
+  });
+
   it("keeps the dashboard in normal document flow for vertical scrolling", () => {
     render(<Dashboard initialProjects={projects} />);
 

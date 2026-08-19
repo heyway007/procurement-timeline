@@ -39,6 +39,11 @@ enum BudgetCategory {
   SPECIFIC_METHOD_OVER_500K
 }
 
+enum ProjectStatusType {
+  SLA_COMPLIANT
+  SLA_NON_COMPLIANT
+}
+
 enum BidSubmissionTimeSlot {
   MORNING
   AFTERNOON
@@ -75,6 +80,7 @@ model Project {
   departmentName               String         @default("")
   budget                       Decimal        @db.Decimal(15, 2)
   budgetCategory               BudgetCategory
+  projectStatusType            ProjectStatusType @default(SLA_COMPLIANT)
   startDate                    DateTime       @db.Date
   note                         String?
   templateId                   String         @db.Uuid

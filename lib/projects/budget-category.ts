@@ -1,3 +1,5 @@
+import type { ProjectStatusType } from "./project-status";
+
 export const BUDGET_CATEGORIES = [
   "ONE_TO_FIVE_MILLION",
   "FIVE_TO_TEN_MILLION",
@@ -19,6 +21,13 @@ export const BUDGET_CATEGORY_OPTIONS: ReadonlyArray<{ value: BudgetCategory; lab
   { value: "SPECIFIC_METHOD_UNDER_500K", label: "วิธีเฉพาะเจาะจง / ไม่เกิน 500,000 บาท" },
   { value: "SPECIFIC_METHOD_OVER_500K", label: "วิธีเฉพาะเจาะจง / 500,001 บาทขึ้นไป" },
 ];
+
+export function budgetCategoryOptionsForProjectStatus(
+  status: ProjectStatusType | undefined,
+): ReadonlyArray<{ value: BudgetCategory; label: string }> {
+  if (status !== "SLA_NON_COMPLIANT") return BUDGET_CATEGORY_OPTIONS;
+  return BUDGET_CATEGORY_OPTIONS.map((option) => ({ ...option }));
+}
 
 export function isProcurementMethod(category: BudgetCategory): boolean {
   return category === "SELECTIVE_METHOD" || category === "SPECIFIC_METHOD_UNDER_500K" || category === "SPECIFIC_METHOD_OVER_500K";

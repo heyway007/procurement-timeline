@@ -8,7 +8,8 @@ import Swal from "sweetalert2";
 import type { CreateProjectInput } from "@/lib/projects/types";
 import { ApiError } from "@/lib/ui/api-client";
 import { formatThaiDate, isWeekendIso } from "@/lib/ui/date-format";
-import { BUDGET_CATEGORY_OPTIONS, type BudgetCategory } from "@/lib/projects/budget-category";
+import { budgetCategoryOptionsForProjectStatus, type BudgetCategory } from "@/lib/projects/budget-category";
+import { PROJECT_STATUS_OPTIONS, type ProjectStatusType } from "@/lib/projects/project-status";
 
 type ProjectFormProps = {
   onCancel: () => void;
@@ -46,6 +47,7 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [startDate, setStartDate] = useState("");
+  const [projectStatusType, setProjectStatusType] = useState<ProjectStatusType | undefined>();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -56,11 +58,13 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
     }
     const form = new FormData(event.currentTarget);
     const budgetCategory = String(form.get("budgetCategory")) as BudgetCategory;
+    const selectedProjectStatusType = String(form.get("projectStatusType")) as ProjectStatusType;
     const input: CreateProjectInput = {
       name: String(form.get("name") ?? ""),
       ownerName: String(form.get("ownerName") ?? ""),
       departmentName: String(form.get("departmentName") ?? ""),
       budgetCategory,
+      projectStatusType: selectedProjectStatusType,
       startDate,
       note: String(form.get("note") ?? ""),
     };
@@ -120,16 +124,59 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
             </label>
             <label className="min-w-0 text-sm font-medium text-slate-700">
               ฝ่าย
-              <select aria-label="ฝ่าย" className={fieldClass} name="departmentName" defaultValue="">
+              <select
+                aria-label="ฝ่าย"
+                className={fieldClass}
+                name="departmentName"
+                defaultValue=""
+                onInvalid={(event) => event.currentTarget.setCustomValidity("กรุณาเลือกฝ่าย")}
+                onChange={(event) => event.currentTarget.setCustomValidity("")}
+              >
                 <option value="" disabled>เลือกฝ่าย</option>
                 {DEPARTMENT_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
               </select>
             </label>
             <label className="min-w-0 text-sm font-medium text-slate-700">
+              สถานะโครงการ
+              <select
+                aria-label="สถานะโครงการ"
+                className={fieldClass}
+                name="projectStatusType"
+                required
+                defaultValue=""
+                onInvalid={(event) => event.currentTarget.setCustomValidity("กรุณาเลือกสถานะโครงการ")}
+                onChange={(event) => {
+                  event.currentTarget.setCustomValidity("");
+                  const selectedStatus = event.target.value as ProjectStatusType;
+                  setProjectStatusType(selectedStatus);
+                  if (selectedStatus === "SLA_NON_COMPLIANT") {
+                    void Swal.fire({
+                      title: "แจ้งเตือน",
+                      text: "ผอ.ฝ่ายฯ จะต้องส่งอีเมลหาผอ.ฝ่ายบริหาร เพื่อขอดำเนินการไม่เป็นไปตาม SLA",
+                      icon: "warning",
+                      confirmButtonText: "รับทราบ",
+                      confirmButtonColor: "#4338ca",
+                    });
+                  }
+                }}
+              >
+                <option value="" disabled>เลือกสถานะโครงการ</option>
+                {PROJECT_STATUS_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+              </select>
+            </label>
+            <label className="min-w-0 text-sm font-medium text-slate-700">
               วิธี / วงเงิน
-              <select aria-label="วิธี / วงเงิน" className={fieldClass} name="budgetCategory" required defaultValue="">
+              <select
+                aria-label="วิธี / วงเงิน"
+                className={fieldClass}
+                name="budgetCategory"
+                required
+                defaultValue=""
+                onInvalid={(event) => event.currentTarget.setCustomValidity("กรุณาเลือกวิธี / วงเงิน")}
+                onChange={(event) => event.currentTarget.setCustomValidity("")}
+              >
                 <option value="" disabled>เลือกวิธี / วงเงิน</option>
-                {BUDGET_CATEGORY_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                {budgetCategoryOptionsForProjectStatus(projectStatusType).map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
               </select>
             </label>
             <label className="min-w-0 text-sm font-medium text-slate-700">
@@ -144,7 +191,11 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
                 type="date"
                 required
                 value={startDate}
-                onChange={(event) => setStartDate(event.target.value)}
+                onInvalid={(event) => event.currentTarget.setCustomValidity("กรุณาเลือกวันที่เริ่มต้น")}
+                onChange={(event) => {
+                  event.currentTarget.setCustomValidity("");
+                  setStartDate(event.target.value);
+                }}
               />
               {startDate ? (
                 <span className="mt-2 block text-xs font-normal text-slate-500">

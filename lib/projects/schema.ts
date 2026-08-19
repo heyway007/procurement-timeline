@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { BUDGET_CATEGORIES, budgetCategoryFor, isProcurementMethod } from "./budget-category";
+import { PROJECT_STATUS_TYPES } from "./project-status";
 
 export const isoDateSchema = z
   .string()
@@ -11,6 +12,7 @@ export const createProjectSchema = z.object({
   departmentName: z.string().trim().max(120).optional().default(""),
   budget: z.coerce.number().finite().min(1_000_000, "วงเงินจริงต้องไม่น้อยกว่า 1,000,000 บาท").optional(),
   budgetCategory: z.enum(BUDGET_CATEGORIES),
+  projectStatusType: z.enum(PROJECT_STATUS_TYPES).default("SLA_COMPLIANT"),
   startDate: isoDateSchema,
   note: z.string().trim().max(2000).optional().default(""),
 }).superRefine((value, context) => {

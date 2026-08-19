@@ -3,6 +3,7 @@ import {
   APPROVED_TEMPLATE_STEPS,
   SELECTIVE_METHOD_TEMPLATE_STEPS,
   approvedTemplateStepsForBudgetCategory,
+  approvedTemplateStepsForProjectStatus,
 } from "@/lib/schedule/approved-template";
 
 describe("approved procurement template", () => {
@@ -84,5 +85,13 @@ describe("approved procurement template", () => {
     expect(approvedTemplateStepsForBudgetCategory("SPECIFIC_METHOD_OVER_500K")).toEqual(
       SELECTIVE_METHOD_TEMPLATE_STEPS,
     );
+  });
+
+  it("keeps a separate copied template set for non-SLA projects", () => {
+    const compliant = approvedTemplateStepsForProjectStatus("SLA_COMPLIANT", "TEN_TO_TWENTY_MILLION");
+    const nonCompliant = approvedTemplateStepsForProjectStatus("SLA_NON_COMPLIANT", "TEN_TO_TWENTY_MILLION");
+
+    expect(nonCompliant).toEqual(compliant);
+    expect(nonCompliant).not.toBe(compliant);
   });
 });

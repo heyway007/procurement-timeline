@@ -232,6 +232,7 @@ export class HolidayService {
       ownerName: project.ownerName,
       budget: project.budget,
       budgetCategory: project.budgetCategory,
+      projectStatusType: project.projectStatusType,
       startDate: timeline.milestones[0].scheduledDate,
       note: project.note,
       templateKey: project.templateKey,

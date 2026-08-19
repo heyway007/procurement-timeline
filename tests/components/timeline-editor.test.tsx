@@ -166,6 +166,18 @@ describe("TimelineDetail", () => {
     expect(screen.getByText("จัดซื้อระบบสารสนเทศ")).toBeInTheDocument();
   });
 
+  it("shows the selected non-SLA project status in the detail header", () => {
+    render(
+      <TimelineDetail
+        projectId="project-1"
+        initialProject={{ ...projectFixture(), projectStatusType: "SLA_NON_COMPLIANT" }}
+      />,
+    );
+
+    expect(screen.getByTestId("timeline-summary")).toHaveTextContent("ไม่เป็นไปตาม SLA");
+    expect(screen.getByTestId("print-total-days")).toHaveTextContent("ไม่เป็นไปตาม SLA");
+  });
+
   it("wraps long project metadata in the print header", () => {
     render(
       <TimelineDetail
@@ -492,6 +504,7 @@ describe("TimelineDetail", () => {
   it("marks a shortened manually adjusted timeline as not meeting SLA", () => {
     const shortened = {
       ...projectFixture(),
+      projectStatusType: "SLA_NON_COMPLIANT" as const,
       steps: projectFixture().steps.map((step, index) =>
         index === 0
           ? { ...step, workingDaysToNext: 1, isDateManuallyAdjusted: true }
