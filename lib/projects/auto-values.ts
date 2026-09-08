@@ -14,12 +14,15 @@ export function defaultBudgetForCategory(category: BudgetCategory): number {
   return DEFAULT_BUDGETS[category];
 }
 
-export function generatedProjectName(startDate: string): string {
-  const [year, month, day] = startDate.split("-");
-  const shortId = globalThis.crypto
-    .randomUUID()
-    .replaceAll("-", "")
-    .slice(0, 8)
-    .toUpperCase();
-  return `Timeline-${shortId}-${day}${month}${year}`;
+export function generatedProjectName(projects: readonly { name: string }[]): string {
+  let highestNumber = projects.length;
+  for (const project of projects) {
+    const match = /^Timeline #(\d+)$/.exec(project.name);
+    if (!match) continue;
+    const number = Number(match[1]);
+    if (Number.isSafeInteger(number)) {
+      highestNumber = Math.max(highestNumber, number);
+    }
+  }
+  return `Timeline #${highestNumber + 1}`;
 }

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import type {
   HolidayCalendarReader,
   ProjectMutationResult,
@@ -111,26 +111,37 @@ function makeService(
 describe("ProjectService", () => {
   it("generates project metadata and a compatibility budget when values are omitted", async () => {
     const { service } = makeService();
-    const randomUUID = vi
-      .spyOn(globalThis.crypto, "randomUUID")
-      .mockReturnValue("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+    const result = await service.create({
+      name: "",
+      ownerName: "",
+      budgetCategory: "TEN_TO_TWENTY_MILLION",
+      startDate: "2026-07-06",
+      note: "",
+    });
 
-    try {
-      const result = await service.create({
-        name: "",
-        ownerName: "",
-        budgetCategory: "TEN_TO_TWENTY_MILLION",
-        startDate: "2026-07-06",
-        note: "",
-      } as never);
+    expect(result.project.name).toBe("Timeline #1");
+    expect(result.project.ownerName).toBe("-");
+    expect(result.project.departmentName).toBe("-");
+    expect(result.project.budget).toBe(10_000_001);
+  });
 
-      expect(result.project.name).toBe("Timeline-A1B2C3D4-06072026");
-      expect(result.project.ownerName).toBe("-");
-      expect(result.project.departmentName).toBe("-");
-      expect(result.project.budget).toBe(10_000_001);
-    } finally {
-      randomUUID.mockRestore();
-    }
+  it("numbers unnamed projects after existing projects and the highest Timeline number", async () => {
+    const { service, repository } = makeService();
+    const input = {
+      budgetCategory: "TEN_TO_TWENTY_MILLION" as const,
+      startDate: "2026-07-06",
+      note: "",
+    };
+    await service.create({ ...input, name: "Existing project" });
+    await service.create({ ...input, name: "Timeline-A1B2C3D4-06072026" });
+    expect((await service.create(input)).project.name).toBe("Timeline #3");
+
+    const earlier = (await service.create({ ...input, name: "Timeline #114" })).project;
+    const next = (await service.create({ ...input, name: "   " })).project;
+    expect(next.name).toBe("Timeline #115");
+
+    await repository.remove(earlier.id, earlier.version);
+    expect((await service.create(input)).project.name).toBe("Timeline #116");
   });
 
   it("preserves explicit project metadata and budget values", async () => {

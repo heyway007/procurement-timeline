@@ -62,7 +62,7 @@ export class ProjectService {
     unverifiedCalendarYears: number[];
   }> {
     const parsed = createProjectSchema.parse(input);
-    const name = parsed.name || generatedProjectName(parsed.startDate);
+    const name = parsed.name || generatedProjectName(await this.projects.list({}));
     const ownerName = parsed.ownerName || "-";
     const departmentName = parsed.departmentName || "-";
     const budget = parsed.budget ?? defaultBudgetForCategory(parsed.budgetCategory);
