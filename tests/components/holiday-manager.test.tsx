@@ -113,6 +113,25 @@ describe("HolidayManager", () => {
     expect(screen.getByText(/จัดซื้อระบบ/)).toBeInTheDocument();
   });
 
+  it("shows the global impact count while listing only the returned own projects", async () => {
+    const user = userEvent.setup();
+    const previewMutation = vi.fn().mockResolvedValue({
+      token: "signed-token",
+      affectedProjectCount: 8,
+      affectedProjects: [{ id: "own-project", name: "โครงการของฉัน", version: 1 }],
+    });
+    render(<HolidayManager initialYear={2026} initialHolidays={[]} previewMutation={previewMutation} />);
+    await user.click(screen.getByRole("button", { name: "เพิ่มวันหยุด" }));
+    await user.type(screen.getByLabelText("วันที่หยุด"), "2026-10-16");
+    await user.type(screen.getByLabelText("ชื่อวันหยุด"), "วันหยุดพิเศษ");
+    await user.type(screen.getByLabelText("แหล่งอ้างอิง"), "มติคณะรัฐมนตรี");
+    await user.click(screen.getByRole("button", { name: "ตรวจสอบผลกระทบ" }));
+    expect(screen.getByText("โครงการที่อาจถูกคำนวณใหม่ 8 รายการ")).toBeInTheDocument();
+    expect(screen.getByText("แสดงรายชื่อเฉพาะ Timeline ของคุณ")).toBeInTheDocument();
+    expect(screen.getAllByRole("listitem")).toHaveLength(1);
+    expect(screen.getByRole("listitem")).toHaveTextContent("โครงการของฉัน");
+  });
+
   it("confirms and saves a holiday with SweetAlert confirmation and success", async () => {
     const user = userEvent.setup();
     const previewMutation = vi.fn().mockResolvedValue({

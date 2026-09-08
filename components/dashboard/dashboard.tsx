@@ -18,10 +18,12 @@ import { formatProjectName } from "@/lib/projects/name";
 import { createProject, deleteProject, getProjects } from "@/lib/ui/api-client";
 import { ProjectForm } from "./project-form";
 import { ProjectTable } from "./project-table";
+import { useAuthUser } from "@/components/auth/authenticated-shell";
 
 const PROJECTS_PER_PAGE = 10;
 
 export function Dashboard({ initialProjects }: { initialProjects?: ProjectRecord[] }) {
+  const user = useAuthUser();
   const [projects, setProjects] = useState(initialProjects ?? []);
   const [loading, setLoading] = useState(initialProjects === undefined);
   const [error, setError] = useState("");
@@ -122,7 +124,7 @@ export function Dashboard({ initialProjects }: { initialProjects?: ProjectRecord
         <div className="relative z-10 grid gap-3 sm:flex sm:shrink-0">
           <Link href="/holidays" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-white/80 px-4 font-semibold text-indigo-700 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-50">
             <FontAwesomeIcon icon={faCalendarDays} aria-hidden="true" />
-            จัดการวันหยุด
+            {user?.role === "USER" ? "ปฏิทินวันหยุด" : "จัดการวันหยุด"}
           </Link>
           <button className="tceb-action-button inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-indigo-700 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-800" type="button" onClick={() => setCreating(true)}>
             <FontAwesomeIcon icon={faPlus} aria-hidden="true" />

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type {
   HolidayMutation,
   OfficialHolidayInput,
@@ -237,7 +237,7 @@ describe("HolidayService", () => {
     expect(result.conflicts).toEqual(["2026-01-02"]);
     expect(holidays.holidays[0].name).toBe("วันหยุดหน่วยงาน");
   });
-  it("previews affected projects and confirms a signed holiday change", async () => {
+  it("previews affected projects and confirms an encrypted holiday change", async () => {
     const project = projectFixture();
     const projects = new FakeProjectRepository(project);
     const holidays = new FakeHolidayRepository([project]);
@@ -258,6 +258,55 @@ describe("HolidayService", () => {
     const result = await service.confirmMutation(preview.token);
     expect(result.updatedProjectIds).toEqual(["project-1"]);
     expect(projects.project.steps[1].scheduledDate).toBe("2026-07-13");
+  });
+
+  it("reveals only the viewer's projects while recalculating own, foreign and legacy projects", async () => {
+    const records = [
+      { ...projectFixture(), id: "own-project", ownerUserId: "viewer", departmentName: "own department" },
+      { ...projectFixture(), id: "foreign-project", name: "private foreign name", ownerUserId: "other", departmentName: "foreign department" },
+      { ...projectFixture(), id: "legacy-project", ownerUserId: null, departmentName: "legacy department" },
+    ];
+    const repositories = records.map((project) => new FakeProjectRepository(project));
+    const combined = new FakeProjectRepository(records[0]);
+    combined.findById = async (id) => repositories.find((repo) => repo.project.id === id)?.project ?? null;
+    combined.replace = async (id, version, input) => repositories.find((repo) => repo.project.id === id)!.replace(id, version, input);
+    const service = new HolidayService(new FakeHolidayRepository(records), combined, "test-secret-key");
+    const mutation: HolidayMutation = { operation: "create", holiday: { date: "2026-07-10", name: "Holiday", sourceNote: "Official" } };
+    const preview = await service.previewMutation(mutation, "viewer");
+    expect(preview.affectedProjectCount).toBe(3);
+    expect(preview.affectedProjects).toEqual([{ id: "own-project", name: "จัดซื้อระบบ", version: 1 }]);
+    for (const part of preview.token.split(".")) {
+      const decoded = Buffer.from(part, "base64url").toString("utf8");
+      expect(decoded).not.toContain("foreign-project");
+      expect(decoded).not.toContain("legacy-project");
+      expect(decoded).not.toContain("own-project");
+    }
+    const result = await service.confirmMutation(preview.token);
+    expect(result.updatedProjectIds).toEqual(["own-project", "foreign-project", "legacy-project"]);
+    expect(repositories.map((repo) => repo.project.ownerUserId)).toEqual(["viewer", "other", null]);
+    expect(repositories.map((repo) => repo.project.departmentName)).toEqual(["own department", "foreign department", "legacy department"]);
+    expect(repositories.map((repo) => repo.project.steps[1].scheduledDate)).toEqual(["2026-07-13", "2026-07-13", "2026-07-13"]);
+  });
+
+  it("authenticates ciphertext and rejects expired, malformed and old plaintext tokens", async () => {
+    const project = projectFixture();
+    const holidays = new FakeHolidayRepository([project]);
+    const service = new HolidayService(holidays, new FakeProjectRepository(project), "test-secret-key");
+    const mutation: HolidayMutation = { operation: "create", holiday: { date: "2026-07-10", name: "Holiday", sourceNote: "Official" } };
+    const preview = await service.previewMutation(mutation, "viewer");
+    const second = await service.previewMutation(mutation, "viewer");
+    expect(preview.token).not.toBe(second.token);
+    const parts = preview.token.split(".");
+    const corrupted = [...parts];
+    corrupted[2] = (corrupted[2][0] === "A" ? "B" : "A") + corrupted[2].slice(1);
+    for (const invalid of [corrupted.join("."), `${preview.token}.extra`, "plaintext.signature", "v1.bad.bad.bad", ""]) {
+      await expect(service.confirmMutation(invalid)).rejects.toThrow("INVALID_HOLIDAY_PREVIEW_TOKEN");
+    }
+    const now = Date.now();
+    const clock = vi.spyOn(Date, "now").mockReturnValue(now + 300_000);
+    try { await expect(service.confirmMutation(preview.token)).rejects.toThrow("HOLIDAY_PREVIEW_TOKEN_EXPIRED"); }
+    finally { clock.mockRestore(); }
+    expect(holidays.holidays).toHaveLength(0);
   });
 
   it("rejects a tampered preview token", async () => {

@@ -1,5 +1,7 @@
+import { privateJson } from "@/lib/http/private-response";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
+import { authErrorResponse } from "@/lib/auth/http";
 
 const messages: Record<string, { status: number; message: string }> = {
   INVALID_HOLIDAY_PREVIEW_TOKEN: {
@@ -21,8 +23,10 @@ const messages: Record<string, { status: number; message: string }> = {
 };
 
 export function holidayErrorResponse(error: unknown): NextResponse {
+  const authError = authErrorResponse(error);
+  if (authError) return authError;
   if (error instanceof ZodError) {
-    return NextResponse.json(
+    return privateJson(
       {
         code: "VALIDATION_ERROR",
         message: "ข้อมูลวันหยุดไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง",
@@ -33,7 +37,7 @@ export function holidayErrorResponse(error: unknown): NextResponse {
   }
   const code = error instanceof Error ? error.message : "INTERNAL_ERROR";
   const known = messages[code];
-  return NextResponse.json(
+  return privateJson(
     {
       code: known ? code : "INTERNAL_ERROR",
       message: known?.message ?? "ระบบขัดข้อง กรุณาลองใหม่อีกครั้ง",

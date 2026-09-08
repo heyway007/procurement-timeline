@@ -1,3 +1,4 @@
+import { privateJson } from "@/lib/http/private-response";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { getProjectService } from "@/lib/projects/container";
@@ -12,9 +13,9 @@ export async function POST(
   try {
     const { id } = await context.params;
     const body = (await request.json()) as { version: number };
-    const service = await getProjectService();
+    const service = await getProjectService(request);
     const project = await service.resetSchedule(id, body.version);
-    return NextResponse.json({ project });
+    return privateJson({ project });
   } catch (error: unknown) {
     return projectErrorResponse(error);
   }

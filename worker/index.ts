@@ -60,7 +60,7 @@ const worker = {
       );
     }
 
-    if (env.STORAGE_MODE === "google_drive" || !url.pathname.startsWith("/api/")) {
+    if (!url.pathname.startsWith("/api/")) {
       return handler.fetch(request, env, ctx);
     }
 

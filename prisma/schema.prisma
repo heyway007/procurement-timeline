@@ -77,6 +77,8 @@ model Project {
   id                           String         @id @default(uuid()) @db.Uuid
   name                         String
   ownerName                    String
+  ownerUserId                  String?        @db.Uuid
+  ownerUser                    User?          @relation(fields: [ownerUserId], references: [id], onDelete: Restrict)
   departmentName               String         @default("")
   budget                       Decimal        @db.Decimal(15, 2)
   budgetCategory               BudgetCategory
@@ -96,8 +98,52 @@ model Project {
 
   @@index([name])
   @@index([ownerName])
+  @@index([ownerUserId])
   @@index([departmentName])
   @@index([startDate, processEndDate])
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model User {
+  id             String    @id @default(uuid()) @db.Uuid
+  provider       String
+  externalUserId String
+  email          String
+  displayName    String
+  role           UserRole  @default(USER)
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  sessions       Session[]
+  projects       Project[]
+
+  @@unique([provider, externalUserId])
+  @@index([email])
+}
+
+model Session {
+  id        String    @id @default(uuid()) @db.Uuid
+  tokenHash String    @unique
+  userId    String    @db.Uuid
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model AuthLoginAttempt {
+  emailHash       String   @id
+  windowStartedAt DateTime
+  attemptCount    Int
+
+  @@index([windowStartedAt])
 }
 
 model ProjectStep {

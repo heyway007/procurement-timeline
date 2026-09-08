@@ -1,3 +1,4 @@
+import { privateJson } from "@/lib/http/private-response";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { getProjectService } from "@/lib/projects/container";
@@ -16,14 +17,14 @@ export async function PATCH(
       version: number;
       confirmShortening?: boolean;
     };
-    const service = await getProjectService();
+    const service = await getProjectService(request);
     const project = await service.adjustEnd(
       id,
       body.newDate,
       body.version,
       body.confirmShortening ?? false,
     );
-    return NextResponse.json({ project });
+    return privateJson({ project });
   } catch (error: unknown) {
     return projectErrorResponse(error);
   }

@@ -9,6 +9,7 @@ export type ProjectRecord = {
   id: string;
   name: string;
   ownerName: string;
+  ownerUserId?: string | null;
   departmentName?: string;
   budget: number;
   budgetCategory: BudgetCategory;

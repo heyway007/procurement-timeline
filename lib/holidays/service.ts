@@ -1,4 +1,5 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
+import { z } from "zod";
 import type { ProjectRepository } from "@/lib/projects/repository";
 import type { ProjectRecord, ProjectReplacement } from "@/lib/projects/types";
 import { recalculateWithManualAnchors } from "@/lib/schedule/engine";
@@ -12,11 +13,13 @@ import { holidayMutationSchema } from "./schema";
 import type { HolidaySource } from "./official-source";
 import type { HolidayRecord, HolidaySyncStatus } from "./repository";
 
-type PreviewPayload = {
-  mutation: HolidayMutation;
-  projects: Array<{ id: string; version: number }>;
-  expiresAt: number;
-};
+const previewPayloadSchema = z.object({
+  mutation: holidayMutationSchema,
+  projects: z.array(z.object({ id: z.string().min(1), version: z.number().int().positive() })),
+  expiresAt: z.number().int().positive(),
+});
+type PreviewPayload = z.infer<typeof previewPayloadSchema>;
+const PREVIEW_AAD = Buffer.from("timeline-holiday-preview:v1");
 
 export type HolidayConfirmResult = {
   updatedProjectIds: string[];
@@ -86,8 +89,9 @@ export class HolidayService {
     return this.holidays.listYear(year);
   }
 
-  async previewMutation(mutation: HolidayMutation): Promise<{
+  async previewMutation(mutation: HolidayMutation, viewerUserId?: string): Promise<{
     token: string;
+    affectedProjectCount: number;
     affectedProjects: Array<{ id: string; name: string; version: number }>;
   }> {
     mutation = holidayMutationSchema.parse(mutation);
@@ -103,8 +107,9 @@ export class HolidayService {
       expiresAt: Date.now() + 5 * 60 * 1000,
     };
     return {
-      token: this.sign(payload),
-      affectedProjects: projects.map((project) => ({
+      token: this.encrypt(payload),
+      affectedProjectCount: projects.length,
+      affectedProjects: projects.filter((project) => viewerUserId === undefined || project.ownerUserId === viewerUserId).map((project) => ({
         id: project.id,
         name: project.name,
         version: project.version,
@@ -171,35 +176,29 @@ export class HolidayService {
     return [...new Set([mutation.previousDate, mutation.holiday.date])];
   }
 
-  private sign(payload: PreviewPayload): string {
-    const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
-    const signature = createHmac("sha256", this.previewSecret)
-      .update(body)
-      .digest("base64url");
-    return `${body}.${signature}`;
+  private encrypt(payload: PreviewPayload): string {
+    const iv = randomBytes(12);
+    const key = createHash("sha256").update(this.previewSecret).digest();
+    const cipher = createCipheriv("aes-256-gcm", key, iv);
+    cipher.setAAD(PREVIEW_AAD);
+    const ciphertext = Buffer.concat([cipher.update(JSON.stringify(payload), "utf8"), cipher.final()]);
+    return ["v1", iv.toString("base64url"), ciphertext.toString("base64url"), cipher.getAuthTag().toString("base64url")].join(".");
   }
 
   private verify(token: string): PreviewPayload {
-    const [body, suppliedSignature] = token.split(".");
-    if (!body || !suppliedSignature) {
-      throw new Error("INVALID_HOLIDAY_PREVIEW_TOKEN");
-    }
-    const expectedSignature = createHmac("sha256", this.previewSecret)
-      .update(body)
-      .digest("base64url");
-    const supplied = Buffer.from(suppliedSignature);
-    const expected = Buffer.from(expectedSignature);
-    if (
-      supplied.length !== expected.length ||
-      !timingSafeEqual(supplied, expected)
-    ) {
-      throw new Error("INVALID_HOLIDAY_PREVIEW_TOKEN");
-    }
     try {
-      const payload = JSON.parse(
-        Buffer.from(body, "base64url").toString("utf8"),
-      ) as PreviewPayload;
-      if (payload.expiresAt < Date.now()) {
+      if (typeof token !== "string") throw new Error();
+      const parts = token.split(".");
+      if (parts.length !== 4 || parts[0] !== "v1" || parts.slice(1).some((part) => !/^[A-Za-z0-9_-]+$/.test(part))) throw new Error();
+      const [iv, ciphertext, tag] = parts.slice(1).map((part) => Buffer.from(part, "base64url"));
+      if (iv.length !== 12 || tag.length !== 16 || parts.slice(1).some((part, index) => [iv, ciphertext, tag][index].toString("base64url") !== part)) throw new Error();
+      const key = createHash("sha256").update(this.previewSecret).digest();
+      const decipher = createDecipheriv("aes-256-gcm", key, iv);
+      decipher.setAAD(PREVIEW_AAD);
+      decipher.setAuthTag(tag);
+      const plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+      const payload = previewPayloadSchema.parse(JSON.parse(plaintext.toString("utf8")));
+      if (payload.expiresAt <= Date.now()) {
         throw new Error("HOLIDAY_PREVIEW_TOKEN_EXPIRED");
       }
       return payload;
@@ -229,7 +228,9 @@ export class HolidayService {
   ): ProjectReplacement {
     return {
       name: project.name,
+      ownerUserId: project.ownerUserId,
       ownerName: project.ownerName,
+      departmentName: project.departmentName,
       budget: project.budget,
       budgetCategory: project.budgetCategory,
       projectStatusType: project.projectStatusType,

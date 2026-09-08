@@ -34,6 +34,7 @@ function mapProject(project: DatabaseProject): ProjectRecord {
     id: project.id,
     name: project.name,
     ownerName: project.ownerName,
+    ownerUserId: project.ownerUserId,
     departmentName: project.departmentName,
     budget: project.budget.toNumber(),
     budgetCategory: project.budgetCategory,
@@ -63,6 +64,7 @@ function projectData(input: NewProjectRecord | ProjectReplacement) {
   return {
     name: input.name,
     ownerName: input.ownerName,
+    ownerUserId: input.ownerUserId,
     departmentName: input.departmentName ?? "",
     budget: input.budget,
     budgetCategory: input.budgetCategory,
@@ -79,9 +81,11 @@ function projectData(input: NewProjectRecord | ProjectReplacement) {
 export class PrismaProjectRepository
   implements ProjectRepository, HolidayCalendarReader
 {
+  constructor(private readonly ownerUserId?: string) {}
+
   async list(filter: ListProjectsFilter): Promise<ProjectRecord[]> {
     const prisma = getPrisma();
-    const where: Prisma.ProjectWhereInput = {};
+    const where: Prisma.ProjectWhereInput = { ownerUserId: this.ownerUserId };
     if (filter.query) {
       where.OR = [
         { name: { contains: filter.query, mode: "insensitive" } },
@@ -105,7 +109,7 @@ export class PrismaProjectRepository
 
   async findById(id: string): Promise<ProjectRecord | null> {
     const project = await getPrisma().project.findUnique({
-      where: { id },
+      where: { id, ownerUserId: this.ownerUserId },
       include: includeProject,
     });
     return project ? mapProject(project) : null;
@@ -144,11 +148,11 @@ export class PrismaProjectRepository
   ): Promise<ProjectMutationResult> {
     return getPrisma().$transaction(async (transaction) => {
       const updated = await transaction.project.updateMany({
-        where: { id, version: expectedVersion },
+        where: { id, version: expectedVersion, ownerUserId: this.ownerUserId },
         data: { ...projectData(input), version: { increment: 1 } },
       });
       if (updated.count === 0) {
-        const exists = await transaction.project.count({ where: { id } });
+        const exists = await transaction.project.count({ where: { id, ownerUserId: this.ownerUserId } });
         return exists ? { kind: "conflict" } : { kind: "not_found" };
       }
       await transaction.projectStep.deleteMany({ where: { projectId: id } });
@@ -177,12 +181,12 @@ export class PrismaProjectRepository
   ): Promise<ProjectMutationResult> {
     return getPrisma().$transaction(async (transaction) => {
       const project = await transaction.project.findUnique({
-        where: { id },
+        where: { id, ownerUserId: this.ownerUserId },
         include: includeProject,
       });
       if (!project) return { kind: "not_found" };
       if (project.version !== expectedVersion) return { kind: "conflict" };
-      await transaction.project.delete({ where: { id } });
+      await transaction.project.delete({ where: { id, version: expectedVersion, ownerUserId: this.ownerUserId } });
       return { kind: "ok", project: mapProject(project) };
     });
   }

@@ -36,6 +36,7 @@ import {
   ApiError,
   deleteProject,
   getProject,
+  handleSessionResponse,
   resetProjectSchedule,
   updateBidSubmissionTime,
 } from "@/lib/ui/api-client";
@@ -273,7 +274,11 @@ export function TimelineDetail({
     Promise.all(
       collectTimelineYears(project).map((year) =>
         fetch(`/api/holidays?year=${year}`)
-          .then((response) => response.json() as Promise<{ holidays?: { date: string }[] }>)
+          .then((response) => {
+            handleSessionResponse(response);
+            if (!response.ok) throw new Error("Cannot load holidays");
+            return response.json() as Promise<{ holidays?: { date: string }[] }>;
+          })
           .then((data) => data.holidays?.map((holiday) => holiday.date) ?? []),
       ),
     )

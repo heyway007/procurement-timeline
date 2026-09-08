@@ -5,6 +5,14 @@ import type {
 } from "@/lib/projects/types";
 import type { BidSubmissionTimeSlot } from "@/lib/schedule/milestone-kind";
 
+export const SESSION_EXPIRED_EVENT = "timeline:session-expired";
+
+export function handleSessionResponse(response: Response): void {
+  if (response.status === 401 && typeof window !== "undefined") {
+    window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+  }
+}
+
 export class ApiError extends Error {
   constructor(
     public readonly code: string,
@@ -23,6 +31,7 @@ async function requestJson<T>(
     ...init,
     headers: { "Content-Type": "application/json", ...init?.headers },
   });
+  handleSessionResponse(response);
   const body = await parseJsonBody<T & { code?: string; message?: string }>(
     response,
   );
@@ -137,6 +146,7 @@ export async function deleteProject(id: string, version: number): Promise<void> 
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ version }),
   });
+  handleSessionResponse(response);
   if (!response.ok) {
     const body = await parseJsonBody<{ code?: string; message?: string }>(
       response,

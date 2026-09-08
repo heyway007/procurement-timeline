@@ -1,3 +1,4 @@
+import { privateJson } from "@/lib/http/private-response";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { getProjectService } from "@/lib/projects/container";
@@ -17,7 +18,7 @@ export async function PATCH(
       confirmShortening?: boolean;
       confirmOverwrite?: boolean;
     };
-    const service = await getProjectService();
+    const service = await getProjectService(request);
     const project = await service.adjustStep(id, {
       order: Number(order),
       newDate: body.newDate,
@@ -25,7 +26,7 @@ export async function PATCH(
       confirmShortening: body.confirmShortening ?? false,
       confirmOverwrite: body.confirmOverwrite ?? false,
     });
-    return NextResponse.json({ project });
+    return privateJson({ project });
   } catch (error: unknown) {
     return projectErrorResponse(error);
   }

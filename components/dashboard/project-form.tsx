@@ -6,6 +6,7 @@ import { faFileCirclePlus, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 import type { CreateProjectInput } from "@/lib/projects/types";
+import { useAuthUser } from "@/components/auth/authenticated-shell";
 import { ApiError } from "@/lib/ui/api-client";
 import { formatThaiDate, isWeekendIso } from "@/lib/ui/date-format";
 import { budgetCategoryOptionsForProjectStatus, type BudgetCategory } from "@/lib/projects/budget-category";
@@ -43,6 +44,7 @@ const DEPARTMENT_OPTIONS = [
 ];
 
 export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
+  const user = useAuthUser();
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
@@ -61,7 +63,7 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
     const selectedProjectStatusType = String(form.get("projectStatusType")) as ProjectStatusType;
     const input: CreateProjectInput = {
       name: String(form.get("name") ?? ""),
-      ownerName: String(form.get("ownerName") ?? ""),
+      ownerName: user?.displayName ?? String(form.get("ownerName") ?? ""),
       departmentName: String(form.get("departmentName") ?? ""),
       budgetCategory,
       projectStatusType: selectedProjectStatusType,
@@ -181,7 +183,7 @@ export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
             </label>
             <label className="min-w-0 text-sm font-medium text-slate-700">
               ผู้จัดทำ Timeline
-              <input className={fieldClass} name="ownerName" maxLength={120} />
+              <input className={fieldClass} name="ownerName" maxLength={120} value={user?.displayName} readOnly={Boolean(user)} />
             </label>
             <label className="min-w-0 text-sm font-medium text-slate-700 sm:col-span-2">
               วันที่เริ่มต้น

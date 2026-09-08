@@ -182,6 +182,7 @@ export class ProjectService {
       : this.toTimeline(project);
     const replacement: ProjectReplacement = {
       name: parsed.name || project.name,
+      ownerUserId: project.ownerUserId,
       ownerName: parsed.ownerName || project.ownerName,
       departmentName: parsed.departmentName || project.departmentName || "-",
       budget: parsed.budget ?? project.budget,
@@ -283,6 +284,7 @@ export class ProjectService {
   ): Promise<ProjectRecord> {
     const replacement: ProjectReplacement = {
       name: project.name,
+      ownerUserId: project.ownerUserId,
       ownerName: project.ownerName,
       departmentName: project.departmentName ?? "",
       budget: project.budget,
