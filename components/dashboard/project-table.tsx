@@ -14,6 +14,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import type { ProjectRecord } from "@/lib/projects/types";
+import { formatProjectName } from "@/lib/projects/name";
 import { formatThaiDate } from "@/lib/ui/date-format";
 import { budgetCategoryDisplayParts, budgetCategoryLabel } from "@/lib/projects/budget-category";
 
@@ -42,7 +43,7 @@ export function ProjectTable({ projects, onDelete }: ProjectTableProps) {
                 <FontAwesomeIcon icon={faFileLines} />
               </span>
               <div className="min-w-0">
-                <p className="break-words font-semibold text-slate-950">{project.name}</p>
+                <p className="break-words font-semibold text-slate-950">{formatProjectName(project.name)}</p>
                 <p className="mt-1 text-sm text-slate-500">{project.ownerName}</p>
                 {project.departmentName ? <p className="mt-1 break-words text-xs text-slate-500">{project.departmentName}</p> : null}
               </div>
@@ -77,7 +78,7 @@ export function ProjectTable({ projects, onDelete }: ProjectTableProps) {
                 <FontAwesomeIcon icon={faArrowUpRightFromSquare} aria-hidden="true" />
                 เปิด Timeline
               </Link>
-              <button type="button" onClick={() => onDelete(project)} aria-label={`ลบ Timeline ${project.name}`} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-rose-200 text-rose-700 hover:bg-rose-50">
+              <button type="button" onClick={() => onDelete(project)} aria-label={`ลบ Timeline ${formatProjectName(project.name)}`} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-rose-200 text-rose-700 hover:bg-rose-50">
                 <FontAwesomeIcon icon={faTrashCan} aria-hidden="true" />
               </button>
             </div>
@@ -111,7 +112,7 @@ export function ProjectTable({ projects, onDelete }: ProjectTableProps) {
                       <FontAwesomeIcon icon={faFileLines} />
                     </span>
                     <div className="min-w-0">
-                      <p className="font-semibold text-slate-950">{project.name}</p>
+                      <p className="font-semibold text-slate-950">{formatProjectName(project.name)}</p>
                       <p className="mt-1 text-sm text-slate-500">{project.ownerName}</p>
                       {project.departmentName ? <p className="mt-1 text-xs text-slate-500">{project.departmentName}</p> : null}
                     </div>
@@ -126,7 +127,7 @@ export function ProjectTable({ projects, onDelete }: ProjectTableProps) {
                       <FontAwesomeIcon icon={faArrowUpRightFromSquare} aria-hidden="true" />
                       เปิด Timeline
                     </Link>
-                    <button type="button" onClick={() => onDelete(project)} aria-label={`ลบ Timeline ${project.name}`} className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg border border-rose-200 text-rose-700 hover:bg-rose-50">
+                    <button type="button" onClick={() => onDelete(project)} aria-label={`ลบ Timeline ${formatProjectName(project.name)}`} className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg border border-rose-200 text-rose-700 hover:bg-rose-50">
                       <FontAwesomeIcon icon={faTrashCan} aria-hidden="true" />
                     </button>
                   </div>

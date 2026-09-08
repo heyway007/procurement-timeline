@@ -14,6 +14,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Swal from "sweetalert2";
 import type { CreateProjectInput, ProjectRecord } from "@/lib/projects/types";
+import { formatProjectName } from "@/lib/projects/name";
 import { createProject, deleteProject, getProjects } from "@/lib/ui/api-client";
 import { ProjectForm } from "./project-form";
 import { ProjectTable } from "./project-table";
@@ -44,6 +45,7 @@ export function Dashboard({ initialProjects }: { initialProjects?: ProjectRecord
       const matchesQuery =
         !normalized ||
         project.name.toLocaleLowerCase("th").includes(normalized) ||
+        formatProjectName(project.name).toLocaleLowerCase("th").includes(normalized) ||
         project.ownerName.toLocaleLowerCase("th").includes(normalized) ||
         (project.departmentName ?? "").toLocaleLowerCase("th").includes(normalized);
       const overlapsFrom = !from || project.processEndDate >= from;
@@ -77,7 +79,7 @@ export function Dashboard({ initialProjects }: { initialProjects?: ProjectRecord
   async function handleDelete(project: ProjectRecord) {
     const confirmation = await Swal.fire({
       title: "ลบ Timeline นี้?",
-      text: `ต้องการลบ ${project.name} ใช่หรือไม่`,
+      text: `ต้องการลบ ${formatProjectName(project.name)} ใช่หรือไม่`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "ลบ Timeline",

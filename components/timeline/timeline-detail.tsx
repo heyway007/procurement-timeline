@@ -29,6 +29,7 @@ import {
 import { useEffect, useState, type CSSProperties } from "react";
 import Swal from "sweetalert2";
 import type { ProjectRecord } from "@/lib/projects/types";
+import { formatProjectName } from "@/lib/projects/name";
 import { budgetCategoryLabel } from "@/lib/projects/budget-category";
 import {
   adjustProjectStep,
@@ -562,7 +563,7 @@ export function TimelineDetail({
       <header data-testid="print-header" className="timeline-summary-header print-header rounded-2xl border border-slate-200 p-4 text-slate-950 shadow-sm sm:rounded-3xl sm:p-7">
         <div className="flex min-w-0 items-center gap-4">
           <div className="min-w-0">
-            <h1 className="mt-1 min-w-0 break-words text-center text-xl font-semibold max-[639px]:text-lg sm:text-left sm:text-2xl">{project.name}</h1>
+            <h1 className="mt-1 min-w-0 break-words text-center text-xl font-semibold max-[639px]:text-lg sm:text-left sm:text-2xl">{formatProjectName(project.name)}</h1>
           </div>
         </div>
         <div data-testid="timeline-summary" className="timeline-summary print-hidden mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-[auto_auto_auto_auto] lg:items-stretch lg:justify-between">

@@ -119,7 +119,7 @@ describe("ProjectService", () => {
       note: "",
     });
 
-    expect(result.project.name).toBe("Timeline #1");
+    expect(result.project.name).toBe("Timeline #001");
     expect(result.project.ownerName).toBe("-");
     expect(result.project.departmentName).toBe("-");
     expect(result.project.budget).toBe(10_000_001);
@@ -134,7 +134,10 @@ describe("ProjectService", () => {
     };
     await service.create({ ...input, name: "Existing project" });
     await service.create({ ...input, name: "Timeline-A1B2C3D4-06072026" });
-    expect((await service.create(input)).project.name).toBe("Timeline #3");
+    expect((await service.create(input)).project.name).toBe("Timeline #003");
+
+    await service.create({ ...input, name: "Timeline #013" });
+    expect((await service.create(input)).project.name).toBe("Timeline #014");
 
     const earlier = (await service.create({ ...input, name: "Timeline #114" })).project;
     const next = (await service.create({ ...input, name: "   " })).project;
@@ -142,6 +145,9 @@ describe("ProjectService", () => {
 
     await repository.remove(earlier.id, earlier.version);
     expect((await service.create(input)).project.name).toBe("Timeline #116");
+
+    await service.create({ ...input, name: "Timeline #999" });
+    expect((await service.create(input)).project.name).toBe("Timeline #1000");
   });
 
   it("preserves explicit project metadata and budget values", async () => {

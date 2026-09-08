@@ -44,6 +44,15 @@ const projects: ProjectRecord[] = [
 ];
 
 describe("Dashboard", () => {
+  it("displays and searches existing Timeline names with three digits", async () => {
+    const user = userEvent.setup();
+    render(<Dashboard initialProjects={[{ ...projects[0], name: "Timeline #14" }]} />);
+
+    expect(screen.getAllByText("Timeline #014")).toHaveLength(2);
+    await user.type(screen.getByRole("searchbox"), "#014");
+    expect(screen.getAllByText("Timeline #014")).toHaveLength(2);
+  });
+
   it("shows ten projects per page and navigates to the next page", async () => {
     const user = userEvent.setup();
     const pagedProjects = Array.from({ length: 12 }, (_, index) => ({

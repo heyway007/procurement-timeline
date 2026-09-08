@@ -94,6 +94,12 @@ function smallBudgetProjectWithPresentDate(
 }
 
 describe("TimelineDetail", () => {
+  it("pads an existing Timeline number in the detail and print heading", () => {
+    const project = { ...projectFixture(), name: "Timeline #14" };
+    render(<TimelineDetail projectId={project.id} initialProject={project} />);
+    expect(screen.getByRole("heading", { name: "Timeline #014", level: 1 })).toBeInTheDocument();
+  });
+
   beforeEach(() => {
     swalFire.mockReset();
     swalFire.mockResolvedValue({ isConfirmed: true } as never);

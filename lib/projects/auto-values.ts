@@ -1,4 +1,5 @@
 import type { BudgetCategory } from "./budget-category";
+import { formatProjectName } from "./name";
 
 const DEFAULT_BUDGETS: Record<BudgetCategory, number> = {
   ONE_TO_FIVE_MILLION: 1_000_000,
@@ -24,5 +25,5 @@ export function generatedProjectName(projects: readonly { name: string }[]): str
       highestNumber = Math.max(highestNumber, number);
     }
   }
-  return `Timeline #${highestNumber + 1}`;
+  return formatProjectName(`Timeline #${highestNumber + 1}`);
 }
