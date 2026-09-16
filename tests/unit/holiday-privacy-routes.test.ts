@@ -10,11 +10,11 @@ const request = (body: unknown) => new NextRequest("https://timeline.example/api
 
 describe("holiday project privacy at HTTP boundary", () => {
   beforeEach(() => vi.resetAllMocks());
-  it("passes authenticated identity as viewer instead of a client supplied owner", async () => {
-    state.preview.mockImplementation(async (_mutation, viewer) => ({ affectedProjectCount: 2, affectedProjects: viewer === "signed-in-admin" ? [{ id: "own" }] : [{ id: "foreign" }], token: "encrypted" }));
+  it("shows all affected projects without accepting a client supplied owner filter", async () => {
+    state.preview.mockImplementation(async (_mutation, viewer) => ({ affectedProjectCount: 2, affectedProjects: viewer === undefined ? [{ id: "own" }, { id: "foreign" }] : [], token: "encrypted" }));
     const response = await preview(request({ operation: "delete", id: "holiday", date: "2026-07-10", viewerUserId: "other" }));
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ affectedProjectCount: 2, affectedProjects: [{ id: "own" }], token: "encrypted" });
+    expect(await response.json()).toEqual({ affectedProjectCount: 2, affectedProjects: [{ id: "own" }, { id: "foreign" }], token: "encrypted" });
     expect(response.headers.get("Cache-Control")).toContain("no-store");
   });
   it("returns aggregate confirmation counts without project IDs", async () => {

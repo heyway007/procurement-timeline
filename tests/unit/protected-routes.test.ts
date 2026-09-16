@@ -30,19 +30,7 @@ const cases: Array<[string, string, Handler]> = [
   ["verify year", "PUT", year.PUT],
 ];
 
-describe("private API routes", () => {
-  it.each(cases)("requires a session for %s", async (_label, method, handler) => {
-    const request = new NextRequest("https://timeline.example/api/projects?year=2026", {
-      method,
-      headers: { Origin: "https://timeline.example", "Content-Type": "application/json" },
-      ...(method === "GET" ? {} : { body: JSON.stringify({ version: 1, year: 2026, sourceNote: "test", token: "test" }) }),
-    });
-    const response = await handler(request, context);
-    expect(response.status).toBe(401);
-    expect(response.headers.get("Cache-Control")).toContain("no-store");
-    expect(await response.json()).not.toHaveProperty("projects");
-  });
-
+describe("shared API origin protection", () => {
   it.each(cases.filter(([, method]) => method !== "GET"))("rejects cross-origin %s before any mutation", async (_label, method, handler) => {
     const response = await handler(new NextRequest("https://timeline.example/api/projects", {
       method, headers: { Origin: "https://other.example", "Content-Type": "application/json" }, body: "{}",

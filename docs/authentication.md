@@ -1,4 +1,8 @@
-# Authentication setup
+# Authentication setup (paused)
+
+As of 2026-09-16, Timeline is shared without login. All visitors can read and manage all projects, including unassigned legacy projects; entered owner names are editable labels. The login page redirects to the dashboard and the login API returns 410 without creating sessions. Existing User/Session tables and ownership fields are preserved for possible future use, but do not restrict access. Holiday management is also available without login; same-origin checks remain on mutations. The configuration below documents the retained authentication foundation, not the currently active access policy. Changing AUTH_PROVIDER alone will not restore access restrictions.
+
+Deployment verification on 2026-09-16: Worker `timeline`, version `97b4dc7e-8295-42c3-b52a-a40b4b466f35`, serves the public page, redirects `/login` home, and disables login issuance. The suite passed 226 tests (two opt-in database tests skipped), with typecheck, focused lint, and build passing. Live project verification is blocked by the existing database connection returning `tenant/user ... not found`; the project and holiday APIs return 500. No database changes were made for this release. Check the existing Supabase project's status and its current connection details before claiming live data availability.
 
 Timeline delegates password authentication to the configured identity provider and keeps its own PostgreSQL users and sessions. Authentication tables require `DATABASE_URL` even when projects use Google Drive storage. Apply the Prisma migration before enabling authentication. No accounts are automatically assigned existing projects.
 

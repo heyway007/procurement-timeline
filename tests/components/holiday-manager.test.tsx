@@ -127,7 +127,7 @@ describe("HolidayManager", () => {
     await user.type(screen.getByLabelText("แหล่งอ้างอิง"), "มติคณะรัฐมนตรี");
     await user.click(screen.getByRole("button", { name: "ตรวจสอบผลกระทบ" }));
     expect(screen.getByText("โครงการที่อาจถูกคำนวณใหม่ 8 รายการ")).toBeInTheDocument();
-    expect(screen.getByText("แสดงรายชื่อเฉพาะ Timeline ของคุณ")).toBeInTheDocument();
+    expect(screen.getByText("แสดงรายชื่อ Timeline ที่ได้รับผลกระทบ")).toBeInTheDocument();
     expect(screen.getAllByRole("listitem")).toHaveLength(1);
     expect(screen.getByRole("listitem")).toHaveTextContent("โครงการของฉัน");
   });

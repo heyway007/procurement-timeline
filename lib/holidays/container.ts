@@ -4,15 +4,12 @@ import { GoogleDriveProjectRepository } from "@/lib/google-drive/project-reposit
 import { storageModeFromEnv } from "@/lib/storage/config";
 import { HolidayService } from "./service";
 import { SocHolidaySource } from "./official-source";
-import { requireAdmin, requireUser } from "@/lib/auth/server";
 import { assertSameOrigin } from "@/lib/auth/http";
 
 let service: Promise<HolidayService> | undefined;
 
-export async function getHolidayService(request?: Request, readOnly = false): Promise<HolidayService> {
+export async function getHolidayService(request?: Request): Promise<HolidayService> {
   if (request && !["GET", "HEAD"].includes(request.method)) assertSameOrigin(request);
-  if (readOnly) await requireUser();
-  else await requireAdmin();
   if (!service) {
     service = createHolidayService();
   }

@@ -13,40 +13,12 @@ const request = (body: unknown, origin = "https://timeline.example") => new Requ
 
 describe("authentication HTTP routes", () => {
   beforeEach(() => { vi.resetAllMocks(); });
-  it("issues an HttpOnly cookie and exposes only the user, never the token", async () => {
-    state.login.mockResolvedValue({ user, token: state.token, expiresAt: new Date() });
-    const response = await login(request({ email: user.email, password: "password" }));
-    expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ user });
-    expect(response.headers.get("set-cookie")).toContain("HttpOnly");
-    expect(response.headers.get("set-cookie")).toContain("SameSite=lax");
+  it("disables login without issuing a session or contacting the provider", async () => {
+    const response = await login();
+    expect(response.status).toBe(410);
+    expect(await response.json()).toEqual({ error: "LOGIN_DISABLED" });
+    expect(response.headers.get("set-cookie")).toBeNull();
     expect(response.headers.get("Cache-Control")).toContain("no-store");
-  });
-  it("rejects foreign origins, malformed bodies, and oversized credentials", async () => {
-    expect((await login(request({ email: user.email, password: "password" }, "https://evil.example"))).status).toBe(403);
-    expect((await login(request({ email: user.email }))).status).toBe(401);
-    expect((await login(request({ email: user.email, password: "x".repeat(4096) }))).status).toBe(401);
-    expect(state.login).not.toHaveBeenCalled();
-  });
-  it("does not echo database or provider error details", async () => {
-    state.login.mockRejectedValue(new Error("database password=secret"));
-    const response = await login(request({ email: user.email, password: "password" }));
-    expect(response.status).toBe(503);
-    expect(await response.json()).toEqual({ error: "AUTH_UNAVAILABLE" });
-    expect(response.headers.get("Cache-Control")).toContain("no-store");
-  });
-  it("stops reading an oversized request body before buffering the rest", async () => {
-    let cancelled = false;
-    let reads = 0;
-    const body = new ReadableStream<Uint8Array>({
-      pull(controller) { reads++; if (reads <= 3) controller.enqueue(new TextEncoder().encode("x".repeat(5000))); else controller.close(); },
-      cancel() { cancelled = true; },
-    });
-    const input = new Request("https://timeline.example/api/auth/login", {
-      method: "POST", headers: { "Content-Type": "application/json", origin: "https://timeline.example" }, body, duplex: "half",
-    } as RequestInit);
-    expect((await login(input)).status).toBe(401);
-    expect(cancelled).toBe(true);
     expect(state.login).not.toHaveBeenCalled();
   });
   it("returns noncacheable session state and a 401 after session loss", async () => {

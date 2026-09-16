@@ -16,7 +16,7 @@ describe("application shell", () => {
     expect(body.props.className).toBe("tceb-full-container tceb-full-container--soft");
   });
 
-  it("renders the Thai product title and create action after checking the session", async () => {
+  it("renders the Thai product title and create action without a login or session check", async () => {
     const requests: string[] = [];
     vi.stubGlobal("fetch", vi.fn().mockImplementation(async (url: string) => {
       requests.push(url);
@@ -30,7 +30,8 @@ describe("application shell", () => {
     expect(
       await screen.findByRole("heading", { name: "แผนงานจัดซื้อจัดจ้าง" }),
     ).toBeInTheDocument();
-    expect(requests).toEqual(["/api/auth/me", "/api/projects?"]);
+    expect(requests).toEqual(["/api/projects?"]);
+    expect(screen.queryByRole("button", { name: "ออกจากระบบ" })).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "สร้าง Timeline" }),
     ).toBeInTheDocument();
