@@ -5,7 +5,7 @@ import "sweetalert2/dist/sweetalert2.min.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "แผนงานจัดซื้อจัดจ้าง",
+  title: "ประมาณการกรอบระยะเวลาในการจัดซื้อจัดจ้าง",
   description: "ระบบวางแผน Timeline งานจัดซื้อจัดจ้างตามวันทำการราชการไทย",
   robots: {
     index: false,

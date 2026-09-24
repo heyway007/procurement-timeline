@@ -28,7 +28,7 @@ describe("application shell", () => {
     render(<HomePage />);
 
     expect(
-      await screen.findByRole("heading", { name: "แผนงานจัดซื้อจัดจ้าง" }),
+      await screen.findByRole("heading", { name: "ประมาณการกรอบระยะเวลาในการจัดซื้อจัดจ้าง" }),
     ).toBeInTheDocument();
     expect(requests).toEqual(["/api/projects?"]);
     expect(screen.queryByRole("button", { name: "ออกจากระบบ" })).not.toBeInTheDocument();

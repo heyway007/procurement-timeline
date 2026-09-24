@@ -81,7 +81,7 @@ describe("Dashboard", () => {
     const logo = screen.getByRole("img", { name: "TCEB" });
     expect(logo.getAttribute("src")).toContain("logo-tceb.webp");
     expect(logo.parentElement).toHaveClass("flex", "items-center");
-    expect(logo.parentElement).toContainElement(screen.getByRole("heading", { name: "แผนงานจัดซื้อจัดจ้าง" }));
+    expect(logo.parentElement).toContainElement(screen.getByRole("heading", { name: "ประมาณการกรอบระยะเวลาในการจัดซื้อจัดจ้าง" }));
     expect(screen.getAllByText("จัดซื้อระบบสารสนเทศ")).not.toHaveLength(0);
     expect(screen.getAllByText("คุณสมชาย")).not.toHaveLength(0);
     expect(screen.queryByText(/29,000,000/)).not.toBeInTheDocument();

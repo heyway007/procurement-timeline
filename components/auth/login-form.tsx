@@ -61,7 +61,7 @@ export function LoginForm() {
         <Image src="/logo-tceb.webp" alt="TCEB" width={88} height={88} priority className="h-20 w-20 object-contain" />
         <p className="mt-5 text-sm font-semibold tracking-wide text-indigo-700">Procurement Timeline</p>
         <h1 id="login-title" className="mt-2 text-2xl font-semibold text-slate-950">เข้าสู่ระบบ</h1>
-        <p className="mt-3 text-sm leading-6 text-slate-600">เข้าสู่ระบบด้วยบัญชีของคุณเพื่อจัดการแผนงานจัดซื้อจัดจ้าง</p>
+        <p className="mt-3 text-sm leading-6 text-slate-600">เข้าสู่ระบบด้วยบัญชีของคุณเพื่อจัดการประมาณการกรอบระยะเวลาในการจัดซื้อจัดจ้าง</p>
         <form onSubmit={submit} className="mt-7 space-y-5" aria-busy={pending}>
           <label className="block text-sm font-medium text-slate-700">
             อีเมล

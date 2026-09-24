@@ -117,7 +117,7 @@ export function Dashboard({ initialProjects }: { initialProjects?: ProjectRecord
               </span>
               Procurement Timeline
             </p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950 sm:text-4xl">แผนงานจัดซื้อจัดจ้าง</h1>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950 sm:text-4xl">ประมาณการกรอบระยะเวลาในการจัดซื้อจัดจ้าง</h1>
             <p className="mt-2 text-sm leading-6 text-slate-600">วางแผนวันดำเนินงานอัตโนมัติตามวันทำการราชการไทย</p>
           </div>
         </div>
