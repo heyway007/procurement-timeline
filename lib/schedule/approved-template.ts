@@ -78,6 +78,13 @@ export const APPROVED_TEMPLATE_STEPS = [
   },
 ] satisfies TemplateStep[];
 
+// Match the source labels because the small-budget template renumbers its steps.
+const NON_SLA_DOCUMENT_PREPARATION_LABELS = new Set<string>([
+  APPROVED_TEMPLATE_STEPS[0].label,
+  APPROVED_TEMPLATE_STEPS[3].label,
+  APPROVED_TEMPLATE_STEPS[10].label,
+]);
+
 export const SELECTIVE_METHOD_TEMPLATE_STEPS = [
   { order: 1, workingDaysToNext: 2, label: "จัดทำเอกสาร รายงานขอซื้อขอจ้าง แต่งตั้งคณะกรรมการ" },
   { order: 2, workingDaysToNext: 2, label: "จัดทำเอกสาร รายงานการประชุมคัดเลือกรายชื่อผู้ยื่นเสนอราคา" },
@@ -111,7 +118,7 @@ export function approvedTemplateStepsForBudgetCategory(
     return smallBudgetTemplateSteps();
   }
   if (budgetCategory === "FIVE_TO_TEN_MILLION") {
-    return documentPickupDurationTemplate(8);
+    return documentPickupDurationTemplate(10);
   }
   if (budgetCategory === "TEN_TO_TWENTY_MILLION") {
     return documentPickupDurationTemplate(10);
@@ -125,7 +132,12 @@ export function approvedTemplateStepsForProjectStatus(
 ): TemplateStep[] {
   const steps = approvedTemplateStepsForBudgetCategory(budgetCategory);
   return projectStatusType === "SLA_NON_COMPLIANT"
-    ? steps.map((step) => ({ ...step }))
+    ? steps.map((step) => ({
+        ...step,
+        workingDaysToNext: NON_SLA_DOCUMENT_PREPARATION_LABELS.has(step.label)
+          ? 3
+          : step.workingDaysToNext,
+      }))
     : steps;
 }
 

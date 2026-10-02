@@ -60,7 +60,7 @@ describe("approved procurement template", () => {
   it("uses longer document pickup durations for higher budget ranges", () => {
     expect(
       approvedTemplateStepsForBudgetCategory("FIVE_TO_TEN_MILLION")[5].workingDaysToNext,
-    ).toBe(8);
+    ).toBe(10);
     expect(
       approvedTemplateStepsForBudgetCategory("TEN_TO_TWENTY_MILLION")[5].workingDaysToNext,
     ).toBe(10);
@@ -87,11 +87,26 @@ describe("approved procurement template", () => {
     );
   });
 
-  it("keeps a separate copied template set for non-SLA projects", () => {
-    const compliant = approvedTemplateStepsForProjectStatus("SLA_COMPLIANT", "TEN_TO_TWENTY_MILLION");
-    const nonCompliant = approvedTemplateStepsForProjectStatus("SLA_NON_COMPLIANT", "TEN_TO_TWENTY_MILLION");
+  it.each([
+    ["ONE_TO_FIVE_MILLION", [2, 1, 5, 1, 1, 3, 4, 3, 1, 7]],
+    ["FIVE_TO_TEN_MILLION", [3, 1, 3, 3, 1, 10, 1, 1, 3, 4, 3, 1, 7]],
+    ["TEN_TO_TWENTY_MILLION", [3, 1, 3, 3, 1, 10, 1, 1, 3, 4, 3, 1, 7]],
+    ["ABOVE_TWENTY_MILLION", [3, 1, 3, 3, 1, 18, 1, 1, 3, 4, 3, 1, 7]],
+  ] as const)("shortens only document-to-announcement intervals for non-SLA %s", (category, durations) => {
+    const original = structuredClone(approvedTemplateStepsForBudgetCategory(category));
+    const steps = approvedTemplateStepsForProjectStatus("SLA_NON_COMPLIANT", category);
 
-    expect(nonCompliant).toEqual(compliant);
-    expect(nonCompliant).not.toBe(compliant);
+    expect(steps.map((step) => step.workingDaysToNext)).toEqual(durations);
+    expect(approvedTemplateStepsForProjectStatus("SLA_COMPLIANT", category)).toEqual(original);
+    expect(approvedTemplateStepsForProjectStatus(undefined, category)).toEqual(original);
   });
+
+  it.each(["SELECTIVE_METHOD", "SPECIFIC_METHOD_UNDER_500K", "SPECIFIC_METHOD_OVER_500K"] as const)(
+    "preserves the non-SLA durations for %s",
+    (category) => {
+      expect(approvedTemplateStepsForProjectStatus("SLA_NON_COMPLIANT", category)).toEqual(
+        approvedTemplateStepsForBudgetCategory(category),
+      );
+    },
+  );
 });

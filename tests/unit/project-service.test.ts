@@ -212,21 +212,27 @@ describe("ProjectService", () => {
     expect(updated.steps.map((step) => step.scheduledDate)).toEqual(dates);
   });
 
-  it("uses an 8-working-day step 6 duration for the 5,000,001-10,000,000 baht category", async () => {
-    const { service } = makeService();
+  it.each([
+    ["SLA_COMPLIANT", "2026-10-07", "2026-10-22"],
+    ["SLA_NON_COMPLIANT", "2026-10-05", "2026-10-20"],
+  ] as const)("allows ten working days for document pickup in the 5–10 million category with %s", async (status, pickupDate, bidDate) => {
+    const { service } = makeService(new Set(["2026-10-13"]));
 
     const result = await service.create({
       name: "โครงการช่วงสอง",
       ownerName: "ผู้รับผิดชอบ",
       budget: 6_000_000,
       budgetCategory: "FIVE_TO_TEN_MILLION",
-      startDate: "2026-07-06",
+      projectStatusType: status,
+      startDate: "2026-09-18",
       note: "",
     });
 
     expect(result.project.steps.find((step) => step.order === 6)).toMatchObject({
-      workingDaysToNext: 8,
+      workingDaysToNext: 10,
+      scheduledDate: pickupDate,
     });
+    expect(result.project.steps.find((step) => step.order === 7)?.scheduledDate).toBe(bidDate);
   });
 
   it("creates a selective procurement method timeline independent of budget range", async () => {
@@ -247,8 +253,8 @@ describe("ProjectService", () => {
     ]);
   });
 
-  it("stores the selected non-SLA project status while using copied steps for now", async () => {
-    const { service } = makeService();
+  it("schedules non-SLA announcements after three working days and recalculates downstream dates", async () => {
+    const { service } = makeService(new Set(["2026-07-07"]));
 
     const result = await service.create({
       name: "โครงการไม่เป็นไปตาม SLA",
@@ -262,6 +268,14 @@ describe("ProjectService", () => {
 
     expect(result.project.projectStatusType).toBe("SLA_NON_COMPLIANT");
     expect(result.project.steps).toHaveLength(13);
+    expect(result.project.steps[1].scheduledDate).toBe("2026-07-10");
+    expect(result.project.steps[4].scheduledDate).toBe("2026-07-21");
+    expect(result.project.steps[11].scheduledDate).toBe("2026-08-21");
+    expect(result.project.processEndDate).toBe("2026-09-02");
+
+    const reset = await service.resetSchedule(result.project.id, result.project.version);
+    expect(reset.steps).toEqual(result.project.steps);
+    expect(reset.processEndDate).toBe("2026-09-02");
   });
 
   it("creates the reduced 1,000,000-5,000,000 baht category timeline", async () => {
