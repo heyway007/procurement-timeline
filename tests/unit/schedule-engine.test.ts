@@ -91,6 +91,65 @@ describe("schedule engine", () => {
     expect(result.milestones[9].scheduledDate).toBe("2026-08-03");
   });
 
+  it("keeps the automatic document review window at two working days", () => {
+    const result = buildTimeline(
+      approvedTemplateStepsForBudgetCategory("SELECTIVE_METHOD"),
+      "2026-07-06",
+      new Set(),
+    );
+
+    expect(result.milestones[6]).toMatchObject({
+      scheduledDate: "2026-07-23",
+      workingDaysToNext: 2,
+      isDateManuallyAdjusted: false,
+    });
+    expect(result.milestones[7].scheduledDate).toBe("2026-07-27");
+  });
+
+  it.each([
+    ["2026-07-23", [], "2026-07-24"],
+    ["2026-07-24", [], "2026-07-27"],
+    ["2026-07-24", ["2026-07-27"], "2026-07-28"],
+  ])("uses one selected document review day on %s and schedules the next working day", (date, holidayDates, nextDate) => {
+    const holidays = new Set(holidayDates);
+    const base = buildTimeline(
+      approvedTemplateStepsForBudgetCategory("SELECTIVE_METHOD"),
+      "2026-07-06",
+      holidays,
+    );
+
+    const changed = adjustMilestone(base, 7, date, holidays);
+
+    expect(changed.milestones.slice(0, 6)).toEqual(base.milestones.slice(0, 6));
+    expect(changed.milestones[6]).toMatchObject({
+      scheduledDate: date,
+      workingDaysToNext: 1,
+      isDateManuallyAdjusted: true,
+    });
+    expect(changed.milestones[7].scheduledDate).toBe(nextDate);
+  });
+
+  it.each([
+    [6, "2026-07-24", "2026-07-27", "2026-07-29"],
+    [1, "2026-07-07", "2026-07-24", "2026-07-28"],
+  ] as const)("restores the two-day document review window when step %s clears its selected day", (order, date, reviewDate, nextDate) => {
+    const base = buildTimeline(
+      approvedTemplateStepsForBudgetCategory("SELECTIVE_METHOD"),
+      "2026-07-06",
+      new Set(),
+    );
+    const selected = adjustMilestone(base, 7, "2026-07-24", new Set());
+
+    const changed = adjustMilestone(selected, order, date, new Set());
+
+    expect(changed.milestones[6]).toMatchObject({
+      scheduledDate: reviewDate,
+      workingDaysToNext: 2,
+      isDateManuallyAdjusted: false,
+    });
+    expect(changed.milestones[7].scheduledDate).toBe(nextDate);
+  });
+
   it.each([
     ["2026-07-30", [], "2026-07-31"],
     ["2026-07-31", [], "2026-08-03"],

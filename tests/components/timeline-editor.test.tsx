@@ -422,6 +422,46 @@ describe("TimelineDetail", () => {
     expect(within(rows[9]).getByText("วันจันทร์ 3 ส.ค. 2569")).toBeInTheDocument();
   });
 
+  it("keeps the default document review window as two working days", () => {
+    render(<TimelineDetail projectId="project-1" initialProject={selectiveMethodProjectFixture()} />);
+
+    const reviewRow = screen.getAllByTestId("timeline-step")[6];
+    expect(within(reviewRow).getByText("วันพฤหัสบดี 23 ก.ค. 2569 - วันศุกร์ 24 ก.ค. 2569")).toBeInTheDocument();
+    expect(within(reviewRow).getAllByText("2 วันทำการถึงขั้นตอนถัดไป")[0]).toBeInTheDocument();
+  });
+
+  it.each([
+    "SELECTIVE_METHOD",
+    "SPECIFIC_METHOD_UNDER_500K",
+    "SPECIFIC_METHOD_OVER_500K",
+  ] as const)("shows a manually selected document review date as one day for %s", (budgetCategory) => {
+    const project = selectiveMethodProjectFixture();
+    const timeline = buildTimeline(
+      approvedTemplateStepsForBudgetCategory(budgetCategory).map((step) =>
+        step.order === 7 ? { ...step, workingDaysToNext: 1 } : step,
+      ),
+      project.startDate,
+      new Set(),
+    );
+    render(
+      <TimelineDetail
+        projectId={project.id}
+        initialProject={{
+          ...project,
+          budgetCategory,
+          processEndDate: timeline.processEndDate,
+          steps: timeline.milestones.map((step) => step.order === 7 ? { ...step, isDateManuallyAdjusted: true } : step),
+        }}
+      />,
+    );
+
+    const rows = screen.getAllByTestId("timeline-step");
+    expect(within(rows[6]).getByText("วันพฤหัสบดี 23 ก.ค. 2569")).toBeInTheDocument();
+    expect(rows[6]).not.toHaveTextContent(" - ");
+    expect(within(rows[6]).getAllByText(/1 วันทำการถึงขั้นตอนถัดไป · ปรับกำหนดการ/)[0]).toBeInTheDocument();
+    expect(within(rows[7]).getByText(/^วันศุกร์ 24 ก.ค. 2569/)).toBeInTheDocument();
+  });
+
   it.each([
     "SELECTIVE_METHOD",
     "SPECIFIC_METHOD_UNDER_500K",
@@ -452,7 +492,10 @@ describe("TimelineDetail", () => {
     expect(within(rows[9]).getByText("วันพฤหัสบดี 30 ก.ค. 2569")).toBeInTheDocument();
   });
 
-  it("updates the selected negotiation day and following dates after saving step nine", async () => {
+  it.each([
+    { order: 7, selectedDate: "วันศุกร์ 31 ก.ค. 2569", nextDate: /^วันจันทร์ 3 ส.ค. 2569/ },
+    { order: 9, selectedDate: "วันศุกร์ 31 ก.ค. 2569", nextDate: /^วันจันทร์ 3 ส.ค. 2569$/ },
+  ])("updates the selected day and following dates after saving step $order", async ({ order, selectedDate, nextDate }) => {
     const user = userEvent.setup();
     const project = selectiveMethodProjectFixture();
     render(
@@ -470,15 +513,16 @@ describe("TimelineDetail", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "แก้วันที่ ขั้นตอนที่ 9" }));
+    await user.click(screen.getByRole("button", { name: `แก้วันที่ ขั้นตอนที่ ${order}` }));
     await user.clear(screen.getByLabelText("วันที่ใหม่"));
     await user.type(screen.getByLabelText("วันที่ใหม่"), "2026-07-31");
     await user.click(screen.getByRole("button", { name: "ตกลง" }));
 
     const rows = screen.getAllByTestId("timeline-step");
-    expect(within(rows[8]).getByText("วันศุกร์ 31 ก.ค. 2569")).toBeInTheDocument();
-    expect(within(rows[9]).getByText("วันจันทร์ 3 ส.ค. 2569")).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "แก้วันที่ขั้นตอนที่ 9" })).not.toBeInTheDocument();
+    expect(within(rows[order - 1]).getByText(selectedDate)).toBeInTheDocument();
+    expect(rows[order - 1]).not.toHaveTextContent(" - ");
+    expect(within(rows[order]).getByText(nextDate)).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: `แก้วันที่ขั้นตอนที่ ${order}` })).not.toBeInTheDocument();
   });
 
   it("splits selective method steps into titles and subtitles without plus signs", () => {

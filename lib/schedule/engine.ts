@@ -9,6 +9,8 @@ import type {
   TemplateStep,
 } from "./types";
 import {
+  DOCUMENT_REVIEW_WINDOW_WORKING_DAYS,
+  isSelectableDocumentReviewMilestone,
   isSelectableNegotiationMilestone,
   isSingleDaySelectableMilestone,
   NEGOTIATION_WINDOW_WORKING_DAYS,
@@ -71,12 +73,17 @@ export function adjustMilestone(
   if (!isWorkingDay(newDate, holidays)) {
     throw new Error("DATE_MUST_BE_WORKING_DAY");
   }
-  const milestones = timeline.milestones.map((item, cursor) => ({
-    ...item,
-    workingDaysToNext: cursor > index && isSelectableNegotiationMilestone(item)
-      ? NEGOTIATION_WINDOW_WORKING_DAYS
-      : item.workingDaysToNext,
-  }));
+  const milestones = timeline.milestones.map((item, cursor) => {
+    const milestone = { ...item };
+    if (cursor > index) {
+      if (isSelectableDocumentReviewMilestone(item)) {
+        milestone.workingDaysToNext = DOCUMENT_REVIEW_WINDOW_WORKING_DAYS;
+      } else if (isSelectableNegotiationMilestone(item)) {
+        milestone.workingDaysToNext = NEGOTIATION_WINDOW_WORKING_DAYS;
+      }
+    }
+    return milestone;
+  });
   if (index === 0) {
     return buildTimeline(milestones, newDate, holidays);
   }

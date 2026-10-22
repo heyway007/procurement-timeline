@@ -15,7 +15,15 @@ export function isPresentMilestone(label: string): boolean {
   return label.includes("Present");
 }
 
+export const DOCUMENT_REVIEW_WINDOW_WORKING_DAYS = 2;
 export const NEGOTIATION_WINDOW_WORKING_DAYS = 3;
+
+export function isSelectableDocumentReviewMilestone(step: {
+  order: number;
+  label: string;
+}): boolean {
+  return step.order === 7 && step.label.includes("ตรวจสอบเอกสารเสนอราคา");
+}
 
 export function isSelectableNegotiationMilestone(step: {
   order: number;
@@ -31,7 +39,9 @@ export function isSingleDaySelectableMilestone(step: {
   order: number;
   label: string;
 }): boolean {
-  return isPresentMilestone(step.label) || isSelectableNegotiationMilestone(step);
+  return isPresentMilestone(step.label) ||
+    isSelectableDocumentReviewMilestone(step) ||
+    isSelectableNegotiationMilestone(step);
 }
 
 export function effectiveBidSubmissionTimeSlot(
