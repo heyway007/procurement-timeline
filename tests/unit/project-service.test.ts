@@ -253,6 +253,75 @@ describe("ProjectService", () => {
     ]);
   });
 
+  it.each([
+    "SELECTIVE_METHOD",
+    "SPECIFIC_METHOD_UNDER_500K",
+    "SPECIFIC_METHOD_OVER_500K",
+  ] as const)("keeps a selected committee day and restores its three-day default on reset for %s", async (budgetCategory) => {
+    const { service } = makeService();
+    const { project } = await service.create({
+      budgetCategory,
+      startDate: "2026-07-06",
+    });
+
+    expect(project.steps[8]).toMatchObject({
+      workingDaysToNext: 3,
+      isDateManuallyAdjusted: false,
+    });
+
+    const selectedPresent = await service.adjustStep(project.id, {
+      order: 8,
+      newDate: "2026-07-28",
+      version: project.version,
+      confirmShortening: false,
+      confirmOverwrite: false,
+    });
+    expect(selectedPresent.steps[7]).toMatchObject({
+      workingDaysToNext: 1,
+      isDateManuallyAdjusted: true,
+    });
+
+    const selectedCommittee = await service.adjustStep(project.id, {
+      order: 9,
+      newDate: "2026-07-31",
+      version: selectedPresent.version,
+      confirmShortening: false,
+      confirmOverwrite: false,
+    });
+
+    expect(selectedCommittee.steps[8]).toMatchObject({
+      scheduledDate: "2026-07-31",
+      workingDaysToNext: 1,
+      isDateManuallyAdjusted: true,
+    });
+    expect(selectedCommittee.steps[9].scheduledDate).toBe("2026-08-03");
+    expect(await service.get(project.id)).toEqual(selectedCommittee);
+
+    const reselectedCommittee = await service.adjustStep(project.id, {
+      order: 9,
+      newDate: "2026-08-04",
+      version: selectedCommittee.version,
+      confirmShortening: false,
+      confirmOverwrite: false,
+    });
+
+    expect(reselectedCommittee.steps[8]).toMatchObject({
+      scheduledDate: "2026-08-04",
+      workingDaysToNext: 1,
+      isDateManuallyAdjusted: true,
+    });
+    expect(reselectedCommittee.steps[9].scheduledDate).toBe("2026-08-05");
+
+    const reset = await service.resetSchedule(project.id, reselectedCommittee.version);
+
+    expect(reset.steps[8]).toMatchObject({
+      workingDaysToNext: 3,
+      isDateManuallyAdjusted: false,
+    });
+    expect(reset.steps).toEqual(project.steps);
+    expect(reset.processEndDate).toBe(project.processEndDate);
+  });
+
   it("schedules non-SLA announcements after three working days and recalculates downstream dates", async () => {
     const { service } = makeService(new Set(["2026-07-07"]));
 

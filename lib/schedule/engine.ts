@@ -8,9 +8,13 @@ import type {
   ScheduledTimeline,
   TemplateStep,
 } from "./types";
-import { isPresentMilestone } from "./milestone-kind";
+import {
+  isSelectableNegotiationMilestone,
+  isSingleDaySelectableMilestone,
+  NEGOTIATION_WINDOW_WORKING_DAYS,
+} from "./milestone-kind";
 
-const PRESENT_MANUAL_WORKING_DAYS_TO_NEXT = 1;
+const SELECTED_DAY_WORKING_DAYS_TO_NEXT = 1;
 
 export function buildTimeline(
   template: TemplateStep[],
@@ -67,8 +71,14 @@ export function adjustMilestone(
   if (!isWorkingDay(newDate, holidays)) {
     throw new Error("DATE_MUST_BE_WORKING_DAY");
   }
+  const milestones = timeline.milestones.map((item, cursor) => ({
+    ...item,
+    workingDaysToNext: cursor > index && isSelectableNegotiationMilestone(item)
+      ? NEGOTIATION_WINDOW_WORKING_DAYS
+      : item.workingDaysToNext,
+  }));
   if (index === 0) {
-    return buildTimeline(timeline.milestones, newDate, holidays);
+    return buildTimeline(milestones, newDate, holidays);
   }
 
   countWorkingDayAdditions(
@@ -77,11 +87,10 @@ export function adjustMilestone(
     holidays,
   );
 
-  const milestones = timeline.milestones.map((item) => ({ ...item }));
   milestones[index].scheduledDate = newDate;
   milestones[index].isDateManuallyAdjusted = true;
-  if (isPresentMilestone(milestones[index].label)) {
-    milestones[index].workingDaysToNext = PRESENT_MANUAL_WORKING_DAYS_TO_NEXT;
+  if (isSingleDaySelectableMilestone(milestones[index])) {
+    milestones[index].workingDaysToNext = SELECTED_DAY_WORKING_DAYS_TO_NEXT;
   }
 
   for (let cursor = index + 1; cursor < milestones.length; cursor += 1) {

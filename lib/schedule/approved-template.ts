@@ -1,6 +1,7 @@
 import type { BudgetCategory } from "@/lib/projects/budget-category";
 import type { ProjectStatusType } from "@/lib/projects/project-status";
 import type { TemplateStep } from "./types";
+import { NEGOTIATION_WINDOW_WORKING_DAYS } from "./milestone-kind";
 
 export const APPROVED_TEMPLATE_KEY = "procurement-29m-v1";
 
@@ -94,7 +95,7 @@ export const SELECTIVE_METHOD_TEMPLATE_STEPS = [
   { order: 6, workingDaysToNext: 1, label: "กำหนดวันยื่นเสนอราคา เวลา 8.30-16.30 น." },
   { order: 7, workingDaysToNext: 2, label: "ตรวจสอบเอกสารเสนอราคา เลือกวันใดวันหนึ่ง" },
   { order: 8, workingDaysToNext: 2, label: "กำหนดวันนัดในการเสนอข้อมูลทางเทคนิค (Present) เลือกวันใดวันหนึ่ง" },
-  { order: 9, workingDaysToNext: 3, label: "คณะกรรมการฯ พิจารณาคัดเลือกผู้ชนะ ต่อรองราคา" },
+  { order: 9, workingDaysToNext: NEGOTIATION_WINDOW_WORKING_DAYS, label: "คณะกรรมการฯ พิจารณาคัดเลือกผู้ชนะ ต่อรองราคา" },
   { order: 10, workingDaysToNext: 1, label: "จัดทำเอกสาร รายงานการประชุมและรายงานผลการพิจารณา แบบแจ้งเหตุผลเพิ่มเติม" },
   { order: 11, workingDaysToNext: 2, label: "จัดทำเอกสาร รายงานผลพิจารณา ประกาศผู้ชนะ" },
   { order: 12, workingDaysToNext: 1, label: "ประกาศผู้ชนะการเสนอราคา บนเว็บไซต์กรมบัญชีกลาง (e-GP)" },

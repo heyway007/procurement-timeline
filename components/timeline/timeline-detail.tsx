@@ -48,6 +48,7 @@ import {
   effectiveBidSubmissionTimeSlot,
   isBidSubmissionMilestone,
   isPresentMilestone,
+  isSingleDaySelectableMilestone,
   type BidSubmissionTimeSlot,
 } from "@/lib/schedule/milestone-kind";
 import {
@@ -297,6 +298,9 @@ export function TimelineDetail({
     const step = project?.steps[stepIndex];
     const nextStep = project?.steps[stepIndex + 1];
     if (!step) return "";
+    if (isSingleDaySelectableMilestone(step) && step.isDateManuallyAdjusted) {
+      return formatThaiDateWithWeekday(step.scheduledDate);
+    }
     if (isPresentMilestone(step.label) && !step.isDateManuallyAdjusted) {
       return formatThaiDateRangeWithWeekday(
         step.scheduledDate,

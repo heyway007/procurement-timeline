@@ -15,6 +15,25 @@ export function isPresentMilestone(label: string): boolean {
   return label.includes("Present");
 }
 
+export const NEGOTIATION_WINDOW_WORKING_DAYS = 3;
+
+export function isSelectableNegotiationMilestone(step: {
+  order: number;
+  label: string;
+}): boolean {
+  // Selective/specific methods use step 9 for negotiation; e-bidding uses other orders.
+  return step.order === 9 &&
+    step.label.includes("พิจารณาคัดเลือกผู้ชนะ") &&
+    step.label.includes("ต่อรองราคา");
+}
+
+export function isSingleDaySelectableMilestone(step: {
+  order: number;
+  label: string;
+}): boolean {
+  return isPresentMilestone(step.label) || isSelectableNegotiationMilestone(step);
+}
+
 export function effectiveBidSubmissionTimeSlot(
   value?: BidSubmissionTimeSlot,
 ): BidSubmissionTimeSlot {

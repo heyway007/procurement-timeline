@@ -7,7 +7,7 @@ import {
   APPROVED_TEMPLATE_STEPS,
   approvedTemplateStepsForBudgetCategory,
 } from "@/lib/schedule/approved-template";
-import { buildTimeline } from "@/lib/schedule/engine";
+import { adjustMilestone, buildTimeline } from "@/lib/schedule/engine";
 import type { ProjectRecord } from "@/lib/projects/types";
 import { ApiError } from "@/lib/ui/api-client";
 
@@ -411,6 +411,74 @@ describe("TimelineDetail", () => {
     expect(rows[7]).toHaveTextContent(" - ");
     expect(rows[8]).toHaveTextContent(" - ");
     expect(rows[5]).not.toHaveTextContent(" - ");
+  });
+
+  it("shows the default negotiation window as three working days", () => {
+    render(<TimelineDetail projectId="project-1" initialProject={selectiveMethodProjectFixture()} />);
+
+    const rows = screen.getAllByTestId("timeline-step");
+    expect(within(rows[8]).getByText("วันพุธ 29 ก.ค. 2569 - วันศุกร์ 31 ก.ค. 2569")).toBeInTheDocument();
+    expect(within(rows[8]).getAllByText("3 วันทำการถึงขั้นตอนถัดไป")[0]).toBeInTheDocument();
+    expect(within(rows[9]).getByText("วันจันทร์ 3 ส.ค. 2569")).toBeInTheDocument();
+  });
+
+  it.each([
+    "SELECTIVE_METHOD",
+    "SPECIFIC_METHOD_UNDER_500K",
+    "SPECIFIC_METHOD_OVER_500K",
+  ] as const)("shows a manually selected negotiation date as one day for %s", (budgetCategory) => {
+    const project = selectiveMethodProjectFixture();
+    const timeline = buildTimeline(
+      project.steps.map((step) => step.order === 9 ? { ...step, workingDaysToNext: 1 } : step),
+      project.startDate,
+      new Set(),
+    );
+    render(
+      <TimelineDetail
+        projectId={project.id}
+        initialProject={{
+          ...project,
+          budgetCategory,
+          processEndDate: timeline.processEndDate,
+          steps: timeline.milestones.map((step) => step.order === 9 ? { ...step, isDateManuallyAdjusted: true } : step),
+        }}
+      />,
+    );
+
+    const rows = screen.getAllByTestId("timeline-step");
+    expect(within(rows[8]).getByText("วันพุธ 29 ก.ค. 2569")).toBeInTheDocument();
+    expect(rows[8]).not.toHaveTextContent(" - ");
+    expect(within(rows[8]).getAllByText(/1 วันทำการถึงขั้นตอนถัดไป · ปรับกำหนดการ/)[0]).toBeInTheDocument();
+    expect(within(rows[9]).getByText("วันพฤหัสบดี 30 ก.ค. 2569")).toBeInTheDocument();
+  });
+
+  it("updates the selected negotiation day and following dates after saving step nine", async () => {
+    const user = userEvent.setup();
+    const project = selectiveMethodProjectFixture();
+    render(
+      <TimelineDetail
+        projectId={project.id}
+        initialProject={project}
+        onAdjustStep={async (order, newDate) => {
+          const timeline = adjustMilestone({
+            milestones: project.steps,
+            processEndDate: project.processEndDate,
+            isProcessEndManuallyAdjusted: project.isProcessEndManuallyAdjusted,
+          }, order, newDate, new Set());
+          return { ...project, steps: timeline.milestones, processEndDate: timeline.processEndDate, version: 2 };
+        }}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "แก้วันที่ ขั้นตอนที่ 9" }));
+    await user.clear(screen.getByLabelText("วันที่ใหม่"));
+    await user.type(screen.getByLabelText("วันที่ใหม่"), "2026-07-31");
+    await user.click(screen.getByRole("button", { name: "ตกลง" }));
+
+    const rows = screen.getAllByTestId("timeline-step");
+    expect(within(rows[8]).getByText("วันศุกร์ 31 ก.ค. 2569")).toBeInTheDocument();
+    expect(within(rows[9]).getByText("วันจันทร์ 3 ส.ค. 2569")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "แก้วันที่ขั้นตอนที่ 9" })).not.toBeInTheDocument();
   });
 
   it("splits selective method steps into titles and subtitles without plus signs", () => {
