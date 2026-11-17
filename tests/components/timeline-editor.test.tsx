@@ -203,6 +203,125 @@ describe("TimelineDetail", () => {
     );
   });
 
+  describe("editing project details", () => {
+    beforeEach(() => {
+      // jsdom does not implement opening or closing a native dialog.
+      if (!HTMLDialogElement.prototype.showModal) {
+        Object.defineProperties(HTMLDialogElement.prototype, {
+          showModal: { value(this: HTMLDialogElement) { this.open = true; } },
+          close: { value(this: HTMLDialogElement) { this.open = false; } },
+        });
+      }
+    });
+
+    it("saves metadata without a schedule reset and updates the existing page", async () => {
+      const user = userEvent.setup();
+      const original = projectFixture();
+      const adjusted = adjustMilestone({
+        milestones: original.steps,
+        processEndDate: original.processEndDate,
+        isProcessEndManuallyAdjusted: false,
+      }, 2, "2026-07-13", new Set());
+      const project = {
+        ...original,
+        departmentName: "ฝ่ายเดิมที่ไม่มีในรายการ",
+        steps: adjusted.milestones,
+        processEndDate: adjusted.processEndDate,
+      };
+      const saved = { ...project, name: "ชื่อโครงการใหม่", departmentName: "ฝ่ายบัญชีและการเงิน", version: 2 };
+      const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+        Response.json({ project: saved }),
+      );
+
+      try {
+        render(<TimelineDetail projectId={project.id} initialProject={project} />);
+        const editButton = screen.getByRole("button", { name: "แก้ไขข้อมูลโครงการ" });
+        expect(editButton).toHaveClass("print-hidden");
+        await user.click(editButton);
+        const editor = within(screen.getByRole("dialog", { name: "แก้ไขข้อมูลโครงการ" }));
+        const name = editor.getByRole("textbox", { name: "ชื่อโครงการ" });
+        expect(name).toHaveFocus();
+        expect(name).toHaveValue(original.name);
+        expect(editor.getByLabelText("ฝ่าย", { exact: true })).toHaveValue(project.departmentName);
+        expect(editor.getByLabelText("วิธี / วงเงิน", { exact: true })).toHaveValue(original.budgetCategory);
+        await user.clear(name);
+        await user.type(name, saved.name);
+        await user.selectOptions(editor.getByRole("combobox", { name: "ฝ่าย" }), saved.departmentName);
+        await user.click(editor.getByRole("button", { name: "บันทึก" }));
+
+        expect(await screen.findByRole("heading", { name: saved.name, level: 1 })).toBeInTheDocument();
+        expect(fetchSpy).toHaveBeenCalledOnce();
+        expect(fetchSpy).toHaveBeenCalledWith(`/api/projects/${project.id}`, expect.objectContaining({ method: "PATCH" }));
+        expect(JSON.parse(String(fetchSpy.mock.calls[0][1]?.body))).toEqual({
+          name: saved.name,
+          departmentName: saved.departmentName,
+          budgetCategory: original.budgetCategory,
+          startDate: original.startDate,
+          version: original.version,
+          confirmReset: false,
+        });
+        expect(screen.getByTestId("timeline-summary")).toHaveTextContent(saved.departmentName);
+        expect(screen.getByTestId("print-department")).toHaveTextContent(saved.departmentName);
+        expect(screen.getByTestId("print-owner")).toHaveTextContent(original.ownerName);
+        expect(screen.getByTestId("timeline-project-note")).toHaveTextContent(original.note);
+        expect(within(screen.getAllByTestId("timeline-step")[1]).getByText("วันจันทร์ 13 ก.ค. 2569")).toBeInTheDocument();
+        expect(screen.queryByRole("dialog", { name: "แก้ไขข้อมูลโครงการ" })).not.toBeInTheDocument();
+        expect(editButton).toHaveFocus();
+      } finally {
+        fetchSpy.mockRestore();
+      }
+    });
+
+    it("previews 16 to 8 working days and sends a schedule reset only after confirmation", async () => {
+      const user = userEvent.setup();
+      const projectForCategory = (budgetCategory: ProjectRecord["budgetCategory"]): ProjectRecord => {
+        const original = projectFixture();
+        const timeline = buildTimeline(approvedTemplateStepsForBudgetCategory(budgetCategory), original.startDate, new Set());
+        return { ...original, budgetCategory, steps: timeline.milestones, processEndDate: timeline.processEndDate };
+      };
+      const project = projectForCategory("SPECIFIC_METHOD_OVER_500K");
+      const saved = { ...projectForCategory("SPECIFIC_METHOD_UNDER_500K"), version: 2 };
+      const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(Response.json({ project: saved }));
+
+      try {
+        render(<TimelineDetail projectId={project.id} initialProject={project} />);
+        await user.click(screen.getByRole("button", { name: "แก้ไขข้อมูลโครงการ" }));
+        const editor = within(screen.getByRole("dialog", { name: "แก้ไขข้อมูลโครงการ" }));
+        await user.selectOptions(editor.getByRole("combobox", { name: "วิธี / วงเงิน" }), saved.budgetCategory);
+        expect(editor.getByText("16 วันทำการ")).toBeInTheDocument();
+        expect(editor.getByText("8 วันทำการ")).toBeInTheDocument();
+        expect(screen.getByTestId("timeline-summary")).toHaveTextContent("16 วันทำการ");
+        expect(screen.getAllByTestId("timeline-step")).toHaveLength(7);
+        await user.click(editor.getByRole("button", { name: "บันทึก" }));
+        expect(editor.getByText("16 วันทำการ")).toBeInTheDocument();
+        expect(editor.getByText("8 วันทำการ")).toBeInTheDocument();
+        expect(editor.getByText(/วันเริ่มต้นเดิม.*วันที่เคยปรับเอง/)).toBeInTheDocument();
+        expect(fetchSpy).not.toHaveBeenCalled();
+
+        await user.click(editor.getByRole("button", { name: "กลับไปแก้ไข" }));
+        expect(editor.getByRole("combobox", { name: "วิธี / วงเงิน" })).toHaveValue(saved.budgetCategory);
+        expect(fetchSpy).not.toHaveBeenCalled();
+
+        await user.click(editor.getByRole("button", { name: "บันทึก" }));
+        await user.click(editor.getByRole("button", { name: "ยืนยันและบันทึก" }));
+
+        expect(await within(screen.getByTestId("timeline-summary")).findByText("8 วันทำการ")).toBeInTheDocument();
+        expect(fetchSpy).toHaveBeenCalledOnce();
+        expect(JSON.parse(String(fetchSpy.mock.calls[0][1]?.body))).toEqual({
+          budgetCategory: saved.budgetCategory,
+          startDate: project.startDate,
+          version: project.version,
+          confirmReset: true,
+        });
+        expect(screen.getByTestId("print-total-days")).toHaveTextContent("8 วันทำการ");
+        expect(screen.getAllByTestId("timeline-step")).toHaveLength(6);
+        expect(within(screen.getByTestId("timeline-table")).getByText("ส่งอีเมลเชิญยื่นเสนอราคา")).toBeInTheDocument();
+      } finally {
+        fetchSpy.mockRestore();
+      }
+    });
+  });
+
   it("uses a compact project summary header on small screens", () => {
     render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
 
@@ -411,6 +530,7 @@ describe("TimelineDetail", () => {
     expect(rows[7]).toHaveTextContent(" - ");
     expect(rows[8]).toHaveTextContent(" - ");
     expect(rows[5]).not.toHaveTextContent(" - ");
+    expect(within(rows[7]).getByText("วันจันทร์ 27 ก.ค. 2569 - วันอังคาร 28 ก.ค. 2569")).toBeInTheDocument();
   });
 
   it("shows 16 working days through the specific method winner announcement and shows signing as step 8", () => {

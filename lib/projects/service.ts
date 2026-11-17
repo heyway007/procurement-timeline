@@ -60,14 +60,20 @@ export class ProjectService {
       }
     }
     const present = project.steps.find((step) => isPresentMilestone(step.label));
-    if (!present || present.isDateManuallyAdjusted || present.workingDaysToNext === 3) {
+    const defaultPresentDays = project.budgetCategory === "SELECTIVE_METHOD" ? 2 : 3;
+    if (
+      !present ||
+      present.isDateManuallyAdjusted ||
+      present.workingDaysToNext === defaultPresentDays ||
+      present.workingDaysToNext === 3
+    ) {
       return project;
     }
     const holidays = await this.calendar.listHolidayDates();
     const legacyTimeline = this.toTimeline({
       ...project,
       steps: project.steps.map((step) =>
-        step.order === present.order ? { ...step, workingDaysToNext: 3 } : step,
+        step.order === present.order ? { ...step, workingDaysToNext: defaultPresentDays } : step,
       ),
     });
     const recalculated = recalculateWithManualAnchors(legacyTimeline, holidays);
@@ -188,36 +194,39 @@ export class ProjectService {
     const project = await this.getRaw(id);
     this.assertVersion(project, input.version);
     const projectStatusType = input.projectStatusType ?? project.projectStatusType ?? "SLA_COMPLIANT";
-    const templateChanged = parsed.budgetCategory !== project.budgetCategory;
+    const categoryChanged = parsed.budgetCategory !== project.budgetCategory;
     const startChanged = parsed.startDate !== project.startDate;
     const statusTypeChanged = projectStatusType !== (project.projectStatusType ?? "SLA_COMPLIANT");
-    if ((startChanged || templateChanged || statusTypeChanged) && !input.confirmReset) {
+    const shouldResetSchedule = startChanged || categoryChanged || statusTypeChanged;
+    if (shouldResetSchedule && input.confirmReset !== true) {
       throw new Error("SCHEDULE_RESET_CONFIRMATION_REQUIRED");
     }
 
-    const holidays = await this.calendar.listHolidayDates();
-    const timeline = startChanged || templateChanged || statusTypeChanged
+    const timeline = shouldResetSchedule
       ? buildTimeline(
           approvedTemplateStepsForProjectStatus(projectStatusType, parsed.budgetCategory),
           parsed.startDate,
-          holidays,
+          await this.calendar.listHolidayDates(),
         )
       : this.toTimeline(project);
+    const budget = parsed.budget ?? (categoryChanged
+      ? defaultBudgetForCategory(parsed.budgetCategory)
+      : project.budget);
     const replacement: ProjectReplacement = {
-      name: parsed.name || project.name,
+      name: input.name === undefined ? project.name : parsed.name || "-",
       ownerUserId: project.ownerUserId,
       ownerName: parsed.ownerName || project.ownerName,
-      departmentName: parsed.departmentName || project.departmentName || "-",
-      budget: parsed.budget ?? project.budget,
+      departmentName: input.departmentName === undefined ? project.departmentName : parsed.departmentName || "-",
+      budget,
       budgetCategory: parsed.budgetCategory,
       projectStatusType,
-      startDate: timeline.milestones[0].scheduledDate,
-      note: parsed.note,
+      startDate: parsed.startDate,
+      note: input.note === undefined ? project.note : parsed.note,
       templateKey: project.templateKey,
       templateVersion: project.templateVersion,
       processEndDate: timeline.processEndDate,
       isProcessEndManuallyAdjusted: timeline.isProcessEndManuallyAdjusted,
-      scheduleStatus: "NORMAL",
+      scheduleStatus: shouldResetSchedule ? "NORMAL" : project.scheduleStatus,
       steps: timeline.milestones,
     };
     const result = await this.projects.replace(

@@ -70,7 +70,7 @@ const knownErrors: Record<string, MappedProjectError> = {
     status: 422,
     body: {
       code: "SCHEDULE_RESET_CONFIRMATION_REQUIRED",
-      message: "การเปลี่ยนวันเริ่มจะล้างวันที่ซึ่งเคยปรับ กรุณายืนยันก่อนบันทึก",
+      message: "การเปลี่ยนครั้งนี้จะคำนวณกำหนดการใหม่ กรุณายืนยันก่อนบันทึก",
     },
   },
 };

@@ -16,6 +16,7 @@ import {
   faGlobe,
   faHandshake,
   faHourglassHalf,
+  faPenToSquare,
   faPersonChalkboard,
   faPrint,
   faRotateLeft,
@@ -26,8 +27,9 @@ import {
   faUsers,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import Swal from "sweetalert2";
+import { ProjectDetailsEditor } from "@/components/timeline/project-details-editor";
 import type { ProjectRecord } from "@/lib/projects/types";
 import { formatProjectName } from "@/lib/projects/name";
 import { budgetCategoryLabel } from "@/lib/projects/budget-category";
@@ -40,7 +42,7 @@ import {
   resetProjectSchedule,
   updateBidSubmissionTime,
 } from "@/lib/ui/api-client";
-import { usesCurrentSpecificMethodTemplate } from "@/lib/schedule/approved-template";
+import { timelineWorkingDays, usesCurrentSpecificMethodTemplate } from "@/lib/schedule/approved-template";
 import { addWorkingDays } from "@/lib/schedule/date";
 import { projectStatusTypeLabel } from "@/lib/projects/project-status";
 import {
@@ -277,6 +279,8 @@ export function TimelineDetail({
   const [loading, setLoading] = useState(!initialProject);
   const [error, setError] = useState("");
   const [notFound, setNotFound] = useState(false);
+  const [editingProjectDetails, setEditingProjectDetails] = useState(false);
+  const editProjectDetailsButton = useRef<HTMLButtonElement>(null);
   const [editError, setEditError] = useState("");
   const [editingOrder, setEditingOrder] = useState<number | null>(null);
   const [newDate, setNewDate] = useState("");
@@ -332,7 +336,7 @@ export function TimelineDetail({
     if (isSingleDaySelectableMilestone(step) && step.isDateManuallyAdjusted) {
       return formatThaiDateWithWeekday(step.scheduledDate);
     }
-    if (isPresentMilestone(step.label) && !step.isDateManuallyAdjusted) {
+    if (project.budgetCategory !== "SELECTIVE_METHOD" && isPresentMilestone(step.label) && !step.isDateManuallyAdjusted) {
       return formatThaiDateRangeWithWeekday(
         step.scheduledDate,
         addWorkingDays(step.scheduledDate, 2, holidayDates),
@@ -568,15 +572,15 @@ export function TimelineDetail({
   const specificMethodPresentation = usesCurrentSpecificMethodTemplate(project)
     ? SPECIFIC_METHOD_PRESENTATIONS[project.budgetCategory]
     : undefined;
-  // Count the opening day and the days through the winner announcement. Signing is separate.
-  const stepsInSla = specificMethodPresentation ? project.steps.slice(0, -1) : project.steps;
-  const totalWorkingDays = stepsInSla.reduce(
-    (sum, step) => sum + step.workingDaysToNext,
-    specificMethodPresentation ? 1 : 0,
-  );
+  const totalWorkingDays = timelineWorkingDays(project);
+
+  function closeProjectDetailsEditor() {
+    setEditingProjectDetails(false);
+    editProjectDetailsButton.current?.focus();
+  }
 
   function formatWorkingDaysText(step: ProjectRecord["steps"][number]): string {
-    if (isPresentMilestone(step.label) && !step.isDateManuallyAdjusted) {
+    if (project?.budgetCategory !== "SELECTIVE_METHOD" && isPresentMilestone(step.label) && !step.isDateManuallyAdjusted) {
       return "3 วันทำการจากขั้นตอนก่อนหน้า";
     }
     return `${step.workingDaysToNext} วันทำการถึงขั้นตอนถัดไป`;
@@ -614,10 +618,20 @@ export function TimelineDetail({
       </nav>
 
       <header data-testid="print-header" className="timeline-summary-header print-header rounded-2xl border border-slate-200 p-4 text-slate-950 shadow-sm sm:rounded-3xl sm:p-7">
-        <div className="flex min-w-0 items-center gap-4">
+        <div className="flex min-w-0 flex-col items-center gap-3 sm:flex-row sm:justify-between">
           <div className="min-w-0">
             <h1 className="mt-1 min-w-0 break-words text-center text-xl font-semibold max-[639px]:text-lg sm:text-left sm:text-2xl">{formatProjectName(project.name)}</h1>
           </div>
+          <button
+            ref={editProjectDetailsButton}
+            type="button"
+            aria-haspopup="dialog"
+            onClick={() => setEditingProjectDetails(true)}
+            className="print-hidden inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg border border-indigo-200 bg-white px-3 text-sm font-semibold text-indigo-700 hover:bg-indigo-50 focus-visible:outline-2 focus-visible:outline-indigo-600"
+          >
+            <FontAwesomeIcon icon={faPenToSquare} aria-hidden="true" />
+            แก้ไขข้อมูลโครงการ
+          </button>
         </div>
         <div data-testid="timeline-summary" className="timeline-summary print-hidden mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-[auto_auto_auto_auto] lg:items-stretch lg:justify-between">
           <div className="timeline-summary-stat timeline-summary-stat--budget">
@@ -735,6 +749,24 @@ export function TimelineDetail({
         <button type="button" onClick={resetSchedule} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 font-semibold"><FontAwesomeIcon icon={faRotateLeft} aria-hidden="true" />คืนค่าเริ่มต้น</button>
         <button type="button" onClick={removeProject} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-rose-700 px-4 py-2 font-semibold text-white hover:bg-rose-800"><FontAwesomeIcon icon={faTrashCan} aria-hidden="true" />ลบโครงการ</button>
       </div>
+
+      {editingProjectDetails ? (
+        <ProjectDetailsEditor
+          project={project}
+          onCancel={closeProjectDetailsEditor}
+          onSaved={(updated) => {
+            if (updated.budgetCategory !== project.budgetCategory) {
+              setEditingOrder(null);
+              setEditError("");
+              setOpenStepDetails(null);
+              setStepTooltipPosition(null);
+            }
+            setProject(updated);
+            setError("");
+            closeProjectDetailsEditor();
+          }}
+        />
+      ) : null}
 
       {editingOrder !== null ? (
         <div className="print-hidden fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4">

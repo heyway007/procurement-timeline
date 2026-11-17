@@ -10,6 +10,7 @@ import { useAuthUser } from "@/components/auth/authenticated-shell";
 import { ApiError } from "@/lib/ui/api-client";
 import { formatThaiDate, isWeekendIso } from "@/lib/ui/date-format";
 import { budgetCategoryOptionsForProjectStatus, type BudgetCategory } from "@/lib/projects/budget-category";
+import { DEPARTMENT_OPTIONS } from "@/lib/projects/department-options";
 import { PROJECT_STATUS_OPTIONS, type ProjectStatusType } from "@/lib/projects/project-status";
 
 type ProjectFormProps = {
@@ -19,29 +20,6 @@ type ProjectFormProps = {
 
 const fieldClass =
   "mt-2 min-h-11 w-full min-w-0 max-w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-base text-slate-950 outline-none transition focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100";
-
-const DEPARTMENT_OPTIONS = [
-  "ฝ่ายส่งเสริมการจัดประชุมนานาชาติ",
-  "ฝ่ายการตลาดไมซ์ในประเทศ",
-  "สำนักส่งเสริมการจัดประชุมและนิทรรศการ ภาคเหนือ",
-  "ฝ่ายส่งเสริมการจัดประชุมและการเดินทางเพื่อเป็นรางวัล",
-  "ฝ่ายบริหาร",
-  "ฝ่ายภาพลักษณ์และสื่อสารองค์กร",
-  "ทีมบริหารดิจิทัล",
-  "สำนักผู้อำนวยการ",
-  "ฝ่ายพัฒนาการจัดงานเมกะอีเว้นท์และเทศกาลนานาชาติ",
-  "สำนักส่งเสริมการจัดประชุมและนิทรรศการ ภาคตะวันออกเฉียงเหนือ",
-  "ฝ่ายไมซ์อินเทลลิเจนท์และนวัตกรรม",
-  "ฝ่ายอุตสาหกรรมการแสดงสินค้านานาชาติ",
-  "ฝ่ายพัฒนาศักยภาพอุตสาหกรรมไมซ์",
-  "สำนักส่งเสริมการจัดประชุมและนิทรรศการ ภาคกลาง",
-  "สำนักส่งเสริมการจัดประชุมและนิทรรศการ ภาคใต้",
-  "ส่วนงานตลาดดิจิทัล",
-  "ผู้ชำนาญการ",
-  "ฝ่ายตรวจสอบภายใน",
-  "ฝ่ายพัฒนากลยุทธ์องค์กร",
-  "ฝ่ายบัญชีและการเงิน",
-];
 
 export function ProjectForm({ onCancel, onCreate }: ProjectFormProps) {
   const user = useAuthUser();

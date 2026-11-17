@@ -2,6 +2,7 @@ import type {
   CreateProjectInput,
   ListProjectsFilter,
   ProjectRecord,
+  UpdateProjectInput,
 } from "@/lib/projects/types";
 import type { BidSubmissionTimeSlot } from "@/lib/schedule/milestone-kind";
 
@@ -88,6 +89,17 @@ export async function getProject(id: string): Promise<ProjectRecord> {
   const result = await requestJson<{ project: ProjectRecord }>(
     `/api/projects/${id}`,
   );
+  return result.project;
+}
+
+export async function updateProjectDetails(
+  id: string,
+  input: UpdateProjectInput,
+): Promise<ProjectRecord> {
+  const result = await requestJson<{ project: ProjectRecord }>(`/api/projects/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
   return result.project;
 }
 

@@ -142,6 +142,15 @@ export function usesLegacySpecificMethodTemplate(project: ProjectTemplateSnapsho
     project.steps.length === LEGACY_SPECIFIC_METHOD_STEP_COUNT;
 }
 
+export function timelineWorkingDays(project: ProjectTemplateSnapshot): number {
+  const { steps } = project;
+  if (usesCurrentSpecificMethodTemplate(project)) {
+    // Count the opening day through the winner announcement. Signing is separate.
+    return steps.slice(0, -1).reduce((sum, step) => sum + step.workingDaysToNext, 1);
+  }
+  return steps.reduce((sum, step) => sum + step.workingDaysToNext, 0);
+}
+
 export function approvedTemplateStepsForBudgetCategory(
   budgetCategory: BudgetCategory,
 ): TemplateStep[] {
@@ -177,6 +186,16 @@ export function approvedTemplateStepsForProjectStatus(
           : step.workingDaysToNext,
       }))
     : steps;
+}
+
+export function defaultTimelineWorkingDays(
+  budgetCategory: BudgetCategory,
+  projectStatusType?: ProjectStatusType,
+): number {
+  return timelineWorkingDays({
+    budgetCategory,
+    steps: approvedTemplateStepsForProjectStatus(projectStatusType, budgetCategory),
+  });
 }
 
 function documentPickupDurationTemplate(workingDaysToNext: number): TemplateStep[] {

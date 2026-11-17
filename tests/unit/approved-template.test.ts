@@ -3,6 +3,8 @@ import {
   APPROVED_TEMPLATE_STEPS,
   approvedTemplateStepsForBudgetCategory,
   approvedTemplateStepsForProjectStatus,
+  defaultTimelineWorkingDays,
+  timelineWorkingDays,
 } from "@/lib/schedule/approved-template";
 
 describe("approved procurement template", () => {
@@ -99,4 +101,22 @@ describe("approved procurement template", () => {
       );
     },
   );
+
+  it.each([
+    ["SPECIFIC_METHOD_OVER_500K", "SLA_COMPLIANT", 16],
+    ["SPECIFIC_METHOD_UNDER_500K", "SLA_COMPLIANT", 8],
+    ["SELECTIVE_METHOD", "SLA_COMPLIANT", 31],
+    ["FIVE_TO_TEN_MILLION", "SLA_NON_COMPLIANT", 41],
+  ] as const)("previews %s / %s as %i working days", (category, status, days) => {
+    expect(defaultTimelineWorkingDays(category, status)).toBe(days);
+  });
+
+  it("keeps the days between the winner and signing out of the specific-method SLA total", () => {
+    const budgetCategory = "SPECIFIC_METHOD_UNDER_500K";
+    const steps = approvedTemplateStepsForBudgetCategory(budgetCategory).map((step) =>
+      step.order === 6 ? { ...step, workingDaysToNext: 3 } : step,
+    );
+
+    expect(timelineWorkingDays({ budgetCategory, steps })).toBe(8);
+  });
 });

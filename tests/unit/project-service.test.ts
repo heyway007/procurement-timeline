@@ -662,4 +662,107 @@ describe("ProjectService", () => {
       true,
     );
   });
+
+  it("updates the name and department without changing saved dates, status, or omitted details", async () => {
+    const { service, repository } = makeService();
+    const { project } = await service.create({
+      name: "ชื่อเดิม",
+      departmentName: "ฝ่ายเดิม",
+      ownerName: "ผู้รับผิดชอบ",
+      budget: 3_000_000,
+      budgetCategory: "ONE_TO_FIVE_MILLION",
+      projectStatusType: "SLA_NON_COMPLIANT",
+      startDate: "2026-07-06",
+      note: "หมายเหตุเดิม",
+    });
+    const changedStep = await service.adjustStep(project.id, {
+      order: 2,
+      newDate: "2026-07-10",
+      version: project.version,
+      confirmShortening: false,
+      confirmOverwrite: false,
+    });
+    const changedEnd = await service.adjustEnd(project.id, "2026-12-01", changedStep.version, false);
+    const needsReview = { ...changedEnd, scheduleStatus: "NEEDS_REVIEW" } as const;
+    repository.items.set(project.id, needsReview);
+
+    const changed = await service.updateDetails(project.id, {
+      name: "ชื่อใหม่",
+      departmentName: "ฝ่ายใหม่",
+      budgetCategory: project.budgetCategory,
+      startDate: project.startDate,
+      version: needsReview.version,
+      confirmReset: false,
+    });
+
+    expect(changed).toEqual({
+      ...needsReview,
+      name: "ชื่อใหม่",
+      departmentName: "ฝ่ายใหม่",
+      version: needsReview.version + 1,
+    });
+  });
+
+  it("requires boolean confirmation for a method change before rebuilding the saved schedule", async () => {
+    const { service, repository } = makeService(new Set(["2026-07-08"]));
+    const { project } = await service.create({
+      budgetCategory: "SPECIFIC_METHOD_OVER_500K",
+      startDate: "2026-07-03",
+    });
+    const saved = await service.adjustStep(project.id, {
+      order: 7,
+      newDate: "2026-07-31",
+      version: project.version,
+      confirmShortening: false,
+      confirmOverwrite: false,
+    });
+    const changeMethod = {
+      budgetCategory: "SPECIFIC_METHOD_UNDER_500K",
+      startDate: saved.startDate,
+      version: saved.version,
+    } as const;
+
+    await expect(service.updateDetails(saved.id, { ...changeMethod, confirmReset: false }))
+      .rejects.toThrow("SCHEDULE_RESET_CONFIRMATION_REQUIRED");
+    // JSON request bodies can carry a truthy string despite the TypeScript input type.
+    const invalidConfirmation = JSON.parse('{"confirmReset":"true"}');
+    await expect(service.updateDetails(saved.id, { ...changeMethod, ...invalidConfirmation }))
+      .rejects.toThrow("SCHEDULE_RESET_CONFIRMATION_REQUIRED");
+    expect(await repository.findById(saved.id)).toEqual(saved);
+
+    const changed = await service.updateDetails(saved.id, { ...changeMethod, confirmReset: true });
+
+    expect(changed).toMatchObject({
+      budget: 500_000,
+      budgetCategory: "SPECIFIC_METHOD_UNDER_500K",
+      startDate: "2026-07-03",
+      processEndDate: "2026-07-16",
+      isProcessEndManuallyAdjusted: false,
+      scheduleStatus: "NORMAL",
+      version: saved.version + 1,
+    });
+    expect(changed.steps).toHaveLength(6);
+    expect(changed.steps[5].scheduledDate).toBe("2026-07-15");
+    expect(changed.steps.every((step) => !step.isDateManuallyAdjusted)).toBe(true);
+    expect(await service.get(saved.id)).toEqual(changed);
+    await expect(service.updateDetails(saved.id, { ...changeMethod, confirmReset: true }))
+      .rejects.toThrow("PROJECT_VERSION_CONFLICT");
+  });
+
+  it("preserves the selective method's two-day Present window after reloading a changed method", async () => {
+    const { service } = makeService();
+    const { project } = await service.create({
+      budgetCategory: "SPECIFIC_METHOD_OVER_500K",
+      startDate: "2026-07-06",
+    });
+    const changed = await service.updateDetails(project.id, {
+      budgetCategory: "SELECTIVE_METHOD",
+      startDate: project.startDate,
+      version: project.version,
+      confirmReset: true,
+    });
+
+    expect(changed.steps[7].workingDaysToNext).toBe(2);
+    expect(await service.get(project.id)).toEqual(changed);
+  });
 });
