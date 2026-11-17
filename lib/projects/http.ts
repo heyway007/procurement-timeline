@@ -45,6 +45,13 @@ const knownErrors: Record<string, MappedProjectError> = {
       message: "วันที่เลือกต้องอยู่หลังขั้นตอนก่อนหน้า",
     },
   },
+  SIGNING_DATE_MUST_FOLLOW_WINNER_ANNOUNCEMENT: {
+    status: 422,
+    body: {
+      code: "SIGNING_DATE_MUST_FOLLOW_WINNER_ANNOUNCEMENT",
+      message: "วันที่เริ่มลงนามในสัญญาได้ต้องเป็นวันทำการถัดจากวันประกาศผู้ชนะ",
+    },
+  },
   DURATION_SHORTER_THAN_TEMPLATE: {
     status: 422,
     body: {

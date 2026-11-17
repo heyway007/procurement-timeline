@@ -413,6 +413,43 @@ describe("TimelineDetail", () => {
     expect(rows[5]).not.toHaveTextContent(" - ");
   });
 
+  it("shows 16 working days through the specific method winner announcement and shows signing as step 8", () => {
+    const budgetCategory = "SPECIFIC_METHOD_OVER_500K";
+    const startDate = "2026-07-10";
+    const timeline = buildTimeline(
+      approvedTemplateStepsForBudgetCategory(budgetCategory),
+      startDate,
+      new Set(),
+    );
+    const project = {
+      ...projectFixture(),
+      budgetCategory,
+      startDate,
+      processEndDate: timeline.processEndDate,
+      steps: timeline.milestones,
+    } as const;
+
+    render(<TimelineDetail projectId={project.id} initialProject={project} />);
+
+    const summary = within(screen.getByTestId("timeline-summary"));
+    expect(summary.getByText("16 วันทำการ")).toBeInTheDocument();
+    expect(screen.getByTestId("print-total-days")).toHaveTextContent("16 วันทำการ");
+
+    const table = within(screen.getByTestId("timeline-table"));
+    const rows = table.getAllByTestId("timeline-step");
+    expect(rows).toHaveLength(7);
+    expect(rows[2]).toHaveTextContent("จัดทำและส่งหนังสือเชิญยื่นเสนอราคา");
+    expect(rows[2]).toHaveTextContent("เว็บไซต์กรมบัญชีกลาง (e-GP)");
+    expect(rows[2]).not.toHaveTextContent("อย่างน้อย 3 ราย");
+    expect(rows[3]).toHaveTextContent("วันอังคาร 21 ก.ค. 2569 - วันพฤหัสบดี 23 ก.ค. 2569");
+    expect(rows[6]).toHaveTextContent("ประกาศผู้ชนะการเสนอราคา");
+    expect(within(rows[6]).getByText("วันศุกร์ 31 ก.ค. 2569")).toBeInTheDocument();
+
+    expect(table.getByText("8")).toBeInTheDocument();
+    expect(table.getByText("วันที่เริ่มลงนามในสัญญาได้")).toBeInTheDocument();
+    expect(table.getByText("วันจันทร์ 3 ส.ค. 2569")).toBeInTheDocument();
+  });
+
   it("shows the default negotiation window as three working days", () => {
     render(<TimelineDetail projectId="project-1" initialProject={selectiveMethodProjectFixture()} />);
 
@@ -437,7 +474,7 @@ describe("TimelineDetail", () => {
   ] as const)("shows a manually selected document review date as one day for %s", (budgetCategory) => {
     const project = selectiveMethodProjectFixture();
     const timeline = buildTimeline(
-      approvedTemplateStepsForBudgetCategory(budgetCategory).map((step) =>
+      project.steps.map((step) =>
         step.order === 7 ? { ...step, workingDaysToNext: 1 } : step,
       ),
       project.startDate,

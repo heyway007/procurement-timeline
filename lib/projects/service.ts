@@ -4,10 +4,12 @@ import {
   buildTimeline,
   recalculateWithManualAnchors,
 } from "@/lib/schedule/engine";
-import { countWorkingDayAdditions } from "@/lib/schedule/date";
+import { countWorkingDayAdditions, isWorkingDay } from "@/lib/schedule/date";
 import {
   APPROVED_TEMPLATE_KEY,
+  SPECIFIC_METHOD_TEMPLATE_STEPS,
   approvedTemplateStepsForProjectStatus,
+  isSpecificOver500kTimeline,
 } from "@/lib/schedule/approved-template";
 import type { ScheduledTimeline } from "@/lib/schedule/types";
 import { isBidSubmissionMilestone, isPresentMilestone } from "@/lib/schedule/milestone-kind";
@@ -36,6 +38,28 @@ export class ProjectService {
 
   async get(id: string): Promise<ProjectRecord> {
     const project = await this.getRaw(id);
+    if (project.budgetCategory === "SPECIFIC_METHOD_OVER_500K" &&
+      project.steps.length === SPECIFIC_METHOD_TEMPLATE_STEPS.length) {
+      // The old template has steps with no equivalent in the shorter schedule.
+      if (project.isProcessEndManuallyAdjusted || project.steps.some((step) => step.isDateManuallyAdjusted)) {
+        return project;
+      }
+      const holidays = await this.calendar.listHolidayDates();
+      if (!isWorkingDay(project.startDate, holidays)) return project;
+      const timeline = buildTimeline(
+        approvedTemplateStepsForProjectStatus(project.projectStatusType, project.budgetCategory),
+        project.startDate,
+        holidays,
+      );
+      try {
+        return await this.replaceTimeline(project, timeline, project.version);
+      } catch (error) {
+        if (error instanceof Error && error.message === "PROJECT_VERSION_CONFLICT") {
+          return this.getRaw(id);
+        }
+        throw error;
+      }
+    }
     const present = project.steps.find((step) => isPresentMilestone(step.label));
     if (!present || present.isDateManuallyAdjusted || present.workingDaysToNext === 3) {
       return project;
@@ -222,6 +246,12 @@ export class ProjectService {
       newDate,
       holidays,
     );
+    if (isSpecificOver500kTimeline(project)) {
+      if (actualDurationToNext !== last.workingDaysToNext) {
+        throw new Error("SIGNING_DATE_MUST_FOLLOW_WINNER_ANNOUNCEMENT");
+      }
+      return project;
+    }
     if (actualDurationToNext < last.workingDaysToNext && !confirmShortening) {
       throw new Error("DURATION_SHORTER_THAN_TEMPLATE");
     }

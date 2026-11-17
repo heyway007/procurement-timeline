@@ -106,13 +106,34 @@ export const SPECIFIC_METHOD_TEMPLATE_STEPS = SELECTIVE_METHOD_TEMPLATE_STEPS.ma
   (step) => ({ ...step }),
 ) satisfies TemplateStep[];
 
+const SPECIFIC_OVER_500K_TEMPLATE_STEPS = [
+  { order: 1, workingDaysToNext: 4, label: "จัดทำเอกสาร รายงานขอซื้อขอจ้าง แต่งตั้งคณะกรรมการ" },
+  { order: 2, workingDaysToNext: 2, label: "จัดทำเอกสาร รายงานการประชุมคัดเลือกรายชื่อผู้ยื่นเสนอราคา" },
+  { order: 3, workingDaysToNext: 1, label: "จัดทำและส่งหนังสือเชิญยื่นเสนอราคาผ่านเว็บไซต์กรมบัญชีกลาง (e-GP)" },
+  { order: 4, workingDaysToNext: 3, label: "เว้นระยะเวลาในการยื่นเสนอราคา" },
+  { order: 5, workingDaysToNext: 1, label: "กำหนดวันยื่นเสนอราคา เวลา 8.30-16.30 น." },
+  { order: 6, workingDaysToNext: 4, label: "จัดทำเอกสาร รายงานผลพิจารณา ประกาศผู้ชนะ" },
+  { order: 7, workingDaysToNext: 1, label: "ประกาศผู้ชนะการเสนอราคา บนเว็บไซต์กรมบัญชีกลาง (e-GP)" },
+] satisfies TemplateStep[];
+
+export function isSpecificOver500kTimeline(project: {
+  budgetCategory: BudgetCategory;
+  steps: readonly TemplateStep[];
+}): boolean {
+  return project.budgetCategory === "SPECIFIC_METHOD_OVER_500K" &&
+    project.steps.length === SPECIFIC_OVER_500K_TEMPLATE_STEPS.length;
+}
+
 export function approvedTemplateStepsForBudgetCategory(
   budgetCategory: BudgetCategory,
 ): TemplateStep[] {
   if (budgetCategory === "SELECTIVE_METHOD") {
     return SELECTIVE_METHOD_TEMPLATE_STEPS;
   }
-  if (budgetCategory === "SPECIFIC_METHOD_UNDER_500K" || budgetCategory === "SPECIFIC_METHOD_OVER_500K") {
+  if (budgetCategory === "SPECIFIC_METHOD_OVER_500K") {
+    return SPECIFIC_OVER_500K_TEMPLATE_STEPS;
+  }
+  if (budgetCategory === "SPECIFIC_METHOD_UNDER_500K") {
     return SPECIFIC_METHOD_TEMPLATE_STEPS;
   }
   if (budgetCategory === "ONE_TO_FIVE_MILLION") {

@@ -78,11 +78,8 @@ describe("approved procurement template", () => {
     ]);
   });
 
-  it("starts both specific procurement methods with a copy of the selective method steps", () => {
+  it("keeps the selective method steps for specific procurement up to 500,000 baht", () => {
     expect(approvedTemplateStepsForBudgetCategory("SPECIFIC_METHOD_UNDER_500K")).toEqual(
-      SELECTIVE_METHOD_TEMPLATE_STEPS,
-    );
-    expect(approvedTemplateStepsForBudgetCategory("SPECIFIC_METHOD_OVER_500K")).toEqual(
       SELECTIVE_METHOD_TEMPLATE_STEPS,
     );
   });

@@ -5,7 +5,7 @@ import type {
   ProjectRepository,
 } from "@/lib/projects/repository";
 import { ProjectService } from "@/lib/projects/service";
-import { APPROVED_TEMPLATE_STEPS } from "@/lib/schedule/approved-template";
+import { APPROVED_TEMPLATE_STEPS, SELECTIVE_METHOD_TEMPLATE_STEPS } from "@/lib/schedule/approved-template";
 import { buildTimeline } from "@/lib/schedule/engine";
 import type {
   ListProjectsFilter,
@@ -256,7 +256,6 @@ describe("ProjectService", () => {
   it.each([
     "SELECTIVE_METHOD",
     "SPECIFIC_METHOD_UNDER_500K",
-    "SPECIFIC_METHOD_OVER_500K",
   ] as const)("keeps a selected committee day and restores its three-day default on reset for %s", async (budgetCategory) => {
     const { service } = makeService();
     const { project } = await service.create({
@@ -325,7 +324,6 @@ describe("ProjectService", () => {
   it.each([
     "SELECTIVE_METHOD",
     "SPECIFIC_METHOD_UNDER_500K",
-    "SPECIFIC_METHOD_OVER_500K",
   ] as const)("keeps a selected document review day and restores its two-day default for %s", async (budgetCategory) => {
     const { service } = makeService();
     const { project } = await service.create({ budgetCategory, startDate: "2026-07-06" });
@@ -364,6 +362,72 @@ describe("ProjectService", () => {
     const reset = await service.resetSchedule(project.id, reselected.version);
     expect(reset.steps).toEqual(project.steps);
     expect(reset.processEndDate).toBe(project.processEndDate);
+  });
+
+  it("schedules specific procurement over 500,000 baht through the winner on day 16 and skips holidays before signing", async () => {
+    const { service } = makeService(new Set(["2026-07-27"]));
+    const { project } = await service.create({
+      budgetCategory: "SPECIFIC_METHOD_OVER_500K",
+      startDate: "2026-07-03",
+    });
+
+    expect(project.steps.map(({ order, workingDaysToNext, scheduledDate }) =>
+      [order, workingDaysToNext, scheduledDate],
+    )).toEqual([
+      [1, 4, "2026-07-03"],
+      [2, 2, "2026-07-09"],
+      [3, 1, "2026-07-13"],
+      [4, 3, "2026-07-14"],
+      [5, 1, "2026-07-17"],
+      [6, 4, "2026-07-20"],
+      [7, 1, "2026-07-24"],
+    ]);
+    expect(project.steps[2].label).toBe("จัดทำและส่งหนังสือเชิญยื่นเสนอราคาผ่านเว็บไซต์กรมบัญชีกลาง (e-GP)");
+    expect(project.steps[6].label).toContain("ประกาศผู้ชนะการเสนอราคา");
+    expect(project.processEndDate).toBe("2026-07-28");
+
+    const rescheduled = await service.adjustStep(project.id, {
+      order: 7,
+      newDate: "2026-07-28",
+      version: project.version,
+      confirmShortening: false,
+      confirmOverwrite: false,
+    });
+    expect(rescheduled.processEndDate).toBe("2026-07-29");
+    await expect(service.adjustEnd(rescheduled.id, "2026-07-30", rescheduled.version, false))
+      .rejects.toThrow("SIGNING_DATE_MUST_FOLLOW_WINNER_ANNOUNCEMENT");
+    await expect(service.adjustEnd(rescheduled.id, "2026-07-29", rescheduled.version, false))
+      .resolves.toMatchObject({ isProcessEndManuallyAdjusted: false, version: rescheduled.version });
+  });
+
+  it.each([false, true])("opens an old specific procurement over 500,000 baht timeline with manual dates: %s", async (manual) => {
+    const { service, repository } = makeService();
+    const legacy = buildTimeline(SELECTIVE_METHOD_TEMPLATE_STEPS, "2026-07-03", new Set());
+    const saved = await repository.create({
+      name: "โครงการแม่แบบเก่า",
+      ownerName: "ผู้รับผิดชอบ",
+      budget: 500_001,
+      budgetCategory: "SPECIFIC_METHOD_OVER_500K",
+      startDate: "2026-07-03",
+      note: "",
+      templateKey: "procurement-29m-v1",
+      templateVersion: 1,
+      processEndDate: legacy.processEndDate,
+      isProcessEndManuallyAdjusted: false,
+      scheduleStatus: "NORMAL",
+      steps: legacy.milestones.map((step) => step.order === 9 && manual
+        ? { ...step, isDateManuallyAdjusted: true }
+        : step),
+    });
+
+    const opened = await service.get(saved.id);
+    if (manual) expect(opened).toEqual(saved);
+    const updated = manual ? await service.resetSchedule(saved.id, opened.version) : opened;
+    expect(updated.steps).toHaveLength(7);
+    expect(updated.processEndDate).toBe("2026-07-27");
+    expect(updated.version).toBe(saved.version + 1);
+    expect(await repository.findById(saved.id)).toEqual(updated);
+    expect(await service.get(saved.id)).toEqual(updated);
   });
 
   it("schedules non-SLA announcements after three working days and recalculates downstream dates", async () => {
