@@ -7,9 +7,9 @@ import {
 import { countWorkingDayAdditions, isWorkingDay } from "@/lib/schedule/date";
 import {
   APPROVED_TEMPLATE_KEY,
-  SPECIFIC_METHOD_TEMPLATE_STEPS,
   approvedTemplateStepsForProjectStatus,
-  isSpecificOver500kTimeline,
+  usesCurrentSpecificMethodTemplate,
+  usesLegacySpecificMethodTemplate,
 } from "@/lib/schedule/approved-template";
 import type { ScheduledTimeline } from "@/lib/schedule/types";
 import { isBidSubmissionMilestone, isPresentMilestone } from "@/lib/schedule/milestone-kind";
@@ -38,8 +38,7 @@ export class ProjectService {
 
   async get(id: string): Promise<ProjectRecord> {
     const project = await this.getRaw(id);
-    if (project.budgetCategory === "SPECIFIC_METHOD_OVER_500K" &&
-      project.steps.length === SPECIFIC_METHOD_TEMPLATE_STEPS.length) {
+    if (usesLegacySpecificMethodTemplate(project)) {
       // The old template has steps with no equivalent in the shorter schedule.
       if (project.isProcessEndManuallyAdjusted || project.steps.some((step) => step.isDateManuallyAdjusted)) {
         return project;
@@ -246,7 +245,7 @@ export class ProjectService {
       newDate,
       holidays,
     );
-    if (isSpecificOver500kTimeline(project)) {
+    if (usesCurrentSpecificMethodTemplate(project)) {
       if (actualDurationToNext !== last.workingDaysToNext) {
         throw new Error("SIGNING_DATE_MUST_FOLLOW_WINNER_ANNOUNCEMENT");
       }

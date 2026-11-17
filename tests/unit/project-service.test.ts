@@ -253,13 +253,10 @@ describe("ProjectService", () => {
     ]);
   });
 
-  it.each([
-    "SELECTIVE_METHOD",
-    "SPECIFIC_METHOD_UNDER_500K",
-  ] as const)("keeps a selected committee day and restores its three-day default on reset for %s", async (budgetCategory) => {
+  it("keeps a selected committee day and restores its three-day default on reset for the selective method", async () => {
     const { service } = makeService();
     const { project } = await service.create({
-      budgetCategory,
+      budgetCategory: "SELECTIVE_METHOD",
       startDate: "2026-07-06",
     });
 
@@ -321,12 +318,9 @@ describe("ProjectService", () => {
     expect(reset.processEndDate).toBe(project.processEndDate);
   });
 
-  it.each([
-    "SELECTIVE_METHOD",
-    "SPECIFIC_METHOD_UNDER_500K",
-  ] as const)("keeps a selected document review day and restores its two-day default for %s", async (budgetCategory) => {
+  it("keeps a selected document review day and restores its two-day default for the selective method", async () => {
     const { service } = makeService();
-    const { project } = await service.create({ budgetCategory, startDate: "2026-07-06" });
+    const { project } = await service.create({ budgetCategory: "SELECTIVE_METHOD", startDate: "2026-07-06" });
 
     expect(project.steps[6]).toMatchObject({ workingDaysToNext: 2, isDateManuallyAdjusted: false });
     expect(project.steps[7].scheduledDate).toBe("2026-07-27");
@@ -400,14 +394,53 @@ describe("ProjectService", () => {
       .resolves.toMatchObject({ isProcessEndManuallyAdjusted: false, version: rescheduled.version });
   });
 
-  it.each([false, true])("opens an old specific procurement over 500,000 baht timeline with manual dates: %s", async (manual) => {
+  it("schedules specific procurement up to 500,000 baht through the winner on day 8 and skips holidays before signing", async () => {
+    const { service } = makeService(new Set(["2026-07-20"]));
+    const { project } = await service.create({
+      budgetCategory: "SPECIFIC_METHOD_UNDER_500K",
+      startDate: "2026-07-08",
+    });
+
+    expect(project.budget).toBe(500_000);
+    expect(project.steps.map(({ order, workingDaysToNext, scheduledDate }) =>
+      [order, workingDaysToNext, scheduledDate],
+    )).toEqual([
+      [1, 1, "2026-07-08"],
+      [2, 1, "2026-07-09"],
+      [3, 3, "2026-07-10"],
+      [4, 1, "2026-07-15"],
+      [5, 1, "2026-07-16"],
+      [6, 1, "2026-07-17"],
+    ]);
+    expect(project.steps[1].label).toBe("ส่งอีเมลเชิญยื่นเสนอราคา");
+    expect(project.steps[5].label).toContain("เว็บไซต์กรมบัญชีกลาง (e-GP)");
+    expect(project.processEndDate).toBe("2026-07-21");
+
+    const rescheduled = await service.adjustStep(project.id, {
+      order: 6,
+      newDate: "2026-07-21",
+      version: project.version,
+      confirmShortening: false,
+      confirmOverwrite: false,
+    });
+    expect(rescheduled.processEndDate).toBe("2026-07-22");
+    await expect(service.adjustEnd(rescheduled.id, "2026-07-23", rescheduled.version, false))
+      .rejects.toThrow("SIGNING_DATE_MUST_FOLLOW_WINNER_ANNOUNCEMENT");
+  });
+
+  it.each([
+    ["SPECIFIC_METHOD_OVER_500K", 500_001, 7, "2026-07-27", false],
+    ["SPECIFIC_METHOD_OVER_500K", 500_001, 7, "2026-07-27", true],
+    ["SPECIFIC_METHOD_UNDER_500K", 500_000, 6, "2026-07-15", false],
+    ["SPECIFIC_METHOD_UNDER_500K", 500_000, 6, "2026-07-15", true],
+  ] as const)("opens an old %s timeline (%i baht, %i steps, signing %s, manual dates: %s)", async (budgetCategory, budget, stepCount, signingDate, manual) => {
     const { service, repository } = makeService();
     const legacy = buildTimeline(SELECTIVE_METHOD_TEMPLATE_STEPS, "2026-07-03", new Set());
     const saved = await repository.create({
       name: "โครงการแม่แบบเก่า",
       ownerName: "ผู้รับผิดชอบ",
-      budget: 500_001,
-      budgetCategory: "SPECIFIC_METHOD_OVER_500K",
+      budget,
+      budgetCategory,
       startDate: "2026-07-03",
       note: "",
       templateKey: "procurement-29m-v1",
@@ -423,8 +456,8 @@ describe("ProjectService", () => {
     const opened = await service.get(saved.id);
     if (manual) expect(opened).toEqual(saved);
     const updated = manual ? await service.resetSchedule(saved.id, opened.version) : opened;
-    expect(updated.steps).toHaveLength(7);
-    expect(updated.processEndDate).toBe("2026-07-27");
+    expect(updated.steps).toHaveLength(stepCount);
+    expect(updated.processEndDate).toBe(signingDate);
     expect(updated.version).toBe(saved.version + 1);
     expect(await repository.findById(saved.id)).toEqual(updated);
     expect(await service.get(saved.id)).toEqual(updated);

@@ -102,9 +102,14 @@ export const SELECTIVE_METHOD_TEMPLATE_STEPS = [
   { order: 13, workingDaysToNext: 7, label: "ระยะเวลาอุทธรณ์ ติดต่อให้ผู้รับจ้างนำส่งเอกสารเพื่อทำสัญญาและวางหลักประกันสัญญา" },
 ] satisfies TemplateStep[];
 
-export const SPECIFIC_METHOD_TEMPLATE_STEPS = SELECTIVE_METHOD_TEMPLATE_STEPS.map(
-  (step) => ({ ...step }),
-) satisfies TemplateStep[];
+const SPECIFIC_UNDER_500K_TEMPLATE_STEPS = [
+  { order: 1, workingDaysToNext: 1, label: "จัดทำเอกสาร รายงานขอซื้อขอจ้าง แต่งตั้งคณะกรรมการ" },
+  { order: 2, workingDaysToNext: 1, label: "ส่งอีเมลเชิญยื่นเสนอราคา" },
+  { order: 3, workingDaysToNext: 3, label: "เว้นระยะเวลาในการยื่นเสนอราคา" },
+  { order: 4, workingDaysToNext: 1, label: "กำหนดวันยื่นเสนอราคา เวลา 8.30-16.30 น." },
+  { order: 5, workingDaysToNext: 1, label: "จัดทำเอกสาร รายงานผลพิจารณา ประกาศผู้ชนะ" },
+  { order: 6, workingDaysToNext: 1, label: "ประกาศผู้ชนะการเสนอราคา บนเว็บไซต์กรมบัญชีกลาง (e-GP)" },
+] satisfies TemplateStep[];
 
 const SPECIFIC_OVER_500K_TEMPLATE_STEPS = [
   { order: 1, workingDaysToNext: 4, label: "จัดทำเอกสาร รายงานขอซื้อขอจ้าง แต่งตั้งคณะกรรมการ" },
@@ -116,12 +121,25 @@ const SPECIFIC_OVER_500K_TEMPLATE_STEPS = [
   { order: 7, workingDaysToNext: 1, label: "ประกาศผู้ชนะการเสนอราคา บนเว็บไซต์กรมบัญชีกลาง (e-GP)" },
 ] satisfies TemplateStep[];
 
-export function isSpecificOver500kTimeline(project: {
+const SPECIFIC_METHOD_TEMPLATES: Partial<Record<BudgetCategory, TemplateStep[]>> = {
+  SPECIFIC_METHOD_UNDER_500K: SPECIFIC_UNDER_500K_TEMPLATE_STEPS,
+  SPECIFIC_METHOD_OVER_500K: SPECIFIC_OVER_500K_TEMPLATE_STEPS,
+};
+
+const LEGACY_SPECIFIC_METHOD_STEP_COUNT = 13;
+
+type ProjectTemplateSnapshot = {
   budgetCategory: BudgetCategory;
   steps: readonly TemplateStep[];
-}): boolean {
-  return project.budgetCategory === "SPECIFIC_METHOD_OVER_500K" &&
-    project.steps.length === SPECIFIC_OVER_500K_TEMPLATE_STEPS.length;
+};
+
+export function usesCurrentSpecificMethodTemplate(project: ProjectTemplateSnapshot): boolean {
+  return project.steps.length === SPECIFIC_METHOD_TEMPLATES[project.budgetCategory]?.length;
+}
+
+export function usesLegacySpecificMethodTemplate(project: ProjectTemplateSnapshot): boolean {
+  return SPECIFIC_METHOD_TEMPLATES[project.budgetCategory] !== undefined &&
+    project.steps.length === LEGACY_SPECIFIC_METHOD_STEP_COUNT;
 }
 
 export function approvedTemplateStepsForBudgetCategory(
@@ -130,11 +148,9 @@ export function approvedTemplateStepsForBudgetCategory(
   if (budgetCategory === "SELECTIVE_METHOD") {
     return SELECTIVE_METHOD_TEMPLATE_STEPS;
   }
-  if (budgetCategory === "SPECIFIC_METHOD_OVER_500K") {
-    return SPECIFIC_OVER_500K_TEMPLATE_STEPS;
-  }
-  if (budgetCategory === "SPECIFIC_METHOD_UNDER_500K") {
-    return SPECIFIC_METHOD_TEMPLATE_STEPS;
+  const specificMethodTemplate = SPECIFIC_METHOD_TEMPLATES[budgetCategory];
+  if (specificMethodTemplate) {
+    return specificMethodTemplate;
   }
   if (budgetCategory === "ONE_TO_FIVE_MILLION") {
     return smallBudgetTemplateSteps();

@@ -450,6 +450,44 @@ describe("TimelineDetail", () => {
     expect(table.getByText("วันจันทร์ 3 ส.ค. 2569")).toBeInTheDocument();
   });
 
+  it("shows 8 working days through the specific method winner announcement for budgets up to 500,000 baht", () => {
+    const budgetCategory = "SPECIFIC_METHOD_UNDER_500K";
+    const startDate = "2026-07-22";
+    const timeline = buildTimeline(
+      approvedTemplateStepsForBudgetCategory(budgetCategory),
+      startDate,
+      new Set(),
+    );
+    const project = {
+      ...projectFixture(),
+      budget: 500_000,
+      budgetCategory,
+      startDate,
+      processEndDate: timeline.processEndDate,
+      steps: timeline.milestones,
+    } as const;
+
+    render(<TimelineDetail projectId={project.id} initialProject={project} />);
+
+    const summary = within(screen.getByTestId("timeline-summary"));
+    expect(summary.getByText("8 วันทำการ")).toBeInTheDocument();
+    expect(screen.getByTestId("print-total-days")).toHaveTextContent("8 วันทำการ");
+
+    const table = within(screen.getByTestId("timeline-table"));
+    const rows = table.getAllByTestId("timeline-step");
+    expect(rows).toHaveLength(6);
+    expect(rows[1]).toHaveTextContent("ส่งอีเมลเชิญยื่นเสนอราคา");
+    expect(rows[2]).toHaveTextContent("วันศุกร์ 24 ก.ค. 2569 - วันอังคาร 28 ก.ค. 2569");
+    expect(rows[3]).toHaveTextContent("เวลา 08.30–16.30 น.");
+    expect(rows[5]).toHaveTextContent("ประกาศผู้ชนะการเสนอราคา");
+    expect(rows[5]).toHaveTextContent("เว็บไซต์กรมบัญชีกลาง (e-GP)");
+    expect(within(rows[5]).getByText("วันศุกร์ 31 ก.ค. 2569")).toBeInTheDocument();
+
+    expect(table.getByText("7")).toBeInTheDocument();
+    expect(table.getByText("วันที่เริ่มลงนามในสัญญาได้")).toBeInTheDocument();
+    expect(table.getByText("วันจันทร์ 3 ส.ค. 2569")).toBeInTheDocument();
+  });
+
   it("shows the default negotiation window as three working days", () => {
     render(<TimelineDetail projectId="project-1" initialProject={selectiveMethodProjectFixture()} />);
 

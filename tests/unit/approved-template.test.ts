@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   APPROVED_TEMPLATE_STEPS,
-  SELECTIVE_METHOD_TEMPLATE_STEPS,
   approvedTemplateStepsForBudgetCategory,
   approvedTemplateStepsForProjectStatus,
 } from "@/lib/schedule/approved-template";
@@ -76,12 +75,6 @@ describe("approved procurement template", () => {
     expect(steps.map((step) => step.workingDaysToNext)).toEqual([
       2, 2, 2, 1, 5, 1, 2, 2, 3, 1, 2, 1, 7,
     ]);
-  });
-
-  it("keeps the selective method steps for specific procurement up to 500,000 baht", () => {
-    expect(approvedTemplateStepsForBudgetCategory("SPECIFIC_METHOD_UNDER_500K")).toEqual(
-      SELECTIVE_METHOD_TEMPLATE_STEPS,
-    );
   });
 
   it.each([

@@ -40,7 +40,7 @@ import {
   resetProjectSchedule,
   updateBidSubmissionTime,
 } from "@/lib/ui/api-client";
-import { isSpecificOver500kTimeline } from "@/lib/schedule/approved-template";
+import { usesCurrentSpecificMethodTemplate } from "@/lib/schedule/approved-template";
 import { addWorkingDays } from "@/lib/schedule/date";
 import { projectStatusTypeLabel } from "@/lib/projects/project-status";
 import {
@@ -137,27 +137,44 @@ const SELECTIVE_METHOD_STEP_PRESENTATIONS: Record<number, StepPresentation> = {
   13: { title: "ระยะเวลาอุทธรณ์", subtitle: "ติดต่อให้ผู้รับจ้างนำส่งเอกสารเพื่อทำสัญญาและวางหลักประกันสัญญา" },
 };
 
-const SPECIFIC_OVER_500K_STEP_PRESENTATIONS: Record<number, StepPresentation> = {
-  1: SELECTIVE_METHOD_STEP_PRESENTATIONS[1],
-  2: SELECTIVE_METHOD_STEP_PRESENTATIONS[2],
-  3: {
-    title: "จัดทำและส่งหนังสือเชิญยื่นเสนอราคา",
-    subtitle: "ผ่านเว็บไซต์กรมบัญชีกลาง (e-GP)",
+type SpecificMethodPresentation = {
+  offerPeriodOrder: number;
+  steps: Record<number, StepPresentation>;
+};
+
+const SPECIFIC_METHOD_PRESENTATIONS: Partial<Record<ProjectRecord["budgetCategory"], SpecificMethodPresentation>> = {
+  SPECIFIC_METHOD_UNDER_500K: {
+    offerPeriodOrder: 3,
+    steps: {
+      1: SELECTIVE_METHOD_STEP_PRESENTATIONS[1],
+      2: { title: "ส่งอีเมลเชิญยื่นเสนอราคา" },
+      3: SELECTIVE_METHOD_STEP_PRESENTATIONS[5],
+      4: { title: "กำหนดวันยื่นเสนอราคา", subtitle: "เวลา 08.30–16.30 น." },
+      5: SELECTIVE_METHOD_STEP_PRESENTATIONS[11],
+      6: SELECTIVE_METHOD_STEP_PRESENTATIONS[12],
+    },
   },
-  4: SELECTIVE_METHOD_STEP_PRESENTATIONS[5],
-  5: SELECTIVE_METHOD_STEP_PRESENTATIONS[6],
-  6: SELECTIVE_METHOD_STEP_PRESENTATIONS[11],
-  7: SELECTIVE_METHOD_STEP_PRESENTATIONS[12],
+  SPECIFIC_METHOD_OVER_500K: {
+    offerPeriodOrder: 4,
+    steps: {
+      1: SELECTIVE_METHOD_STEP_PRESENTATIONS[1],
+      2: SELECTIVE_METHOD_STEP_PRESENTATIONS[2],
+      3: {
+        title: "จัดทำและส่งหนังสือเชิญยื่นเสนอราคา",
+        subtitle: "ผ่านเว็บไซต์กรมบัญชีกลาง (e-GP)",
+      },
+      4: SELECTIVE_METHOD_STEP_PRESENTATIONS[5],
+      5: SELECTIVE_METHOD_STEP_PRESENTATIONS[6],
+      6: SELECTIVE_METHOD_STEP_PRESENTATIONS[11],
+      7: SELECTIVE_METHOD_STEP_PRESENTATIONS[12],
+    },
+  },
 };
 
 function stepPresentation(
   step: ProjectRecord["steps"][number],
   budgetCategory: ProjectRecord["budgetCategory"],
-  isSpecificOver500k: boolean,
 ): StepPresentation {
-  if (isSpecificOver500k) {
-    return SPECIFIC_OVER_500K_STEP_PRESENTATIONS[step.order] ?? { title: step.label };
-  }
   if (budgetCategory === "SELECTIVE_METHOD" || budgetCategory === "SPECIFIC_METHOD_UNDER_500K" || budgetCategory === "SPECIFIC_METHOD_OVER_500K") {
     return SELECTIVE_METHOD_STEP_PRESENTATIONS[step.order] ?? { title: step.label };
   }
@@ -321,13 +338,15 @@ export function TimelineDetail({
         addWorkingDays(step.scheduledDate, 2, holidayDates),
       );
     }
-    if (!nextStep && !isSpecificOver500k) {
+    if (!nextStep && !specificMethodPresentation) {
       return formatThaiDateRangeWithWeekday(
         step.scheduledDate,
         previousWorkingDate(project.processEndDate, holidayDates),
       );
     }
-    const showsDateRange = isSpecificOver500k ? step.order === 4 : isDateRangeMilestone(project, step.order);
+    const showsDateRange = specificMethodPresentation
+      ? step.order === specificMethodPresentation.offerPeriodOrder
+      : isDateRangeMilestone(project, step.order);
     if (!showsDateRange) {
       return formatThaiDateWithWeekday(step.scheduledDate);
     }
@@ -546,12 +565,14 @@ export function TimelineDetail({
   }
   if (!project) return <p className="p-10 text-center text-rose-700">{error || "ไม่พบโครงการ"}</p>;
 
-  const isSpecificOver500k = isSpecificOver500kTimeline(project);
+  const specificMethodPresentation = usesCurrentSpecificMethodTemplate(project)
+    ? SPECIFIC_METHOD_PRESENTATIONS[project.budgetCategory]
+    : undefined;
   // Count the opening day and the days through the winner announcement. Signing is separate.
-  const stepsInSla = isSpecificOver500k ? project.steps.slice(0, -1) : project.steps;
+  const stepsInSla = specificMethodPresentation ? project.steps.slice(0, -1) : project.steps;
   const totalWorkingDays = stepsInSla.reduce(
     (sum, step) => sum + step.workingDaysToNext,
-    isSpecificOver500k ? 1 : 0,
+    specificMethodPresentation ? 1 : 0,
   );
 
   function formatWorkingDaysText(step: ProjectRecord["steps"][number]): string {
@@ -643,7 +664,9 @@ export function TimelineDetail({
           <span>ลำดับ</span><span className="timeline-header-icon-slot print-hidden" /><span>ขั้นตอน<span className="mobile-step-date-label"> / วันที่กำหนด</span></span><span className="mobile-date-header">วันที่กำหนด</span><span className="print-hidden text-center">จัดการ</span>
         </div>
         {project.steps.map((step, index) => {
-          const presentation = stepPresentation(step, project.budgetCategory, isSpecificOver500k);
+          const presentation = specificMethodPresentation
+            ? specificMethodPresentation.steps[step.order] ?? { title: step.label }
+            : stepPresentation(step, project.budgetCategory);
           return (
           <div data-testid="timeline-step" data-order={step.order} key={step.order} className="timeline-step print-grid grid grid-cols-[1.75rem_3rem_minmax(0,1fr)_minmax(0,1.15fr)_3.5rem] items-center gap-2 border-t border-slate-100 px-2 py-3 text-xs sm:grid-cols-[2.5rem_3.25rem_minmax(0,1.4fr)_minmax(0,1.2fr)_6rem] sm:gap-3 sm:px-4 sm:py-4 sm:text-base lg:grid-cols-[4rem_4rem_1fr_20rem_7rem]">
             <span data-testid="timeline-step-order" className="self-center text-center font-semibold text-indigo-700"><span className="print-hidden hidden">ขั้นตอนที่ </span>{step.order}</span>
@@ -703,7 +726,7 @@ export function TimelineDetail({
           );
         })}
         <div className="timeline-step-end print-grid grid grid-cols-[1.75rem_3rem_minmax(0,1fr)_minmax(0,1.15fr)_3.5rem] items-center gap-2 border-t-2 border-indigo-100 bg-indigo-50/40 px-2 py-3 text-xs sm:grid-cols-[2.5rem_3.25rem_minmax(0,1.4fr)_minmax(0,1.2fr)_6rem] sm:gap-3 sm:px-4 sm:py-4 sm:text-base lg:grid-cols-[4rem_4rem_1fr_20rem_7rem]">
-          <span className="self-center text-center font-semibold text-indigo-700">{isSpecificOver500k ? project.steps.length + 1 : "จบ"}</span><div className="timeline-step-main"><span className="timeline-step-icon print-hidden h-12 w-12 self-center" aria-hidden="true"><FontAwesomeIcon icon={faHandshake} /></span><span className="timeline-step-content break-words text-sm font-semibold text-slate-900 sm:text-lg">วันที่เริ่มลงนามในสัญญาได้</span><span className="timeline-step-date break-words font-semibold text-indigo-800">{formatThaiDateWithWeekday(project.processEndDate)}</span></div><span className="timeline-step-end-action print-hidden" />
+          <span className="self-center text-center font-semibold text-indigo-700">{specificMethodPresentation ? project.steps.length + 1 : "จบ"}</span><div className="timeline-step-main"><span className="timeline-step-icon print-hidden h-12 w-12 self-center" aria-hidden="true"><FontAwesomeIcon icon={faHandshake} /></span><span className="timeline-step-content break-words text-sm font-semibold text-slate-900 sm:text-lg">วันที่เริ่มลงนามในสัญญาได้</span><span className="timeline-step-date break-words font-semibold text-indigo-800">{formatThaiDateWithWeekday(project.processEndDate)}</span></div><span className="timeline-step-end-action print-hidden" />
         </div>
       </section>
 
