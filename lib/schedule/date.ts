@@ -58,13 +58,15 @@ export function countWorkingDayAdditions(
   from: string,
   to: string,
   holidays: ReadonlySet<string>,
+  allowSameDay = false,
+  allowNonWorkingDate = false,
 ): number {
   parseIsoDate(from);
   parseIsoDate(to);
-  if (to <= from) {
+  if (to < from || (!allowSameDay && to === from)) {
     throw new Error("DATE_MUST_BE_AFTER_PREVIOUS");
   }
-  if (!isWorkingDay(to, holidays)) {
+  if (!allowNonWorkingDate && !isWorkingDay(to, holidays)) {
     throw new Error("DATE_MUST_BE_WORKING_DAY");
   }
 

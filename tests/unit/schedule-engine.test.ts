@@ -14,6 +14,67 @@ const template: TemplateStep[] = [
   { order: 3, label: "ขั้นตอน 3", workingDaysToNext: 7 },
 ];
 
+describe("non-SLA manual scheduling", () => {
+  const options = { allowSameDay: true, preserveManualDates: true };
+
+  it("allows adjacent stages on one working date and records a zero gap", () => {
+    const base = buildTimeline(template, "2026-07-06", new Set());
+    const changed = adjustMilestone(base, 2, "2026-07-06", new Set(), options);
+    expect(changed.milestones[0].workingDaysToNext).toBe(0);
+    expect(changed.milestones[1]).toMatchObject({ scheduledDate: "2026-07-06", isDateManuallyAdjusted: true });
+    expect(changed.milestones[2].scheduledDate).toBe("2026-07-07");
+  });
+
+  it("keeps downstream manual dates and recalculates their actual incoming gaps", () => {
+    const base = buildTimeline(template, "2026-07-06", new Set());
+    const anchored = adjustMilestone(base, 3, "2026-07-20", new Set(), options);
+    const changed = adjustMilestone(anchored, 2, "2026-07-14", new Set(), options);
+    expect(changed.milestones[2]).toEqual(anchored.milestones[2]);
+    expect(changed.milestones[1].workingDaysToNext).toBe(4);
+    expect(changed.processEndDate).toBe(anchored.processEndDate);
+  });
+
+  it("preserves manual anchors when the first stage moves", () => {
+    const base = buildTimeline(template, "2026-07-06", new Set());
+    const anchored = adjustMilestone(base, 3, "2026-07-20", new Set(), options);
+    const changed = adjustMilestone(anchored, 1, "2026-07-07", new Set(), options);
+    expect(changed.milestones.map((step) => step.scheduledDate)).toEqual(["2026-07-07", "2026-07-13", "2026-07-20"]);
+    expect(changed.milestones[2].isDateManuallyAdjusted).toBe(true);
+    expect(changed.milestones[1].workingDaysToNext).toBe(5);
+  });
+
+  it("rejects edits crossing a preserved manual date without changing the input", () => {
+    const base = buildTimeline(template, "2026-07-06", new Set());
+    const anchored = adjustMilestone(base, 3, "2026-07-20", new Set(), options);
+    const original = structuredClone(anchored);
+    expect(() => adjustMilestone(anchored, 2, "2026-07-21", new Set(), options)).toThrow("MANUAL_DATE_CONFLICT");
+    expect(anchored).toEqual(original);
+  });
+
+  it("preserves a manual completion date, including a same-day final stage", () => {
+    const base = buildTimeline(template, "2026-07-06", new Set());
+    const anchored = adjustProcessEnd(base, "2026-07-20", new Set(), options);
+    const changed = adjustMilestone(anchored, 3, "2026-07-20", new Set(), options);
+    expect(changed.processEndDate).toBe("2026-07-20");
+    expect(changed.isProcessEndManuallyAdjusted).toBe(true);
+    expect(changed.milestones[2].workingDaysToNext).toBe(0);
+    expect(() => adjustMilestone(anchored, 3, "2026-07-21", new Set(), options)).toThrow("MANUAL_DATE_CONFLICT");
+  });
+
+  it("keeps same-day anchors and actual gaps when the holiday calendar changes", () => {
+    const base = buildTimeline(template, "2026-07-06", new Set());
+    const changed = adjustMilestone(base, 2, "2026-07-06", new Set(), options);
+    const recalculated = recalculateWithManualAnchors(changed, new Set(["2026-07-07"]), options);
+    expect(recalculated).toMatchObject({ kind: "ok", timeline: { milestones: [
+      { scheduledDate: "2026-07-06", workingDaysToNext: 0 },
+      { scheduledDate: "2026-07-06", isDateManuallyAdjusted: true },
+      { scheduledDate: "2026-07-08" },
+    ] } });
+    expect(recalculateWithManualAnchors(changed, new Set(["2026-07-06"]), options))
+      .toEqual({ kind: "conflict", order: 1 });
+  });
+});
+
 describe("schedule engine", () => {
   it("uses the project start as milestone one and adds template durations", () => {
     const result = buildTimeline(template, "2026-07-06", new Set());

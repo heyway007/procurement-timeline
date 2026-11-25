@@ -36,6 +36,21 @@ describe("working-day date math", () => {
     expect(addWorkingDays("2026-07-06", 0, new Set())).toBe("2026-07-06");
   });
 
+  it("counts a same-day working date only when explicitly allowed", () => {
+    expect(countWorkingDayAdditions("2026-07-06", "2026-07-06", new Set(), true)).toBe(0);
+    expect(() => countWorkingDayAdditions("2026-07-06", "2026-07-06", new Set()))
+      .toThrow("DATE_MUST_BE_AFTER_PREVIOUS");
+  });
+
+  it("still rejects backwards dates and non-working dates with same-day scheduling", () => {
+    expect(() => countWorkingDayAdditions("2026-07-07", "2026-07-06", new Set(), true))
+      .toThrow("DATE_MUST_BE_AFTER_PREVIOUS");
+    for (const date of ["2026-07-11", "2026-07-12", "2026-07-13"]) {
+      expect(() => countWorkingDayAdditions(date, date, new Set(["2026-07-13"]), true))
+        .toThrow("DATE_MUST_BE_WORKING_DAY");
+    }
+  });
+
   it("rejects invalid ISO dates and invalid amounts", () => {
     expect(() => isWorkingDay("2026-02-30", new Set())).toThrow(
       "INVALID_ISO_DATE",

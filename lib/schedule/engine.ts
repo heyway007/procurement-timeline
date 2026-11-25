@@ -6,6 +6,7 @@ import {
 import type {
   ScheduledMilestone,
   ScheduledTimeline,
+  ScheduleOptions,
   TemplateStep,
 } from "./types";
 import {
@@ -65,6 +66,7 @@ export function adjustMilestone(
   order: number,
   newDate: string,
   holidays: ReadonlySet<string>,
+  options: ScheduleOptions = {},
 ): ScheduledTimeline {
   const index = timeline.milestones.findIndex((item) => item.order === order);
   if (index < 0) {
@@ -72,6 +74,34 @@ export function adjustMilestone(
   }
   if (!isWorkingDay(newDate, holidays)) {
     throw new Error("DATE_MUST_BE_WORKING_DAY");
+  }
+  if (options.preserveManualDates) {
+    if (index > 0) {
+      countWorkingDayAdditions(
+        timeline.milestones[index - 1].scheduledDate,
+        newDate,
+        holidays,
+        options.allowSameDay,
+      );
+    }
+    const milestones = timeline.milestones.map((item) => ({ ...item }));
+    milestones[index].scheduledDate = newDate;
+    milestones[index].isDateManuallyAdjusted = true;
+    if (isSingleDaySelectableMilestone(milestones[index])) {
+      milestones[index].workingDaysToNext = SELECTED_DAY_WORKING_DAYS_TO_NEXT;
+    }
+    // Existing holiday conflicts must remain editable one anchor at a time.
+    // The newly selected date was validated above; ordering stays mandatory.
+    const recalculated = recalculateAnchors(
+      { ...timeline, milestones },
+      holidays,
+      options,
+      true,
+    );
+    if (recalculated.kind === "conflict") {
+      throw new Error("MANUAL_DATE_CONFLICT");
+    }
+    return recalculated.timeline;
   }
   const milestones = timeline.milestones.map((item, cursor) => {
     const milestone = { ...item };
@@ -92,6 +122,7 @@ export function adjustMilestone(
     timeline.milestones[index - 1].scheduledDate,
     newDate,
     holidays,
+    options.allowSameDay,
   );
 
   milestones[index].scheduledDate = newDate;
@@ -126,11 +157,15 @@ export function adjustProcessEnd(
   timeline: ScheduledTimeline,
   newDate: string,
   holidays: ReadonlySet<string>,
+  options: ScheduleOptions = {},
 ): ScheduledTimeline {
   const last = timeline.milestones[timeline.milestones.length - 1];
-  countWorkingDayAdditions(last.scheduledDate, newDate, holidays);
+  const duration = countWorkingDayAdditions(last.scheduledDate, newDate, holidays, options.allowSameDay);
   return {
     ...timeline,
+    milestones: options.allowSameDay
+      ? timeline.milestones.map((item) => item === last ? { ...item, workingDaysToNext: duration } : { ...item })
+      : timeline.milestones,
     processEndDate: newDate,
     isProcessEndManuallyAdjusted: true,
   };
@@ -139,11 +174,21 @@ export function adjustProcessEnd(
 export function recalculateWithManualAnchors(
   timeline: ScheduledTimeline,
   holidays: ReadonlySet<string>,
+  options: ScheduleOptions = {},
 ):
   | { kind: "ok"; timeline: ScheduledTimeline }
   | { kind: "conflict"; order: number | "process-end" } {
+  return recalculateAnchors(timeline, holidays, options);
+}
+
+function recalculateAnchors(
+  timeline: ScheduledTimeline,
+  holidays: ReadonlySet<string>,
+  options: ScheduleOptions,
+  preserveNonWorkingDates = false,
+): ReturnType<typeof recalculateWithManualAnchors> {
   const milestones = timeline.milestones.map((item) => ({ ...item }));
-  if (!isWorkingDay(milestones[0].scheduledDate, holidays)) {
+  if (!preserveNonWorkingDates && !isWorkingDay(milestones[0].scheduledDate, holidays)) {
     return { kind: "conflict", order: 1 };
   }
 
@@ -152,11 +197,14 @@ export function recalculateWithManualAnchors(
     const current = milestones[index];
     if (current.isDateManuallyAdjusted) {
       try {
-        countWorkingDayAdditions(
+        const duration = countWorkingDayAdditions(
           previous.scheduledDate,
           current.scheduledDate,
           holidays,
+          options.allowSameDay,
+          preserveNonWorkingDates,
         );
+        if (options.allowSameDay) previous.workingDaysToNext = duration;
       } catch {
         return { kind: "conflict", order: current.order };
       }
@@ -173,11 +221,14 @@ export function recalculateWithManualAnchors(
   let processEndDate = timeline.processEndDate;
   if (timeline.isProcessEndManuallyAdjusted) {
     try {
-      countWorkingDayAdditions(
+      const duration = countWorkingDayAdditions(
         last.scheduledDate,
         timeline.processEndDate,
         holidays,
+        options.allowSameDay,
+        preserveNonWorkingDates,
       );
+      if (options.allowSameDay) last.workingDaysToNext = duration;
     } catch {
       return { kind: "conflict", order: "process-end" };
     }

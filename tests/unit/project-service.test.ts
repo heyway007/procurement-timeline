@@ -5,6 +5,7 @@ import type {
   ProjectRepository,
 } from "@/lib/projects/repository";
 import { ProjectService } from "@/lib/projects/service";
+import { BUDGET_CATEGORIES } from "@/lib/projects/budget-category";
 import { APPROVED_TEMPLATE_STEPS, SELECTIVE_METHOD_TEMPLATE_STEPS } from "@/lib/schedule/approved-template";
 import { buildTimeline } from "@/lib/schedule/engine";
 import type {
@@ -109,6 +110,95 @@ function makeService(
 }
 
 describe("ProjectService", () => {
+  it.each([false, true])("preserves non-SLA anchors on a start-only details update (confirmReset: %s)", async (confirmReset) => {
+    const { service } = makeService();
+    const { project } = await service.create({ budgetCategory: "ONE_TO_FIVE_MILLION", projectStatusType: "SLA_NON_COMPLIANT", startDate: "2026-07-06" });
+    const anchored = await service.adjustStep(project.id, { order: 3, newDate: "2026-07-20", version: project.version, confirmShortening: false, confirmOverwrite: false });
+    const withEnd = await service.adjustEnd(project.id, anchored.processEndDate, anchored.version, false);
+    const changed = await service.updateDetails(project.id, { budgetCategory: project.budgetCategory, startDate: "2026-07-07", version: withEnd.version, confirmReset });
+    expect(changed.steps[0].scheduledDate).toBe("2026-07-07");
+    expect(changed.steps[2].scheduledDate).toBe("2026-07-20");
+    expect(changed.steps[2].isDateManuallyAdjusted).toBe(true);
+    expect(changed.processEndDate).toBe(withEnd.processEndDate);
+    expect(changed.isProcessEndManuallyAdjusted).toBe(true);
+  });
+
+  it("repairs an obsolete automatic Present window despite an unrelated non-SLA manual edit", async () => {
+    const { service, repository } = makeService();
+    const { project } = await service.create({ budgetCategory: "TEN_TO_TWENTY_MILLION", projectStatusType: "SLA_NON_COMPLIANT", startDate: "2026-07-06" });
+    const steps = project.steps.map((step) => ({ ...step }));
+    steps[1].isDateManuallyAdjusted = true;
+    steps[8].workingDaysToNext = 1;
+    repository.items.set(project.id, { ...project, steps });
+    const opened = await service.get(project.id);
+    expect(opened.steps[8].workingDaysToNext).toBe(3);
+    expect(opened.steps[1].scheduledDate).toBe(project.steps[1].scheduledDate);
+    expect(opened.steps[1].isDateManuallyAdjusted).toBe(true);
+  });
+
+  it("allows non-SLA holiday conflicts to be repaired one manual date at a time", async () => {
+    const holidays = new Set<string>();
+    const { service, repository } = makeService(holidays);
+    const { project } = await service.create({ budgetCategory: "ONE_TO_FIVE_MILLION", projectStatusType: "SLA_NON_COMPLIANT", startDate: "2026-07-06" });
+    const second = await service.adjustStep(project.id, { order: 2, newDate: "2026-07-10", version: project.version, confirmShortening: false, confirmOverwrite: false });
+    const third = await service.adjustStep(project.id, { order: 3, newDate: "2026-07-10", version: second.version, confirmShortening: false, confirmOverwrite: false });
+    holidays.add("2026-07-10");
+    repository.items.set(project.id, { ...third, scheduleStatus: "NEEDS_REVIEW" });
+    const partiallyRepaired = await service.adjustStep(project.id, { order: 2, newDate: "2026-07-09", version: third.version, confirmShortening: false, confirmOverwrite: false });
+    expect(partiallyRepaired.steps[2].scheduledDate).toBe("2026-07-10");
+    expect(partiallyRepaired.scheduleStatus).toBe("NEEDS_REVIEW");
+    await expect(service.adjustStep(project.id, { order: 2, newDate: "2026-07-10", version: partiallyRepaired.version, confirmShortening: false, confirmOverwrite: false }))
+      .rejects.toThrow("DATE_MUST_BE_WORKING_DAY");
+    const repaired = await service.adjustStep(project.id, { order: 3, newDate: "2026-07-13", version: partiallyRepaired.version, confirmShortening: false, confirmOverwrite: false });
+    expect(repaired.steps[1].scheduledDate).toBe("2026-07-09");
+    expect(repaired.steps[2].scheduledDate).toBe("2026-07-13");
+    expect(repaired.scheduleStatus).toBe("NORMAL");
+  });
+
+  it.each(BUDGET_CATEGORIES)("allows all non-SLA stages to share one date for %s and keeps them on reload", async (budgetCategory) => {
+    const { service } = makeService();
+    const { project } = await service.create({ budgetCategory, projectStatusType: "SLA_NON_COMPLIANT", startDate: "2026-07-06" });
+    let changed = project;
+    for (const step of project.steps.slice(1)) {
+      changed = await service.adjustStep(project.id, {
+        order: step.order, newDate: project.startDate, version: changed.version,
+        confirmShortening: false, confirmOverwrite: false,
+      });
+    }
+    expect(changed.steps.every((step) => step.scheduledDate === project.startDate)).toBe(true);
+    expect(changed.steps.slice(0, -1).every((step) => step.workingDaysToNext === 0)).toBe(true);
+    expect(await service.get(project.id)).toEqual(changed);
+    const reset = await service.resetSchedule(project.id, changed.version);
+    expect(reset.steps).toEqual(project.steps);
+  });
+
+  it("preserves downstream non-SLA dates even if overwrite confirmation is supplied", async () => {
+    const { service } = makeService();
+    const { project } = await service.create({ budgetCategory: "SPECIFIC_METHOD_OVER_500K", projectStatusType: "SLA_NON_COMPLIANT", startDate: "2026-07-06" });
+    const anchored = await service.adjustStep(project.id, { order: 3, newDate: "2026-07-20", version: project.version, confirmShortening: false, confirmOverwrite: false });
+    for (const confirmOverwrite of [false, true]) {
+      const current = await service.get(project.id);
+      const changed = await service.adjustStep(project.id, { order: 2, newDate: "2026-07-13", version: current.version, confirmShortening: false, confirmOverwrite });
+      expect(changed.steps[2]).toEqual(anchored.steps[2]);
+    }
+  });
+
+  it("does not save a non-SLA edit that crosses a fixed downstream date", async () => {
+    const { service, repository } = makeService();
+    const { project } = await service.create({ budgetCategory: "SPECIFIC_METHOD_OVER_500K", projectStatusType: "SLA_NON_COMPLIANT", startDate: "2026-07-06" });
+    const anchored = await service.adjustStep(project.id, { order: 3, newDate: "2026-07-20", version: project.version, confirmShortening: false, confirmOverwrite: false });
+    await expect(service.adjustStep(project.id, { order: 2, newDate: "2026-07-21", version: anchored.version, confirmShortening: false, confirmOverwrite: true }))
+      .rejects.toThrow("MANUAL_DATE_CONFLICT");
+    expect(await repository.findById(project.id)).toEqual(anchored);
+  });
+
+  it.each(["SLA_COMPLIANT", undefined] as const)("retains strict same-day rejection for SLA status %s", async (projectStatusType) => {
+    const { service } = makeService();
+    const { project } = await service.create({ budgetCategory: "SELECTIVE_METHOD", projectStatusType, startDate: "2026-07-06" });
+    await expect(service.adjustStep(project.id, { order: 2, newDate: project.startDate, version: project.version, confirmShortening: true, confirmOverwrite: true }))
+      .rejects.toThrow("DATE_MUST_BE_AFTER_PREVIOUS");
+  });
+
   it("generates project metadata and a compatibility budget when values are omitted", async () => {
     const { service } = makeService();
     const result = await service.create({

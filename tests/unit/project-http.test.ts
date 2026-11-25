@@ -3,6 +3,12 @@ import { describe, expect, it } from "vitest";
 import { mapProjectError } from "@/lib/projects/http";
 
 describe("mapProjectError", () => {
+  it("explains conflicts with preserved manual dates", () => {
+    expect(mapProjectError(new Error("MANUAL_DATE_CONFLICT"))).toMatchObject({
+      status: 422,
+      body: { code: "MANUAL_DATE_CONFLICT", message: expect.stringContaining("วันที่ที่ตั้งไว้") },
+    });
+  });
   it("maps stale versions to HTTP 409 with a Thai message", () => {
     expect(mapProjectError(new Error("PROJECT_VERSION_CONFLICT"))).toEqual({
       status: 409,

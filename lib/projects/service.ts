@@ -51,7 +51,7 @@ export class ProjectService {
         holidays,
       );
       try {
-        return await this.replaceTimeline(project, timeline, project.version);
+        return await this.replaceTimeline(project, timeline, project.version, holidays);
       } catch (error) {
         if (error instanceof Error && error.message === "PROJECT_VERSION_CONFLICT") {
           return this.getRaw(id);
@@ -59,11 +59,15 @@ export class ProjectService {
         throw error;
       }
     }
-    const present = project.steps.find((step) => isPresentMilestone(step.label));
+    const presentIndex = project.steps.findIndex((step) => isPresentMilestone(step.label));
+    const present = project.steps[presentIndex];
+    const hasFixedFollowingDate = project.projectStatusType === "SLA_NON_COMPLIANT" &&
+      project.steps[presentIndex + 1]?.isDateManuallyAdjusted;
     const defaultPresentDays = project.budgetCategory === "SELECTIVE_METHOD" ? 2 : 3;
     if (
       !present ||
       present.isDateManuallyAdjusted ||
+      hasFixedFollowingDate ||
       present.workingDaysToNext === defaultPresentDays ||
       present.workingDaysToNext === 3
     ) {
@@ -76,7 +80,9 @@ export class ProjectService {
         step.order === present.order ? { ...step, workingDaysToNext: defaultPresentDays } : step,
       ),
     });
-    const recalculated = recalculateWithManualAnchors(legacyTimeline, holidays);
+    const recalculated = recalculateWithManualAnchors(legacyTimeline, holidays, {
+      allowSameDay: project.projectStatusType === "SLA_NON_COMPLIANT",
+    });
     const timeline = recalculated.kind === "ok" ? recalculated.timeline : legacyTimeline;
     return this.replaceProjectTimeline(
       project,
@@ -130,8 +136,10 @@ export class ProjectService {
     this.assertVersion(project, input.version);
     const index = project.steps.findIndex((step) => step.order === input.order);
     if (index < 0) throw new Error("MILESTONE_NOT_FOUND");
+    const isNonSla = project.projectStatusType === "SLA_NON_COMPLIANT";
 
     if (
+      !isNonSla &&
       project.steps.slice(index + 1).some((step) => step.isDateManuallyAdjusted) &&
       !input.confirmOverwrite
     ) {
@@ -145,9 +153,10 @@ export class ProjectService {
         previous.scheduledDate,
         input.newDate,
         holidays,
+        isNonSla,
       );
       if (
-        actualDurationToNext < previous.workingDaysToNext &&
+        !isNonSla && actualDurationToNext < previous.workingDaysToNext &&
         !input.confirmShortening
       ) {
         throw new Error("DURATION_SHORTER_THAN_TEMPLATE");
@@ -159,8 +168,9 @@ export class ProjectService {
       input.order,
       input.newDate,
       holidays,
+      { allowSameDay: isNonSla, preserveManualDates: isNonSla },
     );
-    return this.replaceTimeline(project, changed, input.version);
+    return this.replaceTimeline(project, changed, input.version, holidays);
   }
 
   async updateBidSubmissionTime(
@@ -197,18 +207,29 @@ export class ProjectService {
     const categoryChanged = parsed.budgetCategory !== project.budgetCategory;
     const startChanged = parsed.startDate !== project.startDate;
     const statusTypeChanged = projectStatusType !== (project.projectStatusType ?? "SLA_COMPLIANT");
-    const shouldResetSchedule = startChanged || categoryChanged || statusTypeChanged;
+    const preserveStartDates = startChanged && !categoryChanged && !statusTypeChanged &&
+      projectStatusType === "SLA_NON_COMPLIANT";
+    const shouldResetSchedule = (startChanged && !preserveStartDates) || categoryChanged || statusTypeChanged;
     if (shouldResetSchedule && input.confirmReset !== true) {
       throw new Error("SCHEDULE_RESET_CONFIRMATION_REQUIRED");
     }
 
-    const timeline = shouldResetSchedule
-      ? buildTimeline(
+    let timeline = this.toTimeline(project);
+    let scheduleStatus = project.scheduleStatus;
+    if (shouldResetSchedule || preserveStartDates) {
+      const holidays = await this.calendar.listHolidayDates();
+      timeline = shouldResetSchedule ? buildTimeline(
           approvedTemplateStepsForProjectStatus(projectStatusType, parsed.budgetCategory),
           parsed.startDate,
-          await this.calendar.listHolidayDates(),
+          holidays,
         )
-      : this.toTimeline(project);
+        : adjustMilestone(timeline, project.steps[0].order, parsed.startDate, holidays, {
+          allowSameDay: true, preserveManualDates: true,
+        });
+      scheduleStatus = recalculateWithManualAnchors(timeline, holidays, {
+        allowSameDay: projectStatusType === "SLA_NON_COMPLIANT",
+      }).kind === "ok" ? "NORMAL" : "NEEDS_REVIEW";
+    }
     const budget = parsed.budget ?? (categoryChanged
       ? defaultBudgetForCategory(parsed.budgetCategory)
       : project.budget);
@@ -226,7 +247,7 @@ export class ProjectService {
       templateVersion: project.templateVersion,
       processEndDate: timeline.processEndDate,
       isProcessEndManuallyAdjusted: timeline.isProcessEndManuallyAdjusted,
-      scheduleStatus: shouldResetSchedule ? "NORMAL" : project.scheduleStatus,
+      scheduleStatus,
       steps: timeline.milestones,
     };
     const result = await this.projects.replace(
@@ -249,10 +270,12 @@ export class ProjectService {
     this.assertVersion(project, version);
     const holidays = await this.calendar.listHolidayDates();
     const last = project.steps[project.steps.length - 1];
+    const isNonSla = project.projectStatusType === "SLA_NON_COMPLIANT";
     const actualDurationToNext = countWorkingDayAdditions(
       last.scheduledDate,
       newDate,
       holidays,
+      isNonSla,
     );
     if (usesCurrentSpecificMethodTemplate(project)) {
       if (actualDurationToNext !== last.workingDaysToNext) {
@@ -260,13 +283,14 @@ export class ProjectService {
       }
       return project;
     }
-    if (actualDurationToNext < last.workingDaysToNext && !confirmShortening) {
+    if (!isNonSla && actualDurationToNext < last.workingDaysToNext && !confirmShortening) {
       throw new Error("DURATION_SHORTER_THAN_TEMPLATE");
     }
     return this.replaceTimeline(
       project,
-      adjustProcessEnd(this.toTimeline(project), newDate, holidays),
+      adjustProcessEnd(this.toTimeline(project), newDate, holidays, { allowSameDay: isNonSla }),
       version,
+      holidays,
     );
   }
 
@@ -279,7 +303,7 @@ export class ProjectService {
       project.startDate,
       holidays,
     );
-    return this.replaceTimeline(project, timeline, version);
+    return this.replaceTimeline(project, timeline, version, holidays);
   }
 
   async remove(id: string, version: number): Promise<void> {
@@ -310,8 +334,13 @@ export class ProjectService {
     project: ProjectRecord,
     timeline: ScheduledTimeline,
     expectedVersion: number,
+    holidays?: ReadonlySet<string>,
   ): Promise<ProjectRecord> {
-    return this.replaceProjectTimeline(project, timeline, expectedVersion, "NORMAL");
+    const scheduleStatus = project.projectStatusType === "SLA_NON_COMPLIANT" &&
+      recalculateWithManualAnchors(timeline, holidays ?? await this.calendar.listHolidayDates(), {
+        allowSameDay: true,
+      }).kind === "conflict" ? "NEEDS_REVIEW" : "NORMAL";
+    return this.replaceProjectTimeline(project, timeline, expectedVersion, scheduleStatus);
   }
 
   private async replaceProjectTimeline(

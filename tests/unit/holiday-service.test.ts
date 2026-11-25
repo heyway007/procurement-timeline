@@ -176,6 +176,20 @@ function projectFixture(): ProjectRecord {
 }
 
 describe("HolidayService", () => {
+  it.each([false, true])("keeps non-SLA same-day manual anchors when an unrelated holiday changes (conflicting holiday: %s)", async (conflictingHoliday) => {
+    const project = projectFixture();
+    project.projectStatusType = "SLA_NON_COMPLIANT";
+    project.steps[0].workingDaysToNext = 0;
+    project.steps[1] = { ...project.steps[1], scheduledDate: project.startDate, isDateManuallyAdjusted: true };
+    const projects = new FakeProjectRepository(project);
+    const service = new HolidayService(new FakeHolidayRepository([project]), projects, "test-secret-key");
+    const preview = await service.previewMutation({ operation: "create", holiday: { date: conflictingHoliday ? project.startDate : "2026-07-07", name: "วันหยุด", sourceNote: "ประกาศ" } });
+    const result = await service.confirmMutation(preview.token);
+    expect(projects.project.steps[1].scheduledDate).toBe(project.startDate);
+    expect(projects.project.steps[1].isDateManuallyAdjusted).toBe(true);
+    expect(projects.project.scheduleStatus).toBe(conflictingHoliday ? "NEEDS_REVIEW" : "NORMAL");
+    expect(conflictingHoliday ? result.needsReviewProjectIds : result.updatedProjectIds).toEqual([project.id]);
+  });
   it("synchronizes official holidays before returning the selected year", async () => {
     const project = projectFixture();
     const holidays = new FakeHolidayRepository([project]);

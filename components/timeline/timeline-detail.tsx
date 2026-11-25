@@ -333,16 +333,23 @@ export function TimelineDetail({
     const step = project?.steps[stepIndex];
     const nextStep = project?.steps[stepIndex + 1];
     if (!step) return "";
+    const isNonSla = project.projectStatusType === "SLA_NON_COMPLIANT";
+    if (isNonSla && step.workingDaysToNext <= 1) {
+      return formatThaiDateWithWeekday(step.scheduledDate);
+    }
     if (isSingleDaySelectableMilestone(step) && step.isDateManuallyAdjusted) {
       return formatThaiDateWithWeekday(step.scheduledDate);
     }
     if (project.budgetCategory !== "SELECTIVE_METHOD" && isPresentMilestone(step.label) && !step.isDateManuallyAdjusted) {
       return formatThaiDateRangeWithWeekday(
         step.scheduledDate,
-        addWorkingDays(step.scheduledDate, 2, holidayDates),
+        addWorkingDays(step.scheduledDate, isNonSla ? step.workingDaysToNext - 1 : 2, holidayDates),
       );
     }
     if (!nextStep && !specificMethodPresentation) {
+      if (project.processEndDate <= step.scheduledDate) {
+        return formatThaiDateWithWeekday(step.scheduledDate);
+      }
       return formatThaiDateRangeWithWeekday(
         step.scheduledDate,
         previousWorkingDate(project.processEndDate, holidayDates),
@@ -359,7 +366,7 @@ export function TimelineDetail({
       step.scheduledDate,
       addWorkingDays(
         step.scheduledDate,
-        step.workingDaysToNext - 1,
+        Math.max(0, step.workingDaysToNext - 1),
         holidayDates,
       ),
     );
@@ -387,9 +394,10 @@ export function TimelineDetail({
       (step) => step.order === editContext.order,
     );
     const previousStep = project.steps[editingIndex - 1];
-    if (previousStep && editContext.date <= previousStep.scheduledDate) {
+    const isNonSla = project.projectStatusType === "SLA_NON_COMPLIANT";
+    if (previousStep && (editContext.date < previousStep.scheduledDate || (!isNonSla && editContext.date === previousStep.scheduledDate))) {
       setEditError(
-        `เลือกไม่ได้ เพราะวันที่ใหม่ต้องอยู่หลังขั้นตอนที่ ${previousStep.order} (${formatThaiDateWithWeekday(previousStep.scheduledDate)})`,
+        `เลือกไม่ได้ เพราะวันที่ใหม่ต้อง${isNonSla ? "ไม่อยู่ก่อน" : "อยู่หลัง"}ขั้นตอนที่ ${previousStep.order} (${formatThaiDateWithWeekday(previousStep.scheduledDate)})`,
       );
       return;
     }
@@ -424,6 +432,10 @@ export function TimelineDetail({
         confirmButtonColor: "#4338ca",
       });
     } catch (caught: unknown) {
+      if (caught instanceof ApiError && caught.code === "MANUAL_DATE_CONFLICT") {
+        setEditError(caught.message);
+        return;
+      }
       if (
         caught instanceof ApiError &&
         caught.code === "DURATION_SHORTER_THAN_TEMPLATE"
@@ -580,7 +592,9 @@ export function TimelineDetail({
   }
 
   function formatWorkingDaysText(step: ProjectRecord["steps"][number]): string {
-    if (project?.budgetCategory !== "SELECTIVE_METHOD" && isPresentMilestone(step.label) && !step.isDateManuallyAdjusted) {
+    const isNonSla = project?.projectStatusType === "SLA_NON_COMPLIANT";
+    if (isNonSla && step.workingDaysToNext === 0) return "วันเดียวกับขั้นตอนถัดไป";
+    if (!isNonSla && project?.budgetCategory !== "SELECTIVE_METHOD" && isPresentMilestone(step.label) && !step.isDateManuallyAdjusted) {
       return "3 วันทำการจากขั้นตอนก่อนหน้า";
     }
     return `${step.workingDaysToNext} วันทำการถึงขั้นตอนถัดไป`;
@@ -772,6 +786,7 @@ export function TimelineDetail({
         <div className="print-hidden fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4">
           <form className="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl sm:p-6" onSubmit={(event) => { event.preventDefault(); void saveEdit(); }}>
             <h2 className="text-xl font-semibold">แก้วันที่ขั้นตอนที่ {editingOrder}</h2>
+            {project.projectStatusType === "SLA_NON_COMPLIANT" ? <p className="mt-3 text-sm text-slate-600">เลือกวันเดียวกับขั้นตอนก่อนหน้าได้ โดยคงวันที่ที่ตั้งเองในขั้นตอนถัดไป</p> : null}
             <label className="mt-5 block min-w-0 text-sm font-medium">วันที่ใหม่<input aria-label="วันที่ใหม่" className="mt-2 min-h-11 w-full min-w-0 max-w-full rounded-xl border border-slate-300 px-3 text-base appearance-none" type="date" value={newDate} onChange={(event) => { setNewDate(event.target.value); setEditError(""); }} required /></label>
             {editError ? <p role="alert" className="mt-3 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-800">{editError}</p> : null}
             <div className="mt-6 grid gap-3 sm:flex sm:justify-end"><button type="button" onClick={() => { setEditingOrder(null); setEditError(""); }} className="min-h-11 rounded-xl border px-4 py-2">ยกเลิก</button><button type="submit" className="min-h-11 rounded-xl bg-indigo-700 px-4 py-2 font-semibold text-white">ตกลง</button></div>

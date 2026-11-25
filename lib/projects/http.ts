@@ -66,6 +66,13 @@ const knownErrors: Record<string, MappedProjectError> = {
       message: "วันที่ซึ่งเคยปรับในขั้นตอนหลังจะถูกคำนวณใหม่",
     },
   },
+  MANUAL_DATE_CONFLICT: {
+    status: 422,
+    body: {
+      code: "MANUAL_DATE_CONFLICT",
+      message: "วันที่ใหม่ทำให้ลำดับขั้นตอนขัดกับวันที่ที่ตั้งไว้ในขั้นตอนถัดไป กรุณาปรับวันที่ให้สอดคล้องกันก่อนบันทึก",
+    },
+  },
   SCHEDULE_RESET_CONFIRMATION_REQUIRED: {
     status: 422,
     body: {

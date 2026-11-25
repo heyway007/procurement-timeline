@@ -10,6 +10,8 @@ import {
 import { adjustMilestone, buildTimeline } from "@/lib/schedule/engine";
 import type { ProjectRecord } from "@/lib/projects/types";
 import { ApiError } from "@/lib/ui/api-client";
+import { BUDGET_CATEGORIES } from "@/lib/projects/budget-category";
+import { formatThaiDateWithWeekday } from "@/lib/ui/date-format";
 
 vi.mock("sweetalert2", () => ({
   default: {
@@ -103,6 +105,62 @@ describe("TimelineDetail", () => {
   beforeEach(() => {
     swalFire.mockReset();
     swalFire.mockResolvedValue({ isConfirmed: true } as never);
+  });
+
+  it.each(BUDGET_CATEGORIES)("submits a same-day non-SLA stage for %s", async (budgetCategory) => {
+    const user = userEvent.setup();
+    const timeline = buildTimeline(approvedTemplateStepsForBudgetCategory(budgetCategory), "2026-07-06", new Set());
+    const project: ProjectRecord = { ...projectFixture(), budgetCategory, projectStatusType: "SLA_NON_COMPLIANT", steps: timeline.milestones, processEndDate: timeline.processEndDate };
+    const onAdjustStep = vi.fn().mockResolvedValue(project);
+    render(<TimelineDetail projectId={project.id} initialProject={project} onAdjustStep={onAdjustStep} />);
+    await user.click(screen.getByRole("button", { name: "แก้วันที่ ขั้นตอนที่ 2" }));
+    await user.clear(screen.getByLabelText("วันที่ใหม่"));
+    await user.type(screen.getByLabelText("วันที่ใหม่"), project.startDate);
+    await user.click(screen.getByRole("button", { name: "ตกลง" }));
+    expect(onAdjustStep).toHaveBeenCalledWith(2, project.startDate, project.version, false, false);
+  });
+
+  it.each(["SLA_NON_COMPLIANT", "SLA_COMPLIANT"] as const)("rejects invalid ordering before submitting for %s", async (projectStatusType) => {
+    const user = userEvent.setup();
+    const project = { ...projectFixture(), projectStatusType };
+    const onAdjustStep = vi.fn();
+    render(<TimelineDetail projectId={project.id} initialProject={project} onAdjustStep={onAdjustStep} />);
+    await user.click(screen.getByRole("button", { name: "แก้วันที่ ขั้นตอนที่ 2" }));
+    await user.clear(screen.getByLabelText("วันที่ใหม่"));
+    await user.type(screen.getByLabelText("วันที่ใหม่"), projectStatusType === "SLA_NON_COMPLIANT" ? "2026-07-03" : project.startDate);
+    await user.click(screen.getByRole("button", { name: "ตกลง" }));
+    expect(screen.getByRole("alert")).toHaveTextContent(projectStatusType === "SLA_NON_COMPLIANT" ? "ต้องไม่อยู่ก่อนขั้นตอนที่ 1" : "ต้องอยู่หลังขั้นตอนที่ 1");
+    expect(onAdjustStep).not.toHaveBeenCalled();
+  });
+
+  it("shows a preserved-date conflict inside the date editor without offering to overwrite", async () => {
+    const user = userEvent.setup();
+    const project = { ...projectFixture(), projectStatusType: "SLA_NON_COMPLIANT" as const };
+    const message = "วันที่ใหม่ขัดกับวันที่ที่ตั้งไว้ในขั้นตอนถัดไป";
+    const onAdjustStep = vi.fn().mockRejectedValue(new ApiError("MANUAL_DATE_CONFLICT", message, 422));
+    render(<TimelineDetail projectId={project.id} initialProject={project} onAdjustStep={onAdjustStep} />);
+    await user.click(screen.getByRole("button", { name: "แก้วันที่ ขั้นตอนที่ 2" }));
+    await user.click(screen.getByRole("button", { name: "ตกลง" }));
+    await waitFor(() => expect(screen.getByLabelText("วันที่ใหม่").closest("form")).toHaveTextContent(message));
+    expect(swalFire).not.toHaveBeenCalled();
+  });
+
+  it.each([3, 6, 9, 13])("renders a collapsed non-SLA date range at stage %s as one date", (order) => {
+    const project = { ...projectFixture(), projectStatusType: "SLA_NON_COMPLIANT" as const };
+    const step = project.steps[order - 1];
+    step.workingDaysToNext = 0;
+    if (order < project.steps.length) {
+      project.steps[order] = { ...project.steps[order], scheduledDate: step.scheduledDate, isDateManuallyAdjusted: true };
+    } else {
+      project.processEndDate = step.scheduledDate;
+      project.isProcessEndManuallyAdjusted = true;
+    }
+    render(<TimelineDetail projectId={project.id} initialProject={project} />);
+    const row = screen.getAllByTestId("timeline-step")[order - 1];
+    expect(row.querySelector(".timeline-step-date > span:nth-child(2)")?.textContent)
+      .toBe(formatThaiDateWithWeekday(step.scheduledDate));
+    expect(row.querySelector(".print-step-hint")).toHaveTextContent("วันเดียวกับขั้นตอนถัดไป");
+    expect(row.querySelector(".print-step-hint")).not.toHaveTextContent("3 วันทำการ");
   });
 
   it("shows a deleted-project state with a way back to the project list", async () => {

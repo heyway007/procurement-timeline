@@ -136,6 +136,7 @@ export class HolidayService {
       const recalculated = recalculateWithManualAnchors(
         this.toTimeline(project),
         holidayDates,
+        { allowSameDay: project.projectStatusType === "SLA_NON_COMPLIANT" },
       );
       const replacement =
         recalculated.kind === "ok"

@@ -1,5 +1,10 @@
 import type { BidSubmissionTimeSlot } from "./milestone-kind";
 
+export type ScheduleOptions = {
+  allowSameDay?: boolean;
+  preserveManualDates?: boolean;
+};
+
 export type TemplateStep = {
   order: number;
   label: string;
