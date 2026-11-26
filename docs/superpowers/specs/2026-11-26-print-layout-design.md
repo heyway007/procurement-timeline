@@ -14,7 +14,7 @@ Approach: adapt the existing timeline DOM and print stylesheet. A separate dupli
 
 ## Refinements requested on 27 November 2026
 
-- Increase step and signing titles to 12pt; keep date text at 10.5pt.
+- Use a shared 9pt scale for summary values, step/signing titles, dates and table headings, following the user's subsequent request to match the summary typography.
 - Reduce step icons to 5.5mm containers / 3.1mm glyphs, and summary icons to 6mm containers / 3.3mm glyphs.
 - Reuse the screen Timeline icon palette: green budget/status, purple department, orange duration. Both views share the same color rules.
 - Left align the date header and all date values while retaining vertical centering.
