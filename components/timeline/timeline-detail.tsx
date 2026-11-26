@@ -713,7 +713,7 @@ export function TimelineDetail({
       {error ? <p role="alert" className="mt-5 rounded-xl bg-rose-50 px-4 py-3 text-rose-800">{error}</p> : null}
 
       <section data-testid="timeline-table" className="timeline-table print-table mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div data-testid="timeline-header-row" className="timeline-header-row print-grid grid grid-cols-[1.75rem_3rem_minmax(0,1fr)_minmax(0,1.15fr)_3.5rem] items-center gap-2 border-b border-slate-100 bg-white px-2 py-3 text-[11px] font-semibold text-slate-500 sm:grid-cols-[2.5rem_3.25rem_minmax(0,1.4fr)_minmax(0,1.2fr)_6rem] sm:gap-3 sm:px-4 sm:text-sm lg:grid-cols-[4rem_4rem_1fr_20rem_7rem]">
+        <div data-testid="timeline-header-row" className="timeline-header-row print-grid grid grid-cols-[1.75rem_3rem_minmax(0,1fr)_minmax(0,1.15fr)_3.5rem] items-center gap-2 border-b border-slate-100 bg-white px-2 py-3 text-[11px] font-semibold text-slate-500 sm:grid-cols-[2.5rem_3.25rem_minmax(0,1.4fr)_minmax(0,1.2fr)_6rem] sm:gap-3 sm:px-4 sm:text-[0.95rem] lg:grid-cols-[4rem_4rem_1fr_20rem_7rem]">
           <span>ลำดับ</span><span className="timeline-header-icon-slot" /><span className="timeline-step-column-heading"><span className="print-hidden">ขั้นตอน<span className="mobile-step-date-label"> / วันที่กำหนด</span></span><span className="print-only">ขั้นตอนดำเนินงาน</span></span><span className="mobile-date-header">วันที่กำหนด</span><span className="print-hidden text-center">จัดการ</span>
         </div>
         {project.steps.map((step, index) => {
