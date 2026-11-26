@@ -18,4 +18,5 @@ Approach: adapt the existing timeline DOM and print stylesheet. A separate dupli
 - Reduce step icons to 5.5mm containers / 3.1mm glyphs, and summary icons to 6mm containers / 3.3mm glyphs.
 - Reuse the screen Timeline icon palette: green budget/status, purple department, orange duration. Both views share the same color rules.
 - Left align the date header and all date values while retaining vertical centering.
-- On the normal Timeline screen, use 0.95rem for the table headings at tablet/desktop widths, matching the actual summary-value size confirmed by the user; retain compact mobile labels. Print headings retain the shared 9pt scale above.
+- On the normal Timeline screen, table headings, every step/signing title and every date share 0.95rem, matching the actual summary-value size confirmed by the user. Use this shared size across screen widths. Print headings retain the shared 9pt scale above.
+- Make the screen table compact with 0.75rem vertical row padding, subtle 0.5px borders, lighter neutral rules, a smaller corner radius and no shadow.

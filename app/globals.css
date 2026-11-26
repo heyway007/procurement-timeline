@@ -641,6 +641,42 @@ body {
   }
 }
 
+@media screen {
+  .timeline-detail-page {
+    --timeline-main-font-size: 0.95rem;
+  }
+
+  .timeline-table {
+    border-width: 0.5px;
+    border-color: #edf0f5;
+    border-radius: 0.75rem;
+    box-shadow: none;
+  }
+
+  .timeline-table .timeline-header-row,
+  .timeline-table .timeline-step-title,
+  .timeline-table .timeline-step-date {
+    font-size: var(--timeline-main-font-size) !important;
+    line-height: 1.4 !important;
+  }
+
+  .timeline-table .timeline-header-row {
+    border-bottom-width: 0;
+  }
+
+  .timeline-table .timeline-step {
+    border-top-width: 0.5px;
+    border-color: #edf0f5;
+    padding-block: 0.75rem;
+  }
+
+  .timeline-table .timeline-step-end {
+    border-top-width: 0.5px;
+    border-color: #e7eaf4;
+    padding-block: 0.75rem;
+  }
+}
+
 @layer base {
   :where(button, input, textarea, select) {
     font: inherit;
