@@ -675,15 +675,15 @@ export function TimelineDetail({
           </div>
         </div>
         <dl className="print-summary print-only text-sm">
-          <div data-testid="print-budget" className="timeline-print-summary-item min-w-0">
+          <div data-testid="print-budget" className="timeline-print-summary-item timeline-print-summary-item--budget min-w-0">
             <dt><span className="timeline-print-summary-icon"><FontAwesomeIcon icon={faSackDollar} aria-hidden="true" /></span><span className="timeline-print-summary-label break-words whitespace-normal">วิธี / วงเงิน</span></dt>
             <dd className="min-w-0 break-words whitespace-normal">{budgetCategoryLabel(project.budgetCategory)}</dd>
           </div>
-          <div data-testid="print-department" className="timeline-print-summary-item min-w-0">
+          <div data-testid="print-department" className="timeline-print-summary-item timeline-print-summary-item--department min-w-0">
             <dt><span className="timeline-print-summary-icon"><FontAwesomeIcon icon={faBuilding} aria-hidden="true" /></span><span className="timeline-print-summary-label break-words whitespace-normal">ฝ่าย</span></dt>
             <dd className="min-w-0 break-words whitespace-normal">{project.departmentName || "-"}</dd>
           </div>
-          <div data-testid="print-total-days" className="timeline-print-summary-item min-w-0">
+          <div data-testid="print-total-days" className="timeline-print-summary-item timeline-print-summary-item--duration min-w-0">
             <dt><span className="timeline-print-summary-icon"><FontAwesomeIcon icon={faCalendarDays} aria-hidden="true" /></span><span className="timeline-print-summary-label break-words whitespace-normal">ระยะเวลาดำเนินการ</span></dt>
             <dd className="min-w-0 break-words whitespace-normal">{totalWorkingDays} วันทำการ</dd>
           </div>
