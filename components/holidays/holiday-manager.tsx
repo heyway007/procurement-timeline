@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { faArrowLeft, faCalendarPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Swal from "sweetalert2";
@@ -27,6 +27,8 @@ export function HolidayManager({ initialYear = new Date().getFullYear(), initial
   const canEdit = !readOnly && (!user || user.role === "ADMIN");
   const [year, setYear] = useState(initialYear);
   const [holidays, setHolidays] = useState(initialHolidays ?? []);
+  const [loading, setLoading] = useState(initialHolidays === undefined);
+  const yearVersion = useRef(0);
   const [sync, setSync] = useState<SyncState>();
   const [adding, setAdding] = useState(false);
   const [preview, setPreview] = useState<Preview>();
@@ -39,8 +41,10 @@ export function HolidayManager({ initialYear = new Date().getFullYear(), initial
 
   function selectYear(nextYear: number) {
     if (nextYear === year) return;
+    yearVersion.current += 1;
     setYear(nextYear);
     setHolidays(nextYear === initialYear ? initialHolidays ?? [] : []);
+    setLoading(!(nextYear === initialYear && initialHolidays !== undefined));
     setSync(undefined);
     setError("");
   }
@@ -54,13 +58,14 @@ export function HolidayManager({ initialYear = new Date().getFullYear(), initial
         if (!response.ok) throw new Error();
         return response.json() as Promise<{ holidays: HolidayRecord[]; sync: SyncState }>;
       })
-      .then((data) => { if (active) { setHolidays(data.holidays); setSync(data.sync); } })
-      .catch(() => { if (active) setError("ไม่สามารถโหลดวันหยุดได้"); });
+      .then((data) => { if (active) { setHolidays(data.holidays); setSync(data.sync); setLoading(false); } })
+      .catch(() => { if (active) { setError("ไม่สามารถโหลดวันหยุดได้"); setLoading(false); } });
     return () => { active = false; };
   }, [initialHolidays, initialYear, year]);
 
   async function refreshOfficialHolidays() {
     if (!canEdit || syncing) return;
+    const requestedVersion = yearVersion.current;
     setSyncing(true);
     setError("");
     try {
@@ -68,10 +73,12 @@ export function HolidayManager({ initialYear = new Date().getFullYear(), initial
       handleSessionResponse(response);
       if (!response.ok) throw new Error("Cannot sync holidays");
       const data = await response.json() as { holidays: HolidayRecord[]; sync: SyncState };
+      if (requestedVersion !== yearVersion.current) return;
       setHolidays(data.holidays);
       setSync(data.sync);
+      setLoading(false);
     } catch {
-      setError("ไม่สามารถอัปเดตวันหยุดราชการได้ กรุณาลองใหม่อีกครั้ง");
+      if (requestedVersion === yearVersion.current) setError("ไม่สามารถอัปเดตวันหยุดราชการได้ กรุณาลองใหม่อีกครั้ง");
     } finally {
       setSyncing(false);
     }
@@ -133,7 +140,7 @@ export function HolidayManager({ initialYear = new Date().getFullYear(), initial
     {hasPlanningHolidays ? <p role="status" className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">ข้อมูลวันหยุดล่วงหน้า ปี {year} (พ.ศ. {year + 543}) สำหรับวางแผน Timeline รวมวันหยุดชดเชยเบื้องต้น วันพืชมงคลและวันหยุดพิเศษยังรอประกาศราชการ และวันที่อาจเปลี่ยนแปลงได้{sync?.message ? <span className="mt-1 block">ยังตรวจประกาศราชการล่าสุดไม่ได้ กำลังใช้ข้อมูลล่วงหน้าและจะลองใหม่อัตโนมัติ</span> : null}</p> : null}
     {canEdit ? <div className="mt-3 flex justify-end"><button type="button" disabled={syncing} onClick={() => void refreshOfficialHolidays()} className="min-h-11 rounded-xl border border-indigo-200 bg-white px-4 text-sm font-semibold text-indigo-700 hover:bg-indigo-50 disabled:opacity-60">{syncing ? "กำลังอัปเดต..." : "อัปเดตวันหยุดราชการ"}</button></div> : null}
     {error ? <p role="alert" className="mt-4 rounded-xl bg-rose-50 p-3 text-rose-800">{error}</p> : null}
-    <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">{holidays.length === 0 ? <p className="p-8 text-center text-slate-600">ยังไม่มีข้อมูลวันหยุดในปีนี้</p> : holidays.map((holiday) => <div key={holiday.id} className="grid gap-2 border-b border-slate-100 px-4 py-4 sm:grid-cols-[10rem_1fr] sm:px-5"><p className="font-semibold text-indigo-700">{formatThaiDate(holiday.date)}</p><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="break-words font-semibold">{holiday.name}</p><span className="rounded-full bg-indigo-50 px-2 py-1 text-xs text-indigo-800">{holiday.scope === "BANGKOK" ? "กรุงเทพมหานคร" : "ทั่วประเทศ"}</span><span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700">{holiday.origin === "PLANNED" ? "ล่วงหน้า" : holiday.origin === "OFFICIAL_SYNC" ? "ราชการ" : "เพิ่มเอง"}</span></div><p className="mt-1 break-words text-sm text-slate-500">{holiday.sourceNote}</p>{holiday.officialSourceUrl ? <a href={holiday.officialSourceUrl} target="_blank" rel="noreferrer" className="mt-1 inline-block break-all text-xs text-indigo-700 underline">แหล่งข้อมูล</a> : null}</div></div>)}</div>
+    <div aria-busy={loading} className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">{loading ? <p role="status" className="flex items-center justify-center gap-3 p-8 text-center text-slate-600"><span aria-hidden="true" className="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-700 motion-reduce:animate-none" />กำลังโหลดวันหยุดปี {year}...</p> : holidays.length === 0 && !error ? <p className="p-8 text-center text-slate-600">ยังไม่มีข้อมูลวันหยุดในปีนี้</p> : holidays.map((holiday) => <div key={holiday.id} className="grid gap-2 border-b border-slate-100 px-4 py-4 sm:grid-cols-[10rem_1fr] sm:px-5"><p className="font-semibold text-indigo-700">{formatThaiDate(holiday.date)}</p><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="break-words font-semibold">{holiday.name}</p><span className="rounded-full bg-indigo-50 px-2 py-1 text-xs text-indigo-800">{holiday.scope === "BANGKOK" ? "กรุงเทพมหานคร" : "ทั่วประเทศ"}</span><span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700">{holiday.origin === "PLANNED" ? "ล่วงหน้า" : holiday.origin === "OFFICIAL_SYNC" ? "ราชการ" : "เพิ่มเอง"}</span></div><p className="mt-1 break-words text-sm text-slate-500">{holiday.sourceNote}</p>{holiday.officialSourceUrl ? <a href={holiday.officialSourceUrl} target="_blank" rel="noreferrer" className="mt-1 inline-block break-all text-xs text-indigo-700 underline">แหล่งข้อมูล</a> : null}</div></div>)}</div>
     {canEdit && adding ? <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-slate-950/40 p-3 sm:p-4"><form onSubmit={submit} className="w-full max-w-lg rounded-2xl bg-white p-5 shadow-2xl sm:p-6"><h2 className="text-xl font-semibold">เพิ่มวันหยุด</h2><div className="mt-5 grid gap-4"><label>วันที่หยุด<input aria-label="วันที่หยุด" name="date" type="date" required className="mt-2 min-h-11 w-full rounded-xl border px-3" /></label><label>ชื่อวันหยุด<input aria-label="ชื่อวันหยุด" name="name" required className="mt-2 min-h-11 w-full rounded-xl border px-3" /></label><label>แหล่งอ้างอิง<textarea aria-label="แหล่งอ้างอิง" name="sourceNote" required className="mt-2 min-h-20 w-full rounded-xl border p-3" /></label></div><div className="mt-5 grid gap-3 sm:flex sm:justify-end"><button type="button" onClick={() => setAdding(false)} className="min-h-11 rounded-xl border px-4 py-2">ยกเลิก</button><button type="submit" className="min-h-11 rounded-xl bg-indigo-700 px-4 py-2 font-semibold text-white">ตรวจสอบผลกระทบ</button></div></form></div> : null}
     {canEdit && preview ? <div className="fixed inset-0 z-[60] grid place-items-center overflow-y-auto bg-slate-950/50 p-3 sm:p-4"><section role="dialog" className="w-full max-w-lg rounded-2xl bg-white p-5 shadow-2xl sm:p-6"><h2 className="text-xl font-semibold">ผลกระทบต่อ Timeline</h2><p className="mt-3 text-sm text-slate-600">โครงการที่อาจถูกคำนวณใหม่ {preview.affectedProjectCount ?? preview.affectedProjects.length} รายการ</p><p className="mt-2 text-sm text-slate-500">แสดงรายชื่อ Timeline ที่ได้รับผลกระทบ</p><ul className="mt-4 list-disc space-y-1 pl-5">{preview.affectedProjects.map((project) => <li className="break-words" key={project.id}>{formatProjectName(project.name)}</li>)}</ul><div className="mt-6 grid gap-3 sm:flex sm:justify-end"><button type="button" onClick={() => setPreview(undefined)} className="min-h-11 rounded-xl border px-4 py-2">ย้อนกลับ</button><button type="button" onClick={() => void confirm()} className="min-h-11 rounded-xl bg-indigo-700 px-4 py-2 font-semibold text-white">ยืนยันและคำนวณใหม่</button></div></section></div> : null}
   </main>;

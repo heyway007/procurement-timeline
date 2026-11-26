@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Swal from "sweetalert2";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -18,6 +18,17 @@ const plannedHoliday: HolidayRecord = {
   officialSourceUrl: null, officialSourceLabel: null, lastConfirmedAt: null,
   createdAt: "2026-11-26T00:00:00.000Z", updatedAt: "2026-11-26T00:00:00.000Z",
 };
+
+const saved2026Holiday: HolidayRecord = { ...plannedHoliday, id: "saved-2026", date: "2026-01-01", origin: "OFFICIAL_SYNC" };
+function calendarResponse(holidays: HolidayRecord[]) {
+  return new Response(JSON.stringify({ holidays, sync: { status: "CACHED", cached: true, message: null, sourceUrl: null, lastSuccessfulSyncAt: null } }));
+}
+function pendingResponse() {
+  let resolve!: (response: Response) => void;
+  let reject!: (error: Error) => void;
+  const promise = new Promise<Response>((accept, fail) => { resolve = accept; reject = fail; });
+  return { promise, resolve, reject };
+}
 
 describe("HolidayManager", () => {
   beforeEach(() => {
@@ -236,5 +247,71 @@ describe("HolidayManager", () => {
     expect(screen.getByText("วันหยุดหน่วยงาน")).toBeInTheDocument();
     expect(screen.queryByText("วันขึ้นปีใหม่")).not.toBeInTheDocument();
     expect(screen.queryByText("ล่วงหน้า")).not.toBeInTheDocument();
+  });
+
+  it("shows loading while the saved 2026 calendar is pending, without claiming it is empty", async () => {
+    const pending = pendingResponse();
+    vi.mocked(fetch).mockReturnValue(pending.promise);
+    render(<HolidayManager initialYear={2026} readOnly />);
+
+    expect(screen.getByRole("status")).toHaveTextContent("กำลังโหลดวันหยุดปี 2026");
+    expect(screen.queryByText("ยังไม่มีข้อมูลวันหยุดในปีนี้")).not.toBeInTheDocument();
+    await act(async () => pending.resolve(calendarResponse([saved2026Holiday])));
+    expect(await screen.findByText("01 ม.ค. 2569")).toBeInTheDocument();
+    expect(screen.queryByText(/กำลังโหลดวันหยุด/)).not.toBeInTheDocument();
+  });
+
+  it("shows the empty state only after a successful empty response", async () => {
+    const pending = pendingResponse();
+    vi.mocked(fetch).mockReturnValue(pending.promise);
+    render(<HolidayManager initialYear={2026} readOnly />);
+
+    expect(screen.queryByText("ยังไม่มีข้อมูลวันหยุดในปีนี้")).not.toBeInTheDocument();
+    await act(async () => pending.resolve(calendarResponse([])));
+    expect(await screen.findByText("ยังไม่มีข้อมูลวันหยุดในปีนี้")).toBeInTheDocument();
+    expect(screen.queryByText(/กำลังโหลดวันหยุด/)).not.toBeInTheDocument();
+  });
+
+  it("does not describe a failed load as an empty calendar", async () => {
+    vi.mocked(fetch).mockRejectedValue(new Error("offline"));
+    render(<HolidayManager initialYear={2026} readOnly />);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("ไม่สามารถโหลดวันหยุดได้");
+    expect(screen.queryByText("ยังไม่มีข้อมูลวันหยุดในปีนี้")).not.toBeInTheDocument();
+    expect(screen.queryByText(/กำลังโหลดวันหยุด/)).not.toBeInTheDocument();
+  });
+
+  it("keeps loading 2026 when an older request for 2027 finishes after switching back", async () => {
+    const user = userEvent.setup();
+    const nextYear = pendingResponse();
+    const currentYear = pendingResponse();
+    vi.mocked(fetch).mockResolvedValueOnce(calendarResponse([saved2026Holiday]))
+      .mockReturnValueOnce(nextYear.promise).mockReturnValueOnce(currentYear.promise);
+    render(<HolidayManager initialYear={2026} readOnly />);
+    await screen.findByText("01 ม.ค. 2569");
+
+    await user.click(screen.getByRole("button", { name: "2027 (พ.ศ. 2570)" }));
+    expect(screen.getByRole("status")).toHaveTextContent("กำลังโหลดวันหยุดปี 2027");
+    await user.click(screen.getByRole("button", { name: "2026 (พ.ศ. 2569)" }));
+    await act(async () => nextYear.resolve(calendarResponse([plannedHoliday])));
+    expect(screen.getByRole("status")).toHaveTextContent("กำลังโหลดวันหยุดปี 2026");
+    expect(screen.queryByText("ยังไม่มีข้อมูลวันหยุดในปีนี้")).not.toBeInTheDocument();
+    await act(async () => currentYear.resolve(calendarResponse([saved2026Holiday])));
+    expect(await screen.findByText("01 ม.ค. 2569")).toBeInTheDocument();
+  });
+
+  it.each([false, true])("ignores an old 2027 refresh after switching to 2026 (failed: %s)", async (failed) => {
+    const user = userEvent.setup();
+    const pending = pendingResponse();
+    vi.mocked(fetch).mockReturnValueOnce(pending.promise).mockResolvedValueOnce(calendarResponse([saved2026Holiday]));
+    render(<HolidayManager initialYear={2027} initialHolidays={[plannedHoliday]} />);
+    await user.click(screen.getByRole("button", { name: "อัปเดตวันหยุดราชการ" }));
+    await user.click(screen.getByRole("button", { name: "2026 (พ.ศ. 2569)" }));
+    await screen.findByText("01 ม.ค. 2569");
+
+    await act(async () => { if (failed) pending.reject(new Error("offline")); else pending.resolve(calendarResponse([plannedHoliday])); });
+    expect(screen.getByText("01 ม.ค. 2569")).toBeInTheDocument();
+    expect(screen.queryByText("01 ม.ค. 2570")).not.toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });
