@@ -7,7 +7,8 @@ export type HolidayInput = {
 };
 
 export type HolidayScope = "NATIONWIDE" | "BANGKOK";
-export type HolidayOrigin = "MANUAL" | "OFFICIAL_SYNC";
+// PLANNED records are bundled calendar projections, never persisted as official data.
+export type HolidayOrigin = "MANUAL" | "OFFICIAL_SYNC" | "PLANNED";
 export type HolidaySyncStatus = "FRESH" | "CACHED" | "FAILED";
 
 export type OfficialHolidayInput = {
@@ -38,6 +39,8 @@ export type YearCoverageRecord = {
   lastSuccessfulSyncAt: string | null;
   lastSyncStatus: HolidaySyncStatus | null;
   lastSyncMessage: string | null;
+  officialCalendarCompleteAt?: string | null;
+  officialAnnualSourceUrl?: string | null;
 };
 
 export type HolidayMutation =
@@ -59,6 +62,6 @@ export interface HolidayRepository {
   listAffectedProjects(dates: string[]): Promise<ProjectRecord[]>;
   applyMutation(mutation: HolidayMutation): Promise<void>;
   verifyYear(year: number, sourceNote: string): Promise<YearCoverageRecord>;
-  reconcileOfficialYear(year: number, holidays: OfficialHolidayInput[], confirmedAt: string): Promise<{ inserted: number; updated: number; conflicts: string[] }>;
+  reconcileOfficialYear(year: number, holidays: OfficialHolidayInput[], confirmedAt: string, options?: { complete?: boolean; cached?: boolean; annualSourceUrl?: string }): Promise<{ inserted: number; updated: number; conflicts: string[] }>;
   recordSyncFailure(year: number, attemptedAt: string, message: string): Promise<void>;
 }

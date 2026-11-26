@@ -1,5 +1,11 @@
 # Authentication setup (paused)
 
+## Current production deployment workflow (2026-11-26)
+
+The user confirmed that production deploys automatically after a commit and push to GitHub `origin/master` (`heyway007/procurement-timeline`). Cloudflare's `Workers Builds: timeline` commit check reports the deployment result. Use this Git workflow for normal releases; the direct Wrangler commands below are historical instructions. Preserve the existing Cloudflare runtime secrets and the Supabase database connection.
+
+The additive `20261126000000_add_official_calendar_authority` migration was applied to the live Supabase database on 2026-11-26. Prisma reports the schema up to date; database project IDs matched all 18 projects returned by production before migration.
+
 As of 2026-09-16, Timeline is shared without login. All visitors can read and manage all projects, including unassigned legacy projects; entered owner names are editable labels. The login page redirects to the dashboard and the login API returns 410 without creating sessions. Existing User/Session tables and ownership fields are preserved for possible future use, but do not restrict access. Holiday management is also available without login; same-origin checks remain on mutations. The configuration below documents the retained authentication foundation, not the currently active access policy. Changing AUTH_PROVIDER alone will not restore access restrictions.
 
 Deployment verification on 2026-09-16: Worker `timeline`, version `97b4dc7e-8295-42c3-b52a-a40b4b466f35`, serves the public page, redirects `/login` home, and disables login issuance. The suite passed 226 tests (two opt-in database tests skipped), with typecheck, focused lint, and build passing. Live project verification is blocked by the existing database connection returning `tenant/user ... not found`; the project and holiday APIs return 500. No database changes were made for this release. Check the existing Supabase project's status and its current connection details before claiming live data availability.

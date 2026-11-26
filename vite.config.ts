@@ -5,6 +5,7 @@ import { sites } from "./build/sites-vite-plugin";
 const localBindingConfig = {
   main: "./worker/index.ts",
   compatibility_flags: ["nodejs_compat"],
+  triggers: { crons: ["0 0 * * *"] },
 };
 
 export default defineConfig(async () => {

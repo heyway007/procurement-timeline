@@ -89,6 +89,8 @@ export const googleDriveYearCoverageSchema = z.object({
   lastSuccessfulSyncAt: isoDateTimeSchema.nullable(),
   lastSyncStatus: z.enum(["FRESH", "CACHED", "FAILED"]).nullable(),
   lastSyncMessage: z.string().nullable(),
+  officialCalendarCompleteAt: isoDateTimeSchema.nullable().optional().default(null),
+  officialAnnualSourceUrl: z.string().nullable().optional().default(null),
 });
 
 export const googleDriveDocumentSchema = z.object({
@@ -100,4 +102,5 @@ export const googleDriveDocumentSchema = z.object({
   updatedAt: isoDateTimeSchema,
 });
 
-export type GoogleDriveDocument = z.infer<typeof googleDriveDocumentSchema>;
+// Stored documents may omit newer fields; parsing supplies their null defaults.
+export type GoogleDriveDocument = z.input<typeof googleDriveDocumentSchema>;

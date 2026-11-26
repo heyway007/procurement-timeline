@@ -139,7 +139,7 @@ describe("GoogleDriveProjectRepository", () => {
     });
     const repository = new GoogleDriveProjectRepository(dataStore);
 
-    expect(await repository.listHolidayDates()).toEqual(new Set(["2026-07-29"]));
+    expect((await repository.listHolidayDates()).has("2026-07-29")).toBe(true);
     expect(await repository.listUnverifiedYears("2026-12-01", "2027-01-15")).toEqual([2027]);
   });
 });

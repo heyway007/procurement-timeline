@@ -9,6 +9,8 @@ import {
   type RuntimeEnvBindings,
 } from "./runtime-env";
 import { createPrismaClient, runWithPrisma } from "../lib/db/prisma";
+import { getHolidaySyncCoordinator } from "../lib/holidays/container";
+import { storageModeFromEnv } from "../lib/storage/config";
 
 type AssetFetcher = {
   fetch(request: Request): Promise<Response>;
@@ -34,6 +36,27 @@ interface ExecutionContext {
 }
 
 const worker = {
+  scheduled(
+    _controller: { scheduledTime: number },
+    env: Env,
+    ctx: ExecutionContext,
+  ): void {
+    syncRuntimeEnv(env);
+    const refresh = async () => (await getHolidaySyncCoordinator()).syncUpcomingYears();
+    if (storageModeFromEnv(process.env) === "google_drive") {
+      ctx.waitUntil(refresh());
+      return;
+    }
+    const prisma = createPrismaClient(env.DATABASE_URL, { useSupabaseTransactionPooler: true });
+    ctx.waitUntil(runWithPrisma(prisma, async () => {
+      try {
+        return await refresh();
+      } finally {
+        await prisma.$disconnect();
+      }
+    }));
+  },
+
   async fetch(
     request: Request,
     env: Env,

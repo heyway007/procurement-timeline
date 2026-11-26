@@ -4,9 +4,25 @@ import { GoogleDriveProjectRepository } from "@/lib/google-drive/project-reposit
 import { storageModeFromEnv } from "@/lib/storage/config";
 import { HolidayService } from "./service";
 import { SocHolidaySource } from "./official-source";
+import { HolidaySyncCoordinator } from "./sync-coordinator";
 import { assertSameOrigin } from "@/lib/auth/http";
 
 let service: Promise<HolidayService> | undefined;
+let coordinator: Promise<HolidaySyncCoordinator> | undefined;
+
+export function getHolidaySyncCoordinator(): Promise<HolidaySyncCoordinator> {
+  coordinator ??= createHolidaySyncCoordinator();
+  return coordinator;
+}
+
+async function createHolidaySyncCoordinator(): Promise<HolidaySyncCoordinator> {
+  if (storageModeFromEnv(process.env) === "google_drive") {
+    const store = getGoogleDriveDataStore();
+    return new HolidaySyncCoordinator(new GoogleDriveHolidayRepository(store, new GoogleDriveProjectRepository(store)), new SocHolidaySource());
+  }
+  const { PrismaHolidayRepository } = await import("@/lib/db/prisma-holiday-repository");
+  return new HolidaySyncCoordinator(new PrismaHolidayRepository(), new SocHolidaySource());
+}
 
 export async function getHolidayService(request?: Request): Promise<HolidayService> {
   if (request && !["GET", "HEAD"].includes(request.method)) assertSameOrigin(request);
@@ -26,7 +42,8 @@ async function createHolidayService(): Promise<HolidayService> {
       new GoogleDriveHolidayRepository(store, projects),
       projects,
       secret,
-      new SocHolidaySource(),
+      undefined,
+      await getHolidaySyncCoordinator(),
     );
   }
   const { PrismaHolidayRepository } = await import(
@@ -39,6 +56,7 @@ async function createHolidayService(): Promise<HolidayService> {
     new PrismaHolidayRepository(),
     new PrismaProjectRepository(),
     secret,
-    new SocHolidaySource(),
+    undefined,
+    await getHolidaySyncCoordinator(),
   );
 }

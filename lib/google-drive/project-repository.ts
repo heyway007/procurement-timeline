@@ -10,6 +10,7 @@ import type {
   ProjectReplacement,
 } from "@/lib/projects/types";
 import type { GoogleDriveDataStore } from "./datastore";
+import { withPlanningHolidayDates } from "@/lib/holidays/planning-calendar";
 
 export class GoogleDriveProjectRepository
   implements ProjectRepository, HolidayCalendarReader
@@ -87,7 +88,12 @@ export class GoogleDriveProjectRepository
 
   async listHolidayDates(): Promise<ReadonlySet<string>> {
     const document = await this.store.read();
-    return new Set(document.holidays.map((holiday) => holiday.date));
+    return withPlanningHolidayDates(
+      document.holidays.map((holiday) => holiday.date),
+      document.holidayCalendarYears
+        .filter((coverage) => coverage.officialCalendarCompleteAt)
+        .map((coverage) => coverage.year),
+    );
   }
 
   async listUnverifiedYears(from: string, to: string): Promise<number[]> {
@@ -95,7 +101,7 @@ export class GoogleDriveProjectRepository
     const endYear = Number(to.slice(0, 4));
     const verifiedYears = new Set(
       (await this.store.read()).holidayCalendarYears
-        .filter((coverage) => coverage.isVerifiedComplete)
+        .filter((coverage) => coverage.isVerifiedComplete || coverage.officialCalendarCompleteAt)
         .map((coverage) => coverage.year),
     );
     return Array.from(

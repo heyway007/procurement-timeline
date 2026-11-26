@@ -43,7 +43,9 @@ describe("GoogleDriveHolidayRepository", () => {
       holiday: { date: "2026-07-30", name: "วันหยุดแก้ไข", sourceNote: "manual 2" },
     });
 
-    expect((await repository.listAllDates())).toEqual(new Set(["2026-07-30"]));
+    const dates = await repository.listAllDates();
+    expect(dates.has("2026-07-30")).toBe(true);
+    expect(dates.has("2026-07-29")).toBe(false);
     expect((await repository.listYear(2026)).holidays[0]).toMatchObject({
       date: "2026-07-30",
       name: "วันหยุดแก้ไข",

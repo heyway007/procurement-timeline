@@ -1,5 +1,7 @@
 import { getPrisma } from "./prisma";
 import { PrismaProjectRepository } from "./prisma-project-repository";
+import { readHolidayDates } from "./holiday-calendar-reader";
+import { mergePlanningHolidays } from "@/lib/holidays/planning-calendar";
 import type {
   HolidayMutation,
   OfficialHolidayInput,
@@ -25,32 +27,39 @@ export class PrismaHolidayRepository implements HolidayRepository {
     coverage: YearCoverageRecord | null;
   }> {
     const prisma = getPrisma();
-    const holidays = await prisma.holiday.findMany({
-      where: {
-        date: {
-          gte: fromIsoDate(`${year}-01-01`),
-          lte: fromIsoDate(`${year}-12-31`),
-        },
-      },
-      orderBy: { date: "asc" },
-    });
-    const coverage = await prisma.holidayCalendarYear.findUnique({
-      where: { year },
-    });
+    const { holidays, coverage } = await prisma.$transaction(async (transaction) => {
+      const [holidays, coverage] = await Promise.all([
+        transaction.holiday.findMany({
+          where: {
+            date: {
+              gte: fromIsoDate(`${year}-01-01`),
+              lte: fromIsoDate(`${year}-12-31`),
+            },
+          },
+          orderBy: { date: "asc" },
+        }),
+        transaction.holidayCalendarYear.findUnique({ where: { year } }),
+      ]);
+      return { holidays, coverage };
+    }, { isolationLevel: "RepeatableRead" });
     return {
-      holidays: holidays.map((holiday) => ({
-        id: holiday.id,
-        date: toIsoDate(holiday.date),
-        name: holiday.name,
-        sourceNote: holiday.sourceNote,
-        createdAt: holiday.createdAt.toISOString(),
-        updatedAt: holiday.updatedAt.toISOString(),
-        scope: holiday.scope,
-        origin: holiday.origin,
-        officialSourceUrl: holiday.officialSourceUrl,
-        officialSourceLabel: holiday.officialSourceLabel,
-        lastConfirmedAt: holiday.lastConfirmedAt?.toISOString() ?? null,
-      })),
+      holidays: mergePlanningHolidays(
+        holidays.map((holiday) => ({
+          id: holiday.id,
+          date: toIsoDate(holiday.date),
+          name: holiday.name,
+          sourceNote: holiday.sourceNote,
+          createdAt: holiday.createdAt.toISOString(),
+          updatedAt: holiday.updatedAt.toISOString(),
+          scope: holiday.scope,
+          origin: holiday.origin,
+          officialSourceUrl: holiday.officialSourceUrl,
+          officialSourceLabel: holiday.officialSourceLabel,
+          lastConfirmedAt: holiday.lastConfirmedAt?.toISOString() ?? null,
+        })),
+        year,
+        Boolean(coverage?.officialCalendarCompleteAt),
+      ),
       coverage: coverage
         ? {
             year: coverage.year,
@@ -61,14 +70,15 @@ export class PrismaHolidayRepository implements HolidayRepository {
             lastSuccessfulSyncAt: coverage.lastSuccessfulSyncAt?.toISOString() ?? null,
             lastSyncStatus: coverage.lastSyncStatus,
             lastSyncMessage: coverage.lastSyncMessage,
+            officialCalendarCompleteAt: coverage.officialCalendarCompleteAt?.toISOString() ?? null,
+            officialAnnualSourceUrl: coverage.officialAnnualSourceUrl,
           }
         : null,
     };
   }
 
   async listAllDates(): Promise<ReadonlySet<string>> {
-    const records = await getPrisma().holiday.findMany({ select: { date: true } });
-    return new Set(records.map((record) => toIsoDate(record.date)));
+    return readHolidayDates();
   }
 
   async listAffectedProjects(dates: string[]): Promise<ProjectRecord[]> {
@@ -103,6 +113,10 @@ export class PrismaHolidayRepository implements HolidayRepository {
           date: fromIsoDate(mutation.holiday.date),
           name: mutation.holiday.name,
           sourceNote: mutation.holiday.sourceNote,
+          origin: "MANUAL",
+          officialSourceUrl: null,
+          officialSourceLabel: null,
+          lastConfirmedAt: null,
         },
       });
       return;
@@ -137,6 +151,8 @@ export class PrismaHolidayRepository implements HolidayRepository {
       lastSuccessfulSyncAt: record.lastSuccessfulSyncAt?.toISOString() ?? null,
       lastSyncStatus: record.lastSyncStatus,
       lastSyncMessage: record.lastSyncMessage,
+      officialCalendarCompleteAt: record.officialCalendarCompleteAt?.toISOString() ?? null,
+      officialAnnualSourceUrl: record.officialAnnualSourceUrl,
     };
   }
 
@@ -144,10 +160,19 @@ export class PrismaHolidayRepository implements HolidayRepository {
     year: number,
     holidays: OfficialHolidayInput[],
     confirmedAt: string,
+    options: { complete?: boolean; cached?: boolean; annualSourceUrl?: string } = {},
   ): Promise<{ inserted: number; updated: number; conflicts: string[] }> {
+    const complete = options.complete === true && options.cached !== true;
+    if (complete && (holidays.length === 0 || holidays.some((holiday) => !holiday.date.startsWith(`${year}-`)))) {
+      throw new Error("OFFICIAL_SOURCE_INVALID");
+    }
     const prisma = getPrisma();
     const confirmed = new Date(confirmedAt);
     return prisma.$transaction(async (tx) => {
+      const previousCoverage = complete || options.cached
+        ? await tx.holidayCalendarYear.findUnique({ where: { year } })
+        : null;
+      const annualSourceUrl = options.annualSourceUrl ?? holidays[0]?.sourceUrl ?? null;
       let inserted = 0;
       let updated = 0;
       const conflicts: string[] = [];
@@ -159,6 +184,7 @@ export class PrismaHolidayRepository implements HolidayRepository {
           conflicts.push(holiday.date);
           continue;
         }
+        if (options.cached && (existing || previousCoverage?.officialCalendarCompleteAt)) continue;
         const data = {
           name: holiday.name,
           sourceNote: holiday.sourceLabel,
@@ -166,7 +192,7 @@ export class PrismaHolidayRepository implements HolidayRepository {
           origin: "OFFICIAL_SYNC" as const,
           officialSourceUrl: holiday.sourceUrl,
           officialSourceLabel: holiday.sourceLabel,
-          lastConfirmedAt: confirmed,
+          lastConfirmedAt: options.cached ? null : confirmed,
         };
         if (existing) {
           await tx.holiday.update({ where: { id: existing.id }, data });
@@ -176,10 +202,32 @@ export class PrismaHolidayRepository implements HolidayRepository {
           inserted += 1;
         }
       }
+      if (complete) {
+        const annualSources = [previousCoverage?.officialAnnualSourceUrl, annualSourceUrl]
+          .filter((url): url is string => Boolean(url));
+        await tx.holiday.deleteMany({
+          where: {
+            origin: "OFFICIAL_SYNC",
+            officialSourceUrl: { in: annualSources },
+            date: {
+              gte: fromIsoDate(`${year}-01-01`),
+              lte: fromIsoDate(`${year}-12-31`),
+              notIn: holidays.map((holiday) => fromIsoDate(holiday.date)),
+            },
+          },
+        });
+      }
+      const syncPatch = {
+        lastSyncAttemptAt: confirmed,
+        ...(options.cached
+          ? { lastSyncStatus: "CACHED" as const, lastSyncMessage: "OFFICIAL_SOURCE_CACHED" }
+          : { lastSuccessfulSyncAt: confirmed, lastSyncStatus: "FRESH" as const, lastSyncMessage: null }),
+        ...(complete ? { officialCalendarCompleteAt: confirmed, officialAnnualSourceUrl: annualSourceUrl } : {}),
+      };
       await tx.holidayCalendarYear.upsert({
         where: { year },
-        create: { year, sourceNote: "สำนักเลขาธิการคณะรัฐมนตรี", lastSyncAttemptAt: confirmed, lastSuccessfulSyncAt: confirmed, lastSyncStatus: "FRESH" },
-        update: { lastSyncAttemptAt: confirmed, lastSuccessfulSyncAt: confirmed, lastSyncStatus: "FRESH", lastSyncMessage: null },
+        create: { year, sourceNote: "สำนักเลขาธิการคณะรัฐมนตรี", ...syncPatch },
+        update: syncPatch,
       });
       return { inserted, updated, conflicts };
     });

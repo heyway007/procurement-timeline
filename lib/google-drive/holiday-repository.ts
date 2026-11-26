@@ -1,4 +1,8 @@
 import { randomUUID } from "node:crypto";
+import {
+  mergePlanningHolidays,
+  withPlanningHolidayDates,
+} from "@/lib/holidays/planning-calendar";
 import type {
   HolidayMutation,
   HolidayRecord,
@@ -21,20 +25,25 @@ export class GoogleDriveHolidayRepository implements HolidayRepository {
     coverage: YearCoverageRecord | null;
   }> {
     const document = await this.store.read();
+    const coverage = document.holidayCalendarYears.find((item) => item.year === year) ?? null;
     return {
-      holidays: document.holidays
-        .filter((holiday) => holiday.date.startsWith(`${year}-`))
-        .sort((left, right) => left.date.localeCompare(right.date)),
-      coverage:
-        document.holidayCalendarYears.find(
-          (coverage) => coverage.year === year,
-        ) ?? null,
+      holidays: mergePlanningHolidays(
+        document.holidays.filter((holiday) => holiday.date.startsWith(`${year}-`)),
+        year,
+        Boolean(coverage?.officialCalendarCompleteAt),
+      ),
+      coverage,
     };
   }
 
   async listAllDates(): Promise<ReadonlySet<string>> {
     const document = await this.store.read();
-    return new Set(document.holidays.map((holiday) => holiday.date));
+    return withPlanningHolidayDates(
+      document.holidays.map((holiday) => holiday.date),
+      document.holidayCalendarYears
+        .filter((coverage) => coverage.officialCalendarCompleteAt)
+        .map((coverage) => coverage.year),
+    );
   }
 
   async listAffectedProjects(dates: string[]): Promise<ProjectRecord[]> {
@@ -110,8 +119,14 @@ export class GoogleDriveHolidayRepository implements HolidayRepository {
     year: number,
     holidays: OfficialHolidayInput[],
     confirmedAt: string,
+    options: { complete?: boolean; cached?: boolean; annualSourceUrl?: string } = {},
   ): Promise<{ inserted: number; updated: number; conflicts: string[] }> {
+    const complete = options.complete === true && !options.cached;
+    if (complete && (holidays.length === 0 || holidays.some((holiday) => !holiday.date.startsWith(`${year}-`)))) {
+      throw new Error("OFFICIAL_SOURCE_INVALID");
+    }
     return this.store.mutate((document) => {
+      const previousCoverage = document.holidayCalendarYears.find((coverage) => coverage.year === year);
       let inserted = 0;
       let updated = 0;
       const conflicts: string[] = [];
@@ -124,6 +139,7 @@ export class GoogleDriveHolidayRepository implements HolidayRepository {
           conflicts.push(holiday.date);
           continue;
         }
+        if (options.cached && (existing || previousCoverage?.officialCalendarCompleteAt)) continue;
         const data = {
           date: holiday.date,
           name: holiday.name,
@@ -132,7 +148,7 @@ export class GoogleDriveHolidayRepository implements HolidayRepository {
           origin: "OFFICIAL_SYNC" as const,
           officialSourceUrl: holiday.sourceUrl,
           officialSourceLabel: holiday.sourceLabel,
-          lastConfirmedAt: confirmedAt,
+          lastConfirmedAt: options.cached ? null : confirmedAt,
           updatedAt: confirmedAt,
         };
         if (existing) {
@@ -147,12 +163,30 @@ export class GoogleDriveHolidayRepository implements HolidayRepository {
           inserted += 1;
         }
       }
+      if (complete) {
+        const annualSourceUrl = options.annualSourceUrl ?? holidays[0].sourceUrl;
+        const annualSources = new Set(
+          [annualSourceUrl, previousCoverage?.officialAnnualSourceUrl]
+            .filter((sourceUrl): sourceUrl is string => Boolean(sourceUrl)),
+        );
+        const incomingDates = new Set(holidays.map((holiday) => holiday.date));
+        document.holidays = document.holidays.filter((holiday) =>
+          !holiday.date.startsWith(`${year}-`) ||
+          holiday.origin !== "OFFICIAL_SYNC" ||
+          !annualSources.has(holiday.officialSourceUrl ?? "") ||
+          incomingDates.has(holiday.date),
+        );
+      }
       upsertCoverage(document.holidayCalendarYears, year, {
         sourceNote: "สำนักเลขาธิการคณะรัฐมนตรี",
         lastSyncAttemptAt: confirmedAt,
-        lastSuccessfulSyncAt: confirmedAt,
-        lastSyncStatus: "FRESH",
-        lastSyncMessage: null,
+        ...(options.cached ? {} : { lastSuccessfulSyncAt: confirmedAt }),
+        lastSyncStatus: options.cached ? "CACHED" : "FRESH",
+        lastSyncMessage: options.cached ? "OFFICIAL_SOURCE_CACHED" : null,
+        ...(complete ? {
+          officialCalendarCompleteAt: confirmedAt,
+          officialAnnualSourceUrl: options.annualSourceUrl ?? holidays[0].sourceUrl,
+        } : {}),
       });
       return { inserted, updated, conflicts };
     });
@@ -193,6 +227,8 @@ function upsertCoverage(
     lastSuccessfulSyncAt: null,
     lastSyncStatus: null,
     lastSyncMessage: null,
+    officialCalendarCompleteAt: null,
+    officialAnnualSourceUrl: null,
     ...patch,
   };
   records.push(created);

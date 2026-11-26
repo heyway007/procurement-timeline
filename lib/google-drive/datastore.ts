@@ -44,6 +44,7 @@ export class GoogleDriveDataStore {
     | { document: GoogleDriveDocument; expiresAtMs: number }
     | undefined;
   private pendingRead: Promise<GoogleDriveDocument> | undefined;
+  private mutationQueue: Promise<unknown> = Promise.resolve();
   private readonly cacheTtlMs: number;
   private readonly nowMs: () => number;
 
@@ -71,7 +72,15 @@ export class GoogleDriveDataStore {
     }
   }
 
-  async mutate<T>(
+  mutate<T>(
+    mutation: (document: GoogleDriveDocument) => T | Promise<T>,
+  ): Promise<T> {
+    const operation = this.mutationQueue.then(() => this.applyMutation(mutation));
+    this.mutationQueue = operation.then(() => undefined, () => undefined);
+    return operation;
+  }
+
+  private async applyMutation<T>(
     mutation: (document: GoogleDriveDocument) => T | Promise<T>,
   ): Promise<T> {
     const document = await this.read();

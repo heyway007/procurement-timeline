@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import Swal from "sweetalert2";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { HolidayManager } from "@/components/holidays/holiday-manager";
+import type { HolidayRecord } from "@/lib/holidays/repository";
 
 vi.mock("sweetalert2", () => ({
   default: {
@@ -11,6 +12,12 @@ vi.mock("sweetalert2", () => ({
 }));
 
 const swalFire = vi.mocked(Swal.fire);
+const plannedHoliday: HolidayRecord = {
+  id: "planned-2027-01-01", date: "2027-01-01", name: "วันขึ้นปีใหม่",
+  sourceNote: "ปฏิทินล่วงหน้าเพื่อวางแผน", scope: "NATIONWIDE", origin: "PLANNED",
+  officialSourceUrl: null, officialSourceLabel: null, lastConfirmedAt: null,
+  createdAt: "2026-11-26T00:00:00.000Z", updatedAt: "2026-11-26T00:00:00.000Z",
+};
 
 describe("HolidayManager", () => {
   beforeEach(() => {
@@ -169,5 +176,65 @@ describe("HolidayManager", () => {
         title: "บันทึกวันหยุดสำเร็จ",
       }),
     );
+  });
+
+  it("identifies advance dates without claiming they are cached official holidays", async () => {
+    vi.mocked(fetch).mockResolvedValue({ ok: true, json: async () => ({
+      holidays: [plannedHoliday],
+      sync: { status: "CACHED", cached: true, message: null, sourceUrl: null, lastSuccessfulSyncAt: null },
+    }) } as Response);
+    render(<HolidayManager initialYear={2027} readOnly />);
+
+    expect(await screen.findByText("วันขึ้นปีใหม่")).toBeInTheDocument();
+    expect(screen.getByText("ล่วงหน้า")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("2027");
+    expect(screen.getByRole("status")).toHaveTextContent("วันพืชมงคล");
+    expect(screen.queryByText("กำลังใช้ข้อมูลราชการที่บันทึกไว้")).not.toBeInTheDocument();
+    expect(screen.queryByText("เพิ่มเอง")).not.toBeInTheDocument();
+  });
+
+  it("loads a future year from the shortcuts even when the initial year was supplied", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetch).mockResolvedValue({ ok: true, json: async () => ({
+      holidays: [plannedHoliday],
+      sync: { status: "CACHED", cached: true, message: null, sourceUrl: null, lastSuccessfulSyncAt: null },
+    }) } as Response);
+    render(<HolidayManager initialYear={2026} initialHolidays={[]} readOnly />);
+
+    await user.click(screen.getByRole("button", { name: "2027 (พ.ศ. 2570)" }));
+    expect(await screen.findByText("วันขึ้นปีใหม่")).toBeInTheDocument();
+    expect(screen.getByRole("spinbutton", { name: "ปี ค.ศ." })).toHaveValue(2027);
+    expect(screen.getByRole("button", { name: "2028 (พ.ศ. 2571)" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "2026 (พ.ศ. 2569)" }));
+    expect(screen.queryByText("วันขึ้นปีใหม่")).not.toBeInTheDocument();
+  });
+
+  it("keeps advance dates visible and explains a failed automatic publication check", async () => {
+    vi.mocked(fetch).mockResolvedValue({ ok: true, json: async () => ({
+      holidays: [plannedHoliday],
+      sync: { status: "CACHED", cached: true, message: "OFFICIAL_SOURCE_UNAVAILABLE", sourceUrl: null, lastSuccessfulSyncAt: null },
+    }) } as Response);
+    render(<HolidayManager initialYear={2027} readOnly />);
+
+    expect(await screen.findByText(/ยังตรวจประกาศราชการล่าสุดไม่ได้/)).toBeInTheDocument();
+    expect(screen.getByText("วันขึ้นปีใหม่")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("ลองใหม่อัตโนมัติ");
+  });
+
+  it("replaces a projected row immediately when a manual holiday is saved on its date", async () => {
+    const user = userEvent.setup();
+    const previewMutation = vi.fn().mockResolvedValue({ token: "signed-token", affectedProjects: [] });
+    render(<HolidayManager initialYear={2027} initialHolidays={[plannedHoliday]} previewMutation={previewMutation} />);
+
+    await user.click(screen.getByRole("button", { name: "เพิ่มวันหยุด" }));
+    await user.type(screen.getByLabelText("วันที่หยุด"), "2027-01-01");
+    await user.type(screen.getByLabelText("ชื่อวันหยุด"), "วันหยุดหน่วยงาน");
+    await user.type(screen.getByLabelText("แหล่งอ้างอิง"), "ประกาศหน่วยงาน");
+    await user.click(screen.getByRole("button", { name: "ตรวจสอบผลกระทบ" }));
+    await user.click(screen.getByRole("button", { name: "ยืนยันและคำนวณใหม่" }));
+
+    expect(screen.getByText("วันหยุดหน่วยงาน")).toBeInTheDocument();
+    expect(screen.queryByText("วันขึ้นปีใหม่")).not.toBeInTheDocument();
+    expect(screen.queryByText("ล่วงหน้า")).not.toBeInTheDocument();
   });
 });

@@ -195,6 +195,35 @@ describe("GoogleDriveDataStore", () => {
 
     await expect(store.read()).rejects.toThrow("GOOGLE_DRIVE_DATA_INVALID");
   });
+
+  it("preserves both changes when a background import overlaps another mutation", async () => {
+    const client = new FakeDriveFileClient(JSON.stringify(createEmptyGoogleDriveDocument(nowIso)));
+    const store = new GoogleDriveDataStore(client, () => nowIso);
+    let release!: () => void;
+    let started!: () => void;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    const ready = new Promise<void>((resolve) => { started = resolve; });
+    const first = store.mutate(async (document) => {
+      document.templates[0].name = "Updated by the background import";
+      started();
+      await gate;
+    });
+    await ready;
+    const second = store.mutate((document) => { document.templates[0].version = 2; });
+    release();
+    await Promise.all([first, second]);
+
+    expect((await store.read()).templates[0]).toMatchObject({ name: "Updated by the background import", version: 2 });
+    expect(JSON.parse(client.content!).templates[0]).toMatchObject({ name: "Updated by the background import", version: 2 });
+  });
+
+  it("continues processing mutations after a failed update", async () => {
+    const client = new FakeDriveFileClient(JSON.stringify(createEmptyGoogleDriveDocument(nowIso)));
+    const store = new GoogleDriveDataStore(client, () => nowIso);
+    await expect(store.mutate(() => { throw new Error("rejected update"); })).rejects.toThrow("rejected update");
+    await store.mutate((document) => { document.templates[0].version = 2; });
+    expect((await store.read()).templates[0].version).toBe(2);
+  });
 });
 
 describe("GoogleDriveApiFileClient", () => {

@@ -1,5 +1,6 @@
 import type { Prisma } from "@/app/generated/prisma/client";
 import { getPrisma } from "./prisma";
+import { readHolidayDates } from "./holiday-calendar-reader";
 import type {
   HolidayCalendarReader,
   ProjectMutationResult,
@@ -192,8 +193,7 @@ export class PrismaProjectRepository
   }
 
   async listHolidayDates(): Promise<ReadonlySet<string>> {
-    const holidays = await getPrisma().holiday.findMany({ select: { date: true } });
-    return new Set(holidays.map((holiday) => toIsoDate(holiday.date)));
+    return readHolidayDates();
   }
 
   async listUnverifiedYears(from: string, to: string): Promise<number[]> {
@@ -204,7 +204,13 @@ export class PrismaProjectRepository
       (_, index) => startYear + index,
     );
     const verified = await getPrisma().holidayCalendarYear.findMany({
-      where: { year: { in: years }, isVerifiedComplete: true },
+      where: {
+        year: { in: years },
+        OR: [
+          { isVerifiedComplete: true },
+          { officialCalendarCompleteAt: { not: null } },
+        ],
+      },
       select: { year: true },
     });
     const verifiedSet = new Set(verified.map((item) => item.year));

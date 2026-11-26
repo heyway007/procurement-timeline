@@ -185,6 +185,8 @@ model HolidayCalendarYear {
   lastSuccessfulSyncAt DateTime?
   lastSyncStatus     HolidaySyncStatus?
   lastSyncMessage    String?
+  officialCalendarCompleteAt DateTime?
+  officialAnnualSourceUrl String?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 }
