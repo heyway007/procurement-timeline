@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import {
@@ -632,6 +633,14 @@ export function TimelineDetail({
       </nav>
 
       <header data-testid="print-header" className="timeline-summary-header print-header rounded-2xl border border-slate-200 p-4 text-slate-950 shadow-sm sm:rounded-3xl sm:p-7">
+        <div className="timeline-print-masthead print-only">
+          <Image src="/logo-tceb.webp" alt="TCEB" width={88} height={88} loading="eager" className="timeline-print-logo" />
+          <div className="timeline-print-masthead-copy">
+            <p className="timeline-print-brand"><FontAwesomeIcon icon={faCalendarCheck} aria-hidden="true" /><span>PROCUREMENT TIMELINE</span></p>
+            <p className="timeline-print-document-title">ประมาณการกรอบระยะเวลาในการจัดซื้อจัดจ้าง</p>
+            <p className="timeline-print-document-subtitle">วางแผนวันดำเนินงานอัตโนมัติตามวันทำการราชการไทย</p>
+          </div>
+        </div>
         <div className="flex min-w-0 flex-col items-center gap-3 sm:flex-row sm:justify-between">
           <div className="min-w-0">
             <h1 className="mt-1 min-w-0 break-words text-center text-xl font-semibold max-[639px]:text-lg sm:text-left sm:text-2xl">{formatProjectName(project.name)}</h1>
@@ -665,11 +674,27 @@ export function TimelineDetail({
             <div className="min-w-0 flex-1"><p>สถานะโครงการ</p><strong className="break-words whitespace-normal">{slaStatusText(project)}</strong></div>
           </div>
         </div>
-        <dl className="print-summary sr-only text-sm">
-          <div data-testid="print-owner" className="min-w-0"><dt className="break-words whitespace-normal">ผู้จัดทำ Timeline</dt><dd className="min-w-0 break-words whitespace-normal">{project.ownerName}</dd></div>
-          <div data-testid="print-department" className="min-w-0"><dt className="break-words whitespace-normal">ฝ่าย</dt><dd className="min-w-0 break-words whitespace-normal">{project.departmentName || "-"}</dd></div>
-          <div data-testid="print-budget" className="min-w-0"><dt className="break-words whitespace-normal">วิธี / วงเงิน</dt><dd className="min-w-0 break-words whitespace-normal">{budgetCategoryLabel(project.budgetCategory)}</dd></div>
-          <div data-testid="print-total-days" className="min-w-0"><dt className="break-words whitespace-normal">จำนวนวันทำการทั้งหมด</dt><dd className="min-w-0 break-words whitespace-normal">{totalWorkingDays} วันทำการ · {slaStatusText(project)}</dd></div>
+        <dl className="print-summary print-only text-sm">
+          <div data-testid="print-budget" className="timeline-print-summary-item min-w-0">
+            <dt><span className="timeline-print-summary-icon"><FontAwesomeIcon icon={faSackDollar} aria-hidden="true" /></span><span className="timeline-print-summary-label break-words whitespace-normal">วิธี / วงเงิน</span></dt>
+            <dd className="min-w-0 break-words whitespace-normal">{budgetCategoryLabel(project.budgetCategory)}</dd>
+          </div>
+          <div data-testid="print-department" className="timeline-print-summary-item min-w-0">
+            <dt><span className="timeline-print-summary-icon"><FontAwesomeIcon icon={faBuilding} aria-hidden="true" /></span><span className="timeline-print-summary-label break-words whitespace-normal">ฝ่าย</span></dt>
+            <dd className="min-w-0 break-words whitespace-normal">{project.departmentName || "-"}</dd>
+          </div>
+          <div data-testid="print-total-days" className="timeline-print-summary-item min-w-0">
+            <dt><span className="timeline-print-summary-icon"><FontAwesomeIcon icon={faCalendarDays} aria-hidden="true" /></span><span className="timeline-print-summary-label break-words whitespace-normal">ระยะเวลาดำเนินการ</span></dt>
+            <dd className="min-w-0 break-words whitespace-normal">{totalWorkingDays} วันทำการ</dd>
+          </div>
+          <div data-testid="print-status" className="timeline-print-summary-item timeline-print-summary-item--status min-w-0">
+            <dt><span className="timeline-print-summary-icon"><FontAwesomeIcon icon={faShieldHalved} aria-hidden="true" /></span><span className="timeline-print-summary-label break-words whitespace-normal">สถานะโครงการ</span></dt>
+            <dd className="min-w-0 break-words whitespace-normal">{slaStatusText(project)}</dd>
+          </div>
+        </dl>
+        <dl data-testid="print-owner" className="timeline-print-owner print-only min-w-0">
+          <dt className="break-words whitespace-normal">ผู้จัดทำ Timeline</dt>
+          <dd className="min-w-0 break-words whitespace-normal">{project.ownerName}</dd>
         </dl>
         {project.note ? (
           <section data-testid="timeline-project-note" className="timeline-project-note timeline-summary-stat timeline-summary-stat--note mt-5">
@@ -689,7 +714,7 @@ export function TimelineDetail({
 
       <section data-testid="timeline-table" className="timeline-table print-table mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div data-testid="timeline-header-row" className="timeline-header-row print-grid grid grid-cols-[1.75rem_3rem_minmax(0,1fr)_minmax(0,1.15fr)_3.5rem] items-center gap-2 border-b border-slate-100 bg-white px-2 py-3 text-[11px] font-semibold text-slate-500 sm:grid-cols-[2.5rem_3.25rem_minmax(0,1.4fr)_minmax(0,1.2fr)_6rem] sm:gap-3 sm:px-4 sm:text-sm lg:grid-cols-[4rem_4rem_1fr_20rem_7rem]">
-          <span>ลำดับ</span><span className="timeline-header-icon-slot print-hidden" /><span>ขั้นตอน<span className="mobile-step-date-label"> / วันที่กำหนด</span></span><span className="mobile-date-header">วันที่กำหนด</span><span className="print-hidden text-center">จัดการ</span>
+          <span>ลำดับ</span><span className="timeline-header-icon-slot" /><span className="timeline-step-column-heading"><span className="print-hidden">ขั้นตอน<span className="mobile-step-date-label"> / วันที่กำหนด</span></span><span className="print-only">ขั้นตอนดำเนินงาน</span></span><span className="mobile-date-header">วันที่กำหนด</span><span className="print-hidden text-center">จัดการ</span>
         </div>
         {project.steps.map((step, index) => {
           const presentation = specificMethodPresentation
@@ -699,10 +724,10 @@ export function TimelineDetail({
           <div data-testid="timeline-step" data-order={step.order} key={step.order} className="timeline-step print-grid grid grid-cols-[1.75rem_3rem_minmax(0,1fr)_minmax(0,1.15fr)_3.5rem] items-center gap-2 border-t border-slate-100 px-2 py-3 text-xs sm:grid-cols-[2.5rem_3.25rem_minmax(0,1.4fr)_minmax(0,1.2fr)_6rem] sm:gap-3 sm:px-4 sm:py-4 sm:text-base lg:grid-cols-[4rem_4rem_1fr_20rem_7rem]">
             <span data-testid="timeline-step-order" className="self-center text-center font-semibold text-indigo-700"><span className="print-hidden hidden">ขั้นตอนที่ </span>{step.order}</span>
             <div className="timeline-step-main">
-              <span data-testid="timeline-step-icon" className="timeline-step-icon print-hidden h-12 w-12 max-[639px]:h-9 max-[639px]:w-9 self-center" aria-hidden="true"><FontAwesomeIcon icon={stepIcon(presentation)} /></span>
+              <span data-testid="timeline-step-icon" className="timeline-step-icon h-12 w-12 max-[639px]:h-9 max-[639px]:w-9 self-center" aria-hidden="true"><FontAwesomeIcon icon={stepIcon(presentation)} /></span>
               <div className="timeline-step-content min-w-0">
                 <div className="timeline-step-title-row flex min-w-0 items-center gap-2">
-                      <p className="min-w-0 flex-1 break-words text-lg font-semibold text-slate-900 max-[639px]:text-sm sm:text-lg">{presentation.title}</p>
+                      <p className="timeline-step-title min-w-0 flex-1 break-words text-lg font-semibold text-slate-900 max-[639px]:text-sm sm:text-lg">{presentation.title}</p>
                   <div data-testid="timeline-step-details" className="timeline-step-details timeline-step-details--inline-mobile print-hidden">
                     <button type="button" className="timeline-step-details-trigger timeline-step-details-trigger--inline-mobile timeline-step-details-trigger--aligned-mobile" aria-label={`ดูรายละเอียด ${presentation.title} ขั้นตอนที่ ${step.order}`} aria-expanded={openStepDetails === step.order} aria-controls={`timeline-step-tooltip-${step.order}`} onClick={(event) => toggleStepDetails(step.order, event.currentTarget)}>
                       <FontAwesomeIcon icon={faCircleInfo} aria-hidden="true" />
@@ -754,9 +779,13 @@ export function TimelineDetail({
           );
         })}
         <div className="timeline-step-end print-grid grid grid-cols-[1.75rem_3rem_minmax(0,1fr)_minmax(0,1.15fr)_3.5rem] items-center gap-2 border-t-2 border-indigo-100 bg-indigo-50/40 px-2 py-3 text-xs sm:grid-cols-[2.5rem_3.25rem_minmax(0,1.4fr)_minmax(0,1.2fr)_6rem] sm:gap-3 sm:px-4 sm:py-4 sm:text-base lg:grid-cols-[4rem_4rem_1fr_20rem_7rem]">
-          <span className="self-center text-center font-semibold text-indigo-700">{specificMethodPresentation ? project.steps.length + 1 : "จบ"}</span><div className="timeline-step-main"><span className="timeline-step-icon print-hidden h-12 w-12 self-center" aria-hidden="true"><FontAwesomeIcon icon={faHandshake} /></span><span className="timeline-step-content break-words text-sm font-semibold text-slate-900 sm:text-lg">วันที่เริ่มลงนามในสัญญาได้</span><span className="timeline-step-date break-words font-semibold text-indigo-800">{formatThaiDateWithWeekday(project.processEndDate)}</span></div><span className="timeline-step-end-action print-hidden" />
+          <span className="self-center text-center font-semibold text-indigo-700">{specificMethodPresentation ? project.steps.length + 1 : "จบ"}</span><div className="timeline-step-main"><span className="timeline-step-icon h-12 w-12 self-center" aria-hidden="true"><FontAwesomeIcon icon={faHandshake} /></span><span className="timeline-step-title timeline-step-content break-words text-sm font-semibold text-slate-900 sm:text-lg">วันที่เริ่มลงนามในสัญญาได้</span><span className="timeline-step-date break-words font-semibold text-indigo-800">{formatThaiDateWithWeekday(project.processEndDate)}</span></div><span className="timeline-step-end-action print-hidden" />
         </div>
       </section>
+
+      <footer className="timeline-print-footer print-only">
+        <p>หมายเหตุ: กรอบระยะเวลาเป็นประมาณการตามวันทำการ โดยไม่นับวันเสาร์–อาทิตย์และวันหยุดราชการ</p>
+      </footer>
 
       <div data-testid="timeline-bottom-actions" className="timeline-bottom-actions print-hidden mt-6 grid gap-3 sm:flex sm:flex-wrap sm:justify-end">
         <button type="button" onClick={() => window.print()} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 font-semibold"><FontAwesomeIcon icon={faPrint} aria-hidden="true" />พิมพ์ Timeline</button>

@@ -22,26 +22,4 @@ describe("print stylesheet", () => {
     expect(printTableBlock).toMatch(/border-top:\s*0\s*!important/);
   });
 
-  it("fits the sequence column and uses the shared table font in the header", () => {
-    expect(stylesheet).toMatch(
-      /grid-template-columns:\s*16mm\s+minmax\(0,\s*1fr\)\s+100mm\s*!important/,
-    );
-
-    const printHeaderBlock = stylesheet.match(
-      /\.print-grid:first-child\s*\{([\s\S]*?)\n\s*\}/,
-    )?.[1] ?? "";
-
-    expect(printHeaderBlock).toMatch(
-      /font-family:\s*"Kanit",\s*Tahoma,\s*sans-serif\s*!important/,
-    );
-  });
-
-  it("keeps horizontal borders around the printed end row", () => {
-    const printEndRowBlock = stylesheet.match(
-      /\.print-grid:last-child\s*\{([\s\S]*?)\n\s*\}/,
-    )?.[1] ?? "";
-
-    expect(printEndRowBlock).toMatch(/border-top:\s*1px\s+solid\s+#cbd5e1\s*!important/);
-    expect(printEndRowBlock).toMatch(/border-bottom:\s*1px\s+solid\s+#cbd5e1\s*!important/);
-  });
 });

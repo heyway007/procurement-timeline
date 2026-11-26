@@ -222,7 +222,8 @@ describe("TimelineDetail", () => {
     expect(departmentStat?.querySelector("strong")).toHaveClass("break-words", "whitespace-normal");
     expect(screen.getByTestId("print-budget")).not.toHaveTextContent("29,000,000.00");
     expect(screen.getByTestId("print-budget")).toHaveTextContent("10,000,001–50,000,000 บาท");
-    expect(screen.getByTestId("print-total-days")).toHaveTextContent("39 วันทำการ · เป็นไปตาม SLA");
+    expect(screen.getByTestId("print-total-days")).toHaveTextContent("39 วันทำการ");
+    expect(screen.getByTestId("print-status")).toHaveTextContent("เป็นไปตาม SLA");
     expect(within(screen.getByTestId("print-header")).queryByText("วันที่เริ่มลงนามในสัญญาได้")).not.toBeInTheDocument();
     expect(screen.getAllByText("วันที่เริ่มลงนามในสัญญาได้")).not.toHaveLength(0);
     expect(screen.queryByText("วันที่เริ่มทำสัญญา")).not.toBeInTheDocument();
@@ -239,7 +240,70 @@ describe("TimelineDetail", () => {
     );
 
     expect(screen.getByTestId("timeline-summary")).toHaveTextContent("ไม่เป็นไปตาม SLA");
-    expect(screen.getByTestId("print-total-days")).toHaveTextContent("ไม่เป็นไปตาม SLA");
+    expect(screen.getByTestId("print-status")).toHaveTextContent("ไม่เป็นไปตาม SLA");
+  });
+
+  it("includes print branding and a document title without adding another project heading", () => {
+    render(<TimelineDetail projectId="project-1" initialProject={projectFixture()} />);
+
+    const header = screen.getByTestId("print-header");
+    const masthead = header.querySelector(".timeline-print-masthead");
+    expect(masthead).toHaveClass("print-only");
+    expect(masthead?.querySelector('img[alt="TCEB"]')).toHaveAttribute("src", expect.stringContaining("logo-tceb.webp"));
+    expect(masthead?.querySelector(".timeline-print-brand")).toHaveTextContent("PROCUREMENT TIMELINE");
+    expect(masthead?.querySelector('.timeline-print-brand svg[data-icon="calendar-check"]')).toBeInTheDocument();
+    expect(masthead?.querySelector(".timeline-print-document-title")).toHaveTextContent("ประมาณการกรอบระยะเวลาในการจัดซื้อจัดจ้าง");
+    expect(masthead?.querySelector(".timeline-print-document-subtitle")).toHaveTextContent("วันทำการราชการไทย");
+    expect(screen.getAllByRole("heading")).toHaveLength(1);
+    expect(screen.getByRole("heading", { name: "จัดซื้อระบบสารสนเทศ" })).toBeInTheDocument();
+    const footer = screen.getByRole("main").querySelector(".timeline-print-footer");
+    expect(footer).toHaveClass("print-only");
+    expect(footer).toHaveTextContent("กรอบระยะเวลาเป็นประมาณการตามวันทำการ");
+  });
+
+  it("prints four icon metadata items with the owner separate and the complete note preserved", () => {
+    const project = { ...projectFixture(), note: "หมายเหตุโครงการที่ต้องแสดงครบทุกบรรทัด\nรายละเอียดประกอบเพื่อใช้ติดตามการดำเนินงาน" };
+    render(<TimelineDetail projectId={project.id} initialProject={project} />);
+
+    const summary = screen.getByTestId("print-header").querySelector(".print-summary");
+    expect(summary?.children).toHaveLength(4);
+    for (const [testId, icon] of [
+      ["print-budget", "sack-dollar"],
+      ["print-department", "building"],
+      ["print-total-days", "calendar-days"],
+      ["print-status", "shield-halved"],
+    ]) {
+      const item = screen.getByTestId(testId);
+      expect(item.parentElement).toBe(summary);
+      expect(item.querySelector(`dt svg[data-icon="${icon}"]`)).toBeInTheDocument();
+      expect(item.querySelector(".timeline-print-summary-icon")).not.toHaveClass("print-hidden");
+    }
+    expect(screen.getByTestId("print-total-days")).not.toHaveTextContent("SLA");
+    const owner = screen.getByTestId("print-owner");
+    expect(owner.closest(".print-summary")).toBeNull();
+    expect(owner.closest(".timeline-print-owner")).toHaveClass("print-only");
+    expect(owner.querySelector("dd")).toHaveTextContent(project.ownerName);
+    const note = screen.getByTestId("timeline-project-note");
+    expect(owner.compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(note.querySelector("strong")?.textContent).toBe(project.note);
+  });
+
+  it("keeps the icon column and every step title available in print, including signing", () => {
+    const project = projectFixture();
+    render(<TimelineDetail projectId={project.id} initialProject={project} />);
+
+    const table = screen.getByTestId("timeline-table");
+    const icons = table.querySelectorAll(".timeline-step-icon");
+    expect(icons).toHaveLength(project.steps.length + 1);
+    for (const icon of icons) {
+      expect(icon).not.toHaveClass("print-hidden");
+      expect(icon.closest(".print-hidden")).toBeNull();
+    }
+    expect(table.querySelector(".timeline-step-end .timeline-step-icon svg[data-icon='handshake']")).toBeInTheDocument();
+    expect(table.querySelector(".timeline-header-icon-slot")).not.toHaveClass("print-hidden");
+    expect(table.querySelectorAll(".timeline-step-title")).toHaveLength(project.steps.length + 1);
+    expect(table.querySelector(".timeline-step-end .timeline-step-title")).toHaveTextContent("วันที่เริ่มลงนามในสัญญาได้");
+    expect(table.querySelector(".timeline-step-column-heading .print-only")).toHaveTextContent("ขั้นตอนดำเนินงาน");
   });
 
   it("wraps long project metadata in the print header", () => {
@@ -886,8 +950,9 @@ describe("TimelineDetail", () => {
     render(<TimelineDetail projectId="project-1" initialProject={shortened} />);
 
     expect(screen.getByTestId("print-total-days")).toHaveTextContent(
-      "36 วันทำการ · ไม่เป็นไปตาม SLA",
+      "36 วันทำการ",
     );
+    expect(screen.getByTestId("print-status")).toHaveTextContent("ไม่เป็นไปตาม SLA");
   });
 
   it("hides the procurement unit prefix from existing timeline labels", () => {

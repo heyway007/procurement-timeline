@@ -684,17 +684,19 @@ textarea:disabled {
 @media print {
   html {
     font-size: 10px;
+    overflow: visible;
+    background: white !important;
   }
 
   body {
     min-height: auto;
     background: white !important;
-    color: #0f172a;
-    font-family: "Kanit", Tahoma, sans-serif !important;
+    color: #19213b;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
+  body,
   .print-page,
   .print-page * {
     font-family: "Kanit", Tahoma, sans-serif !important;
@@ -711,48 +713,82 @@ textarea:disabled {
   .print-page {
     min-height: auto !important;
     max-width: none !important;
+    overflow: visible !important;
     padding: 0 !important;
   }
 
   .print-header {
-    margin-bottom: 3mm !important;
-    border: 1px solid #cbd5e1 !important;
+    margin: 0 0 3mm !important;
+    border: 0 !important;
     border-radius: 0 !important;
     background: white !important;
-    color: #0f172a !important;
+    color: #19213b !important;
     box-shadow: none !important;
-    padding: 4mm 5mm !important;
+    padding: 0 !important;
+  }
+
+  .timeline-print-masthead {
+    display: flex !important;
+    align-items: center;
+    gap: 5mm;
+    padding-bottom: 3mm;
+    margin-bottom: 2mm;
+    border-bottom: 0.5mm solid #5142b8;
+    break-inside: avoid;
+  }
+
+  .timeline-print-masthead > img {
+    width: 16mm !important;
+    height: 16mm !important;
+    flex: 0 0 auto;
+    object-fit: contain;
+  }
+
+  .timeline-print-masthead > div {
+    min-width: 0;
+  }
+
+  .timeline-print-brand {
+    display: flex;
+    align-items: center;
+    gap: 1.5mm;
+    margin: 0 0 1mm;
+    color: #5142b8;
+    font-size: 8pt;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+
+  .timeline-print-document-title {
+    margin: 0;
+    color: #19213b;
+    font-size: 17pt;
+    font-weight: 600;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  .timeline-print-document-subtitle {
+    margin: 1mm 0 0;
+    color: #626b7f;
+    font-size: 8.5pt;
+    line-height: 1.5;
   }
 
   .print-header > .flex {
     display: block !important;
   }
 
-  .print-header > .flex > .timeline-summary-icon {
-    display: none !important;
-  }
-
-  .print-header .timeline-summary {
-    display: none !important;
-  }
-
-  .print-header p,
-  .print-header dt,
-  .print-header dd {
-    color: #475569 !important;
-    font-size: 15px !important;
-    line-height: 1.25 !important;
-    overflow-wrap: anywhere !important;
-    white-space: normal !important;
-  }
-
   .print-header h1 {
-    margin-top: 0.6mm !important;
-    font-size: 24px !important;
-    line-height: 1.2 !important;
-    color: #0f172a !important;
+    margin: 0 0 2mm !important;
+    color: #19213b !important;
+    font-size: 14pt !important;
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+    text-align: left !important;
     overflow-wrap: anywhere !important;
     white-space: normal !important;
+    break-after: avoid;
   }
 
   .print-header .print-summary {
@@ -760,109 +796,276 @@ textarea:disabled {
     position: static !important;
     width: auto !important;
     height: auto !important;
-    margin: 4mm 0 0 !important;
+    margin: 0 0 1.5mm !important;
+    padding: 2mm 3.5mm !important;
     overflow: visible !important;
     clip: auto !important;
     clip-path: none !important;
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    gap: 0 !important;
+    grid-template-columns: 1.5fr 2fr 1fr 1fr !important;
+    gap: 3mm !important;
+    border: 1px solid #e0e3ec;
+    border-radius: 2mm;
+    background: #f7f8fc;
+    break-inside: avoid;
   }
 
-  .print-header .print-summary > div {
-    display: block !important;
-    min-width: 0 !important;
-    padding-right: 3mm !important;
+  .print-summary > div {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: 7mm minmax(0, 1fr);
+    align-items: center;
+    column-gap: 2mm;
+    align-content: center;
   }
 
-  .print-header .print-summary dd {
-    min-width: 0 !important;
-    margin: 0.5mm 0 0 !important;
-    color: #0f172a !important;
-    font-size: 15px !important;
-    font-weight: 600 !important;
-    line-height: 1.25 !important;
-    overflow-wrap: anywhere !important;
+  .print-summary dt {
+    display: contents;
+    margin: 0;
+    color: #626b7f;
+    font-size: 7.5pt;
+    line-height: 1.5;
+  }
+
+  .timeline-print-summary-label {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .print-summary dd {
+    grid-column: 2;
+    grid-row: 2;
+    min-width: 0;
+    margin: 0.4mm 0 0;
+    color: #19213b;
+    font-size: 9pt;
+    font-weight: 600;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .timeline-print-summary-icon {
+    display: flex;
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    width: 7mm;
+    height: 7mm;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    border-radius: 1.8mm;
+    background: #eeecfb;
+    color: #5142b8;
+  }
+
+  .timeline-print-summary-icon > svg {
+    width: 3.8mm;
+    height: 3.8mm;
+    font-size: 3.8mm;
+  }
+
+  .timeline-print-summary-item--status .timeline-print-summary-icon {
+    color: #23714b;
+    background: #eaf5ee;
+  }
+
+  .timeline-print-owner {
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.5mm;
+    margin: 0;
+    color: #626b7f;
+    font-size: 8pt;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  .timeline-print-owner dd {
+    margin: 0;
+    color: #19213b;
   }
 
   .print-header .timeline-project-note {
-    margin-top: 4mm !important;
+    display: flex;
+    margin-top: 3mm !important;
     gap: 0 !important;
+    break-inside: auto;
   }
 
-  .print-header .timeline-project-note-icon {
-    display: none !important;
+  .print-header .timeline-project-note p,
+  .print-header .timeline-project-note strong {
+    margin: 0;
+    color: #626b7f;
+    font-size: 8.5pt;
+    font-weight: 400;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+
+  .print-header .timeline-project-note strong {
+    color: #19213b;
   }
 
   .print-table {
     margin-top: 0 !important;
     overflow: visible !important;
-    border: 1px solid #cbd5e1 !important;
+    border: 1px solid #e0e3ec !important;
     border-top: 0 !important;
     border-radius: 0 !important;
+    background: white !important;
     box-shadow: none !important;
   }
 
   .print-grid {
     display: grid !important;
-    grid-template-columns: 16mm minmax(0, 1fr) 100mm !important;
+    grid-template-columns: 10mm 11mm minmax(0, 1fr) 34% !important;
     gap: 0 !important;
-    align-items: stretch !important;
-    padding: 0 !important;
+    align-items: center !important;
+    min-height: 9.5mm;
+    padding: 0.8mm 2mm !important;
     border: 0 !important;
-    border-top: 1px solid #cbd5e1 !important;
-    font-size: 16px !important;
+    border-top: 1px solid #e0e3ec !important;
+    font-size: 10.5pt !important;
     line-height: 1.35 !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 
-  .print-grid > * {
-    padding: 2.4mm 3mm !important;
+  .print-grid > :first-child {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    text-align: center;
+    color: #5142b8;
+    font-size: 9pt;
   }
 
-  .print-grid > * + * {
-    border-left: 1px solid #cbd5e1 !important;
+  .print-grid .timeline-step-main {
+    display: contents !important;
   }
 
-  .print-grid .text-lg {
-    font-size: 16px !important;
-    line-height: 1.35 !important;
+  .print-grid .timeline-step-icon,
+  .timeline-header-icon-slot {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    justify-self: center;
   }
 
-  .print-grid p:not(.text-lg) {
-    font-size: 14px !important;
-    line-height: 1.35 !important;
+  .print-grid .timeline-step-icon {
+    display: flex !important;
+    width: 7mm !important;
+    height: 7mm !important;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e5e1f2;
+    border-radius: 1.8mm;
+    background: #f7f6fc;
+    color: #5142b8;
   }
 
-  .print-date {
-    white-space: nowrap !important;
+  .print-grid .timeline-step-icon > svg {
+    width: 3.8mm;
+    height: 3.8mm;
+    font-size: 3.8mm;
   }
 
-  .print-grid:first-child {
-    border-top: 0 !important;
-    background: #e2e8f0 !important;
-    color: #0f172a !important;
-    font-family: "Kanit", Tahoma, sans-serif !important;
-    font-weight: 700 !important;
+  .print-grid .timeline-step-content,
+  .print-grid .timeline-step-column-heading {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    min-width: 0;
+    padding: 0 3mm;
+    text-align: left !important;
   }
 
-  .print-table > .print-grid:last-child {
-    border-top: 1px solid #cbd5e1 !important;
-    border-bottom: 1px solid #cbd5e1 !important;
+  .print-grid .timeline-step-title-row {
+    display: block !important;
   }
 
-  .print-grid p {
+  .print-grid .timeline-step-title {
+    display: block !important;
     margin: 0 !important;
+    color: #19213b !important;
+    font-size: 10.5pt !important;
+    font-weight: 600 !important;
+    line-height: 1.35 !important;
+    overflow-wrap: anywhere;
   }
 
-  .print-grid p + p {
-    margin-top: 1mm !important;
+  .print-grid .timeline-step-inline-details {
+    display: block !important;
   }
 
+  .print-grid .timeline-step-inline-details p {
+    margin: 0.3mm 0 0 !important;
+    color: #626b7f !important;
+    font-size: 8pt !important;
+    line-height: 1.4 !important;
+  }
+
+  .print-grid .timeline-step-date,
+  .timeline-header-row > .mobile-date-header {
+    display: block !important;
+    grid-column: 4 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    min-width: 0;
+    padding: 0 2mm;
+    color: #19213b;
+    font-size: 10.5pt !important;
+    line-height: 1.5 !important;
+    text-align: center !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+  }
+
+  .print-grid.timeline-header-row {
+    min-height: 8mm;
+    padding-block: 1.5mm !important;
+    background: #eeedf7 !important;
+    color: #4c456d !important;
+    font-size: 8.5pt !important;
+    font-weight: 600 !important;
+    break-after: avoid;
+  }
+
+  .timeline-header-row > :first-child,
+  .timeline-header-row > .mobile-date-header {
+    color: inherit;
+    font-size: inherit !important;
+  }
+
+  .timeline-header-row .mobile-step-date-label,
   .print-step-hint {
     display: none !important;
   }
 
-  [data-testid="timeline-step"] {
-    break-inside: avoid;
-    page-break-inside: avoid;
+  .print-grid.timeline-step-end {
+    border-top: 1px solid #d5cff0 !important;
+    background: #f3f2fb !important;
+    padding-block: 1.5mm !important;
+  }
+
+  .timeline-step-end .timeline-step-title,
+  .timeline-step-end .timeline-step-date {
+    color: #5142b8 !important;
+    font-weight: 600 !important;
+  }
+
+  .timeline-step-end .timeline-step-icon {
+    border-color: #d8d1f4;
+    background: #e9e5fa;
+  }
+
+  .timeline-print-footer {
+    display: block !important;
+    margin: 1mm 0 0;
+    color: #626b7f;
+    font-size: 7.5pt;
+    line-height: 1.5;
   }
 }
